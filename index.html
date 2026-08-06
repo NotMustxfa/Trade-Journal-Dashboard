@@ -727,9 +727,10 @@ body::after {
   font-family: var(--font-display); font-size: 12px; font-weight: 700;
   letter-spacing: 0.2em; text-transform: uppercase;
   cursor: pointer; transition: all 0.25s;
+  display: inline-flex; align-items: center; justify-content: center;
 }
 .jsubmit-btn:hover { background: var(--gold-lt); box-shadow: 0 0 30px rgba(200,168,75,0.3); }
-.jsubmit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.jsubmit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .jdelete-btn {
   padding: 16px 24px;
@@ -738,8 +739,10 @@ body::after {
   font-family: var(--font-display); font-size: 12px; font-weight: 700;
   letter-spacing: 0.16em; text-transform: uppercase;
   cursor: pointer; transition: all 0.2s;
+  display: inline-flex; align-items: center; justify-content: center;
 }
 .jdelete-btn:hover { background: var(--red-bg); }
+.jdelete-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .jerr { margin-top: 14px; font-family: var(--font-display); font-size: 12px; color: var(--red); }
 .jok  { margin-top: 14px; font-family: var(--font-display); font-size: 12px; color: var(--green); }
@@ -750,6 +753,7 @@ body::after {
   letter-spacing: 0.14em; text-transform: uppercase;
   border-radius: var(--r2); cursor: pointer; transition: all 0.2s;
   white-space: nowrap; border: 1px solid var(--border2); background: var(--bg4); color: var(--txt2);
+  display: inline-flex; align-items: center; justify-content: center;
 }
 .jbtn-sm:hover { border-color: var(--border3); color: var(--txt); }
 .jbtn-sm.add     { background: var(--green-bg); border-color: var(--green-rim); color: var(--green); }
@@ -758,7 +762,31 @@ body::after {
 .jbtn-sm.remove:hover { background: var(--red-bg); }
 .jbtn-sm.gold    { background: var(--gold-bg); border-color: var(--gold-rim); color: var(--gold); }
 .jbtn-sm.gold:hover { background: var(--gold); color: #08070A; }
-.jbtn-sm:disabled { opacity: 0.35; cursor: not-allowed; }
+.jbtn-sm:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ── Inline button loading spinner (used across all action buttons) ── */
+.btn-spinner {
+  display: inline-block; width: 12px; height: 12px;
+  margin-right: 8px; vertical-align: -2px;
+  border: 2px solid rgba(8,7,10,0.28);
+  border-top-color: #08070A;
+  border-radius: 50%;
+  animation: btnspin 0.65s linear infinite;
+  flex-shrink: 0;
+}
+/* Buttons with dark/transparent backgrounds need a lighter spinner */
+.jdelete-btn .btn-spinner,
+.jbtn-sm.remove .btn-spinner,
+.jbtn-sm:not(.add):not(.gold) .btn-spinner {
+  border-color: rgba(255,255,255,0.18);
+  border-top-color: var(--txt2);
+}
+.jdelete-btn .btn-spinner { border-color: rgba(224,82,82,0.28); border-top-color: var(--red); }
+.jbtn-sm.remove .btn-spinner { border-color: rgba(224,82,82,0.28); border-top-color: var(--red); }
+.jbtn-sm.add .btn-spinner { border-color: rgba(8,7,10,0.28); border-top-color: #08070A; }
+.jbtn-sm.gold .btn-spinner { border-color: rgba(8,7,10,0.28); border-top-color: #08070A; }
+.jbtn-sm .btn-spinner { width: 10px; height: 10px; border-width: 2px; margin-right: 6px; }
+@keyframes btnspin { to { transform: rotate(360deg); } }
 
 /* ── Badges: phase / status ── */
 .badge-phase, .badge-status {
@@ -1115,7 +1143,7 @@ body::after {
         </div>
         <div class="wtable-wrap" id="rawLogTable"></div>
         <div style="text-align:center;margin-top:16px;">
-          <button class="jbtn-sm add" id="rawLoadMoreBtn" onclick="loadMoreRaw()">Show more</button>
+          <button class="jbtn-sm add" id="rawLoadMoreBtn" onclick="loadMoreRaw(this)">Show more</button>
         </div>
       </div>
     </div>
@@ -1157,7 +1185,7 @@ body::after {
           </div>
         </div>
         <div class="jfield"><label class="jlabel">Notes</label><input class="jinput" type="text" id="poNotes" placeholder="optional"></div>
-        <div class="jactions"><button class="jsubmit-btn" onclick="submitPayout()">Save Payout</button></div>
+        <div class="jactions"><button class="jsubmit-btn" onclick="submitPayout(this)">Save Payout</button></div>
         <div class="jerr" id="poErr"></div>
         <div class="jok" id="poOk"></div>
 
@@ -1181,7 +1209,7 @@ body::after {
         </div>
         <div class="jfield"><label class="jlabel">Account Name</label><input class="jinput" type="text" id="aaName" placeholder="e.g. 5k, 100k" maxlength="40"></div>
 
-        <div class="jactions"><button class="jsubmit-btn" onclick="submitAddAccount()">+ Add Account</button></div>
+        <div class="jactions"><button class="jsubmit-btn" onclick="submitAddAccount(this)">+ Add Account</button></div>
         <div class="jerr" id="aaErr"></div>
         <div class="jok" id="aaOk"></div>
       </div>
@@ -1295,6 +1323,27 @@ body::after {
   }
   loop();
 })();
+
+/* ══════════════════════════════════════
+   BUTTON LOADING HELPER
+   Wraps any button in a spinner + disabled state while an async
+   (jsonp) action is in flight, and restores its original label
+   afterwards. Used by every button that triggers a network call.
+══════════════════════════════════════ */
+function btnLoading(btn, label){
+  if(!btn) return function(){};
+  if(btn.dataset.loading === "1") return function(){}; // already loading, avoid double-wrap
+  btn.dataset.loading = "1";
+  btn.dataset.origHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="btn-spinner"></span>' + esc(label || "Working") + '…';
+  return function restore(){
+    btn.disabled = false;
+    if(btn.dataset.origHtml !== undefined) btn.innerHTML = btn.dataset.origHtml;
+    delete btn.dataset.loading;
+    delete btn.dataset.origHtml;
+  };
+}
 
 /* ══════════════════════════════════════
    APPS SCRIPT & STATE
@@ -2080,7 +2129,7 @@ function onRawFilterChange(){
   renderRawLog();
 }
 
-function loadMoreRaw(){ _rawLimit += 50; renderRawLog(); }
+function loadMoreRaw(btn){ _rawLimit += 50; renderRawLog(); }
 
 function renderRawLog(){
   var all = (_data.rawTrades||[]).filter(function(t){
@@ -2186,7 +2235,7 @@ function renderPayoutTable(){
       '<td>'+esc(p.accountName)+' '+statusTag+'</td>'+
       '<td style="color:var(--green);font-weight:700;">'+fmtMoney(p.amount)+'</td>'+
       '<td style="color:var(--txt3)">'+esc(p.notes||"—")+'</td>'+
-      '<td><button class="jbtn-sm remove" onclick="removePayout(\''+p.id+'\')">Delete</button></td>'+
+      '<td><button class="jbtn-sm remove" onclick="removePayout(\''+p.id+'\', this)">Delete</button></td>'+
     '</tr>';
   });
   h += '</tbody></table>';
@@ -2202,7 +2251,7 @@ function renderPayoutByPerson(){
   document.getElementById("payoutByPerson").innerHTML = h || '<div class="empty">No data</div>';
 }
 
-function submitPayout(){
+function submitPayout(btn){
   var person    = document.getElementById("poPerson").value;
   var accountId = document.getElementById("poAccount").value;
   var amount    = document.getElementById("poAmount").value;
@@ -2222,7 +2271,9 @@ function submitPayout(){
     "&date=" + encodeURIComponent(date) +
     "&notes=" + encodeURIComponent(notes);
 
+  var done = btnLoading(btn, "Saving");
   jsonp(APPS_SCRIPT_URL + "?action=addPayout&" + params, function(d){
+    done();
     if(!d || !d.success){
       document.getElementById("poErr").textContent = (d && d.error) || "Could not save payout.";
       return;
@@ -2236,12 +2287,15 @@ function submitPayout(){
   });
 }
 
-function removePayout(payoutId){
+function removePayout(payoutId, btn){
   if(!confirm("Delete this payout entry? This can't be undone.")) return;
+  var done = btnLoading(btn, "Deleting");
   jsonp(APPS_SCRIPT_URL + "?action=deletePayout&token=" + encodeURIComponent(_tok) + "&payoutId=" + encodeURIComponent(payoutId), function(d){
-    if(!d || !d.success){ alert((d&&d.error)||"Could not delete payout."); return; }
+    if(!d || !d.success){ done(); alert((d&&d.error)||"Could not delete payout."); return; }
     refreshDashboardQuietly(function(){
       renderPayoutsKPI(); renderPayoutTable(); renderPayoutByPerson();
+      // note: the button itself is re-rendered away by renderPayoutTable,
+      // so no explicit done() restore is needed on the success path.
     });
   });
 }
@@ -2257,7 +2311,7 @@ function initAddAccountTab(){
   }).join("");
 }
 
-function submitAddAccount(){
+function submitAddAccount(btn){
   var person = document.getElementById("aaPerson").value;
   var phase  = document.getElementById("aaPhase").value;
   var name   = document.getElementById("aaName").value.trim();
@@ -2274,7 +2328,9 @@ function submitAddAccount(){
     "&phase=" + encodeURIComponent(phase) +
     "&startingBalance=" + encodeURIComponent(balance || "0");
 
+  var done = btnLoading(btn, "Adding");
   jsonp(APPS_SCRIPT_URL + "?action=addAccount&" + params, function(d){
+    done();
     if(!d || !d.success){
       document.getElementById("aaErr").textContent = (d && d.error) || "Could not add account.";
       return;
@@ -2322,10 +2378,10 @@ function maccCardHTML(a){
 
   var quickBtns = "";
   if(a.status==="ACTIVE"){
-    quickBtns += '<button class="jbtn-sm gold" onclick="quickAccountStatus(\''+a.accountId+'\',\'PASSED\')">Mark Passed</button>';
-    quickBtns += '<button class="jbtn-sm remove" onclick="quickAccountStatus(\''+a.accountId+'\',\'BLOWN\')">Mark Blown</button>';
+    quickBtns += '<button class="jbtn-sm gold" onclick="quickAccountStatus(\''+a.accountId+'\',\'PASSED\', this)">Mark Passed</button>';
+    quickBtns += '<button class="jbtn-sm remove" onclick="quickAccountStatus(\''+a.accountId+'\',\'BLOWN\', this)">Mark Blown</button>';
   } else {
-    quickBtns += '<button class="jbtn-sm add" onclick="quickAccountStatus(\''+a.accountId+'\',\'ACTIVE\')">Reactivate</button>';
+    quickBtns += '<button class="jbtn-sm add" onclick="quickAccountStatus(\''+a.accountId+'\',\'ACTIVE\', this)">Reactivate</button>';
   }
   if(a.phase==="MASTER"){
     quickBtns += '<button class="jbtn-sm gold" onclick="gotoPayout(\''+a.accountId+'\')">+ Log Payout</button>';
@@ -2350,7 +2406,7 @@ function maccCardHTML(a){
         '<div class="jfield"><label class="jlabel">Status</label><select class="jselect" id="edtStatus_'+a.accountId+'">'+statusOpts+'</select></div>'+
       '</div>'+
       '<div class="jfield" style="max-width:220px;margin-top:12px;"><label class="jlabel">Starting Balance ($)</label><input class="jinput" type="number" id="edtBalance_'+a.accountId+'" value="'+a.startingBalance+'" min="0" step="0.01"></div>'+
-      '<div class="jactions" style="margin-top:14px;"><button class="jsubmit-btn" onclick="saveAccountEdit(\''+a.accountId+'\')">Save Changes</button></div>'+
+      '<div class="jactions" style="margin-top:14px;"><button class="jsubmit-btn" onclick="saveAccountEdit(\''+a.accountId+'\', this)">Save Changes</button></div>'+
       '<div class="jerr" id="edtErr_'+a.accountId+'"></div>'+
       '<div class="jok" id="edtOk_'+a.accountId+'"></div>'+
     '</div>'+
@@ -2362,7 +2418,7 @@ function toggleAccountEdit(accountId){
   renderManageAccounts();
 }
 
-function saveAccountEdit(accountId){
+function saveAccountEdit(accountId, btn){
   var name    = document.getElementById("edtName_"+accountId).value.trim();
   var phase   = document.getElementById("edtPhase_"+accountId).value;
   var status  = document.getElementById("edtStatus_"+accountId).value;
@@ -2380,16 +2436,18 @@ function saveAccountEdit(accountId){
     "&status=" + encodeURIComponent(status) +
     "&startingBalance=" + encodeURIComponent(balance || "0");
 
+  var done = btnLoading(btn, "Saving");
   jsonp(APPS_SCRIPT_URL + "?action=updateAccount&" + params, function(d){
-    if(!d || !d.success){ errEl.textContent = (d && d.error) || "Could not save changes."; return; }
+    if(!d || !d.success){ done(); errEl.textContent = (d && d.error) || "Could not save changes."; return; }
     okEl.textContent = "Saved ✓";
     _maccOpen[accountId] = false;
     refreshAccountsList();
     refreshDashboardQuietly(function(){ renderManageAccounts(); });
+    // page re-renders on success, so no explicit done() restore needed
   });
 }
 
-function quickAccountStatus(accountId, status){
+function quickAccountStatus(accountId, status, btn){
   var msgs = {
     PASSED: "Mark this account as Passed? It will stop appearing for new trades. Its history keeps counting toward analytics — use the Status filter to include/exclude it.",
     BLOWN:  "Mark this account as Blown? It will stop appearing for new trades. Its history keeps counting toward analytics — use the Status filter to include/exclude it. If this is a Master account, any payouts already logged against it are untouched.",
@@ -2397,12 +2455,14 @@ function quickAccountStatus(accountId, status){
   };
   if(msgs[status] && !confirm(msgs[status])) return;
 
+  var done = btnLoading(btn, "Updating");
   jsonp(APPS_SCRIPT_URL + "?action=updateAccount&token=" + encodeURIComponent(_tok) +
         "&accountId=" + encodeURIComponent(accountId) +
         "&status=" + encodeURIComponent(status), function(d){
-    if(!d || !d.success){ alert((d&&d.error)||"Could not update account."); return; }
+    if(!d || !d.success){ done(); alert((d&&d.error)||"Could not update account."); return; }
     refreshAccountsList();
     refreshDashboardQuietly(function(){ renderManageAccounts(); });
+    // page re-renders on success, so no explicit done() restore needed
   });
 }
 
@@ -2460,21 +2520,47 @@ function openDatePicker(inputId){
   renderDatePicker();
 
   var rect = input.getBoundingClientRect();
+  var popW = 264;
+  var left = window.scrollX + rect.left;
+  // Keep the popup from overflowing off the right edge of the viewport.
+  var maxLeft = window.scrollX + document.documentElement.clientWidth - popW - 8;
+  if(left > maxLeft) left = Math.max(window.scrollX + 8, maxLeft);
   pop.style.top = (window.scrollY + rect.bottom + 6) + "px";
-  pop.style.left = (window.scrollX + rect.left) + "px";
+  pop.style.left = left + "px";
 
-  setTimeout(function(){ document.addEventListener("click", onDpOutsideClick); }, 0);
+  // Use a flag instead of a delayed listener so that clicks on the
+  // popup's own controls (month nav, day cells) never trigger a
+  // false "outside click" close — see onDpOutsideClick below.
+  _dpJustOpened = true;
+  document.addEventListener("click", onDpOutsideClick, true);
+  document.addEventListener("scroll", closeDatePicker, true);
+  setTimeout(function(){ _dpJustOpened = false; }, 0);
 }
+var _dpJustOpened = false;
 function closeDatePicker(){
   var pop = document.getElementById("dpPop");
   if(pop) pop.remove();
-  document.removeEventListener("click", onDpOutsideClick);
+  document.removeEventListener("click", onDpOutsideClick, true);
+  document.removeEventListener("scroll", closeDatePicker, true);
   _dpActiveInput = null;
 }
 function onDpOutsideClick(e){
+  if(_dpJustOpened) return;
   var pop = document.getElementById("dpPop");
+  if(!pop) return;
   var input = _dpActiveInput ? document.getElementById(_dpActiveInput) : null;
-  if(pop && !pop.contains(e.target) && e.target!==input){ closeDatePicker(); }
+  // IMPORTANT: use composedPath() (captured at dispatch time) instead of
+  // pop.contains(e.target). Clicking a day cell or the month-nav arrows
+  // re-renders the popup's innerHTML mid-click, which detaches the
+  // original e.target from the DOM tree — after that, pop.contains(e.target)
+  // incorrectly returns false and the popup would close itself right after
+  // a month change or date selection. composedPath() is unaffected by that
+  // DOM mutation, so this correctly recognizes clicks that originated
+  // inside the popup even after it re-renders.
+  var path = (typeof e.composedPath === "function") ? e.composedPath() : null;
+  var clickedInsidePopup = path ? path.indexOf(pop) !== -1 : pop.contains(e.target);
+  var clickedInput = path ? path.indexOf(input) !== -1 : e.target === input;
+  if(!clickedInsidePopup && !clickedInput){ closeDatePicker(); }
 }
 function dpChangeMonth(delta){
   _dpViewDate = new Date(_dpViewDate.getFullYear(), _dpViewDate.getMonth()+delta, 1);
@@ -2734,12 +2820,12 @@ function submitTrade(){
     "&pnl="       + encodeURIComponent(document.getElementById("jPnl").value || "0");
 
   var action = _journalState.editing ? "updateTrade" : "logTrade";
-  document.getElementById("jSubmitBtn").disabled = true;
   document.getElementById("jErr").textContent = "";
   document.getElementById("jOk").textContent = "";
 
+  var done = btnLoading(document.getElementById("jSubmitBtn"), _journalState.editing ? "Updating" : "Saving");
   jsonp(APPS_SCRIPT_URL + "?action=" + action + "&" + params, function(d){
-    document.getElementById("jSubmitBtn").disabled = false;
+    done();
     if(!d || !d.success){
       document.getElementById("jErr").textContent = (d && d.error) || "Something went wrong.";
       return;
@@ -2755,10 +2841,12 @@ function deleteTradeEntry(){
   var person    = document.getElementById("jPerson").value;
   var accountId = document.getElementById("jAccount").value;
   var date      = getDateISO("jDate");
+  var done = btnLoading(document.getElementById("jDeleteBtn"), "Deleting");
   jsonp(APPS_SCRIPT_URL + "?action=deleteTrade&token=" + encodeURIComponent(_tok) +
         "&person=" + encodeURIComponent(person) +
         "&accountId=" + encodeURIComponent(accountId) +
         "&date=" + encodeURIComponent(date), function(d){
+    done();
     if(!d || !d.success){
       document.getElementById("jErr").textContent = (d && d.error) || "Could not delete.";
       return;
