@@ -824,7 +824,16 @@ body::after {
 .macc-edit { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); display: none; }
 .macc-edit.show { display: block; }
 
-/* ── DATE PICKER ── */
+/* ── DATE PICKER ──
+   The popup width is intentionally responsive on BOTH the CSS side
+   (width: min(...)) and the JS side (positionDatePicker clamps
+   against the *actual measured* box every time it opens or the
+   month changes). Doing it in both places is what makes this
+   robust: CSS guarantees the box itself can never be wider than
+   the viewport, and the JS clamp guarantees its position can never
+   push it off-screen even when its height changes (a 4-week month
+   is shorter than a 6-week month, which can also trigger the
+   internal vertical scrollbar and shrink available width). ── */
 .datepicker-wrap { position: relative; }
 .datepicker-wrap .jinput { cursor: pointer; padding-right: 40px; }
 .dp-icon {
@@ -842,10 +851,18 @@ body::after {
   background: var(--bg3); border: 1px solid var(--border3);
   border-radius: var(--r2); padding: 14px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  /* Responsive width: never wider than the viewport (minus a
+     margin), computed natively by the browser rather than relying
+     solely on JS math. This is belt-and-suspenders alongside the
+     JS clamp in positionDatePicker(). */
   width: 264px;
-  max-width: calc(100vw - 16px);
-  max-height: calc(100vh - 16px);
+  max-width: min(264px, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
   overflow-y: auto;
+  overflow-x: hidden; /* hard guarantee: the 7-column grid inside
+                          can never create a horizontal scrollbar
+                          or bleed past the popup's own edge */
+  box-sizing: border-box;
   font-family: var(--font-display);
   animation: fadeUp 0.15s ease both;
 }
@@ -858,11 +875,19 @@ body::after {
 }
 .dp-nav:hover { border-color: var(--gold-rim); color: var(--gold); }
 .dp-title { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: var(--txt); text-transform: uppercase; }
-.dp-dow { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; margin-bottom: 4px; }
-.dp-dow div { font-size: 8px; text-align: center; color: var(--txt4); letter-spacing: 0.08em; text-transform: uppercase; }
-.dp-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; }
+.dp-dow {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0,1fr));
+  gap: 2px; margin-bottom: 4px; width: 100%;
+}
+.dp-dow div { font-size: 8px; text-align: center; color: var(--txt4); letter-spacing: 0.08em; text-transform: uppercase; overflow: hidden; }
+.dp-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0,1fr));
+  gap: 2px; width: 100%;
+}
 .dp-cell {
-  height: 30px; display: flex; align-items: center; justify-content: center;
+  height: 30px; min-width: 0; display: flex; align-items: center; justify-content: center;
   font-size: 11px; color: var(--txt2); border-radius: 6px; cursor: pointer;
   font-family: var(--font-mono);
 }
@@ -2496,10 +2521,15 @@ function gotoPayout(accountId){
 
    Positioning: the popup is appended to <body> and positioned with
    position:fixed, measured against the input's own
-   getBoundingClientRect(). It's clamped on BOTH axes so it can
-   never render partially off-screen (that was previously only
-   done horizontally), and it flips above the input if there isn't
-   room below. z-index is kept above #cursorCanvas so the mouse
+   getBoundingClientRect(). It is clamped on BOTH axes using a
+   single min/max expression (not an if-chain) so there is no code
+   path where the popup's box can end up partially outside the
+   viewport, and it flips above the input if there isn't room
+   below. Because a month can span 4–6 calendar rows, the popup's
+   own height (and therefore whether its internal scrollbar kicks
+   in) changes between months — so positioning is RE-COMPUTED
+   after every render, not just on initial open (see
+   dpChangeMonth). z-index is kept above #cursorCanvas so the mouse
    trail effect never paints over it.
 ══════════════════════════════════════ */
 var _dpActiveInput = null, _dpViewDate = null;
@@ -2536,7 +2566,8 @@ function openDatePicker(inputId){
   pop.id = "dpPop";
   // Render invisibly first so we can measure its real size (it can
   // be narrower than 264px on small viewports because of the
-  // max-width clamp), then position it precisely against the input.
+  // max-width clamp, or taller on 6-week months), then position it
+  // precisely against the input.
   pop.style.visibility = "hidden";
   document.body.appendChild(pop);
   renderDatePicker();
@@ -2551,28 +2582,52 @@ function openDatePicker(inputId){
   document.addEventListener("scroll", closeDatePicker, true);
   window.addEventListener("resize", closeDatePicker, true);
   setTimeout(function(){ _dpJustOpened = false; }, 0);
+
+  // Belt-and-suspenders: if the monospace webfont finishes loading
+  // just after we measured/positioned the popup, glyph metrics can
+  // shift slightly and change its rendered box. Re-clamp once more
+  // when fonts settle so the position never drifts based on a
+  // measurement taken against fallback-font metrics.
+  if(window.document && document.fonts && document.fonts.ready){
+    document.fonts.ready.then(function(){
+      if(_dpActiveInput === inputId) positionDatePicker(input);
+    }).catch(function(){});
+  }
 }
 
 function positionDatePicker(input){
   var pop = document.getElementById("dpPop");
   if(!pop || !input) return;
   var rect = input.getBoundingClientRect();
+  // clientWidth/clientHeight (not window.innerWidth/innerHeight) —
+  // these exclude the scrollbar gutter, so they always match the
+  // actually-visible viewport area the popup must fit inside.
   var vw = document.documentElement.clientWidth;
   var vh = document.documentElement.clientHeight;
+
+  // Measure the popup's REAL rendered box every single time this
+  // runs (not just once on open). This matters because switching
+  // months can change the row count from 4 to 6 weeks, which
+  // changes popH — and on a short viewport can even trigger the
+  // popup's own vertical scrollbar, which changes popW too. Reusing
+  // a stale measurement from a different month is exactly what
+  // allowed the popup to drift off-screen for some months.
   var popRect = pop.getBoundingClientRect();
   var popW = popRect.width;
   var popH = popRect.height;
 
-  // Horizontal: align to the input's left edge, but never let the
-  // popup spill past either side of the viewport.
-  var left = rect.left;
-  var maxLeft = vw - popW - 8;
-  if(left > maxLeft) left = Math.max(8, maxLeft);
-  if(left < 8) left = 8;
+  // Horizontal clamp — single expression, so there's no branch that
+  // can leave `left` unclamped. Guarantees left>=8 and
+  // left+popW<=vw-8 whenever the viewport is wide enough to fit
+  // that; if the popup is wider than the viewport itself (very
+  // narrow screens), it's still pinned flush to the 8px margin
+  // rather than allowed to run off the right edge.
+  var minLeft = 8;
+  var maxLeft = Math.max(minLeft, vw - popW - 8);
+  var left = Math.min(Math.max(rect.left, minLeft), maxLeft);
 
-  // Vertical: prefer just below the input; if there isn't room
-  // underneath, flip it above the input instead of letting it run
-  // off the bottom of the screen.
+  // Vertical: prefer just below the input; flip above if there's no
+  // room below; otherwise pin within the viewport.
   var top = rect.bottom + 6;
   if(top + popH > vh - 8){
     var above = rect.top - popH - 6;
@@ -2617,7 +2672,10 @@ function dpChangeMonth(delta){
   _dpViewDate = new Date(_dpViewDate.getFullYear(), _dpViewDate.getMonth()+delta, 1);
   renderDatePicker();
   // Row count (4/5/6 weeks) can change between months, which changes
-  // the popup's height — reposition so it stays clamped in view.
+  // the popup's width AND height (a 6-week month can trigger the
+  // internal scrollbar, which eats into the available width) — always
+  // reposition against a fresh measurement so the clamp stays correct
+  // no matter which month is showing.
   var input = _dpActiveInput ? document.getElementById(_dpActiveInput) : null;
   if(input) positionDatePicker(input);
 }
@@ -2627,7 +2685,10 @@ function renderDatePicker(){
   var y = _dpViewDate.getFullYear(), m = _dpViewDate.getMonth();
   var mn = ["January","February","March","April","May","June","July","August","September","October","November","December"];
   var first = new Date(y,m,1);
-  var startDow = (first.getDay()+6)%7; // Monday = 0
+  // Monday-first day index: JS getDay() is Sunday=0..Saturday=6;
+  // (day+6)%7 rotates that to Monday=0..Sunday=6, matching the
+  // Mo/Tu/We/Th/Fr/Sa/Su header order rendered below.
+  var startDow = (first.getDay()+6)%7;
   var daysInMonth = new Date(y,m+1,0).getDate();
   var input = document.getElementById(_dpActiveInput);
   var selIso = input ? input.dataset.iso : "";
