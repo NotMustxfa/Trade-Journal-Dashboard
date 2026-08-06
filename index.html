@@ -462,6 +462,7 @@ body::after {
 
 .kpi-strip { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 32px; }
 .kpi-strip.k3 { grid-template-columns: repeat(3,1fr); }
+.kpi-strip.k5 { grid-template-columns: repeat(5,1fr); }
 
 .kpi {
   background: var(--bg2); border: 1px solid var(--border);
@@ -819,6 +820,7 @@ body::after {
 @media(max-width:1100px) {
   .kpi-strip { grid-template-columns: repeat(2,1fr); }
   .kpi-strip.k3 { grid-template-columns: repeat(2,1fr); }
+  .kpi-strip.k5 { grid-template-columns: repeat(3,1fr); }
   .g3 { grid-template-columns: 1fr 1fr; }
 }
 @media(max-width:780px) {
@@ -830,7 +832,7 @@ body::after {
   .jgrid { grid-template-columns: 1fr; }
 }
 @media(max-width:520px) {
-  .kpi-strip, .kpi-strip.k3 { grid-template-columns: 1fr 1fr; }
+  .kpi-strip, .kpi-strip.k3, .kpi-strip.k5 { grid-template-columns: 1fr 1fr; }
   .g3 { grid-template-columns: 1fr; }
   .brand-text { font-size: 14px; }
   .topbar-tag,.gen-time { display: none; }
@@ -929,10 +931,13 @@ body::after {
       <div class="f-sep"></div>
       <span class="filter-label">Account</span>
       <div id="accountPills"></div>
+      <div class="f-sep"></div>
+      <span class="filter-label">Status</span>
+      <div id="statusPills"></div>
     </div>
-    <div class="psub" style="margin:-20px 0 24px;">Only Active accounts feed analytics — Passed / Blown accounts are excluded once they're no longer being traded</div>
+    <div class="psub" style="margin:-20px 0 24px;">Status defaults to All — every account's full history counts. Narrow to Active / Passed / Blown to isolate a lifecycle stage.</div>
 
-    <div class="kpi-strip" id="kpiStrip"></div>
+    <div class="kpi-strip k5" id="kpiStrip"></div>
 
     <div class="sec">
       <div class="sh">
@@ -950,6 +955,20 @@ body::after {
     <div class="sec">
       <div class="sh">
         <div class="sh-num">02</div>
+        <div class="sh-title">Percentage Performance</div>
+        <div class="sh-line"></div>
+        <div class="sh-tag">Risk-normalized — % of each account's starting balance</div>
+      </div>
+      <div class="kpi-strip k3" id="pctKpiStrip"></div>
+      <div class="g2">
+        <div class="panel d1" id="pctAccountPanel"></div>
+        <div class="panel d2" id="pctPersonPanel"></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sh">
+        <div class="sh-num">03</div>
         <div class="sh-title">Patterns</div>
         <div class="sh-line"></div>
         <div class="sh-tag">Behavioral</div>
@@ -975,10 +994,10 @@ body::after {
 
     <div class="sec">
       <div class="sh">
-        <div class="sh-num">03</div>
+        <div class="sh-num">04</div>
         <div class="sh-title">Equity</div>
         <div class="sh-line"></div>
-        <div class="sh-tag">Active accounts only — ignores period filter</div>
+        <div class="sh-tag">Respects Person / Account / Status — ignores Period</div>
       </div>
       <div class="kpi-strip" id="equityKpiStrip"></div>
       <div class="panel d1">
@@ -990,7 +1009,7 @@ body::after {
 
     <div class="sec">
       <div class="sh">
-        <div class="sh-num">04</div>
+        <div class="sh-num">05</div>
         <div class="sh-title">Monthly Trend</div>
         <div class="sh-line"></div>
         <div class="sh-tag">Edge over time</div>
@@ -1004,7 +1023,7 @@ body::after {
 
     <div class="sec">
       <div class="sh">
-        <div class="sh-num">05</div>
+        <div class="sh-num">06</div>
         <div class="sh-title">Detail</div>
         <div class="sh-line"></div>
         <div class="sh-tag">Per-week & per-account</div>
@@ -1017,7 +1036,7 @@ body::after {
         </div>
         <div class="panel d2">
           <div class="ptitle">By Account</div>
-          <div class="psub">Active accounts only</div>
+          <div class="psub">Matches current filters — any status</div>
           <div class="acc-cards" id="accCards"></div>
         </div>
       </div>
@@ -1025,7 +1044,7 @@ body::after {
 
     <div class="sec">
       <div class="sh">
-        <div class="sh-num">06</div>
+        <div class="sh-num">07</div>
         <div class="sh-title">Payouts</div>
         <div class="sh-line"></div>
         <div class="sh-tag">All-time — survives blown accounts</div>
@@ -1035,7 +1054,7 @@ body::after {
 
     <div class="sec">
       <div class="sh">
-        <div class="sh-num">07</div>
+        <div class="sh-num">08</div>
         <div class="sh-title">Raw Trade Log</div>
         <div class="sh-line"></div>
         <div class="sh-tag" id="rawLogMeta">— entries</div>
@@ -1077,7 +1096,7 @@ body::after {
       </div>
       <div class="panel d2">
         <div class="ptitle">Log a Payout</div>
-        <div class="psub">Master accounts only</div>
+        <div class="psub">Master accounts only — Active, Passed, or Blown</div>
         <div class="jfield">
           <label class="jlabel">Person</label>
           <select class="jselect" id="poPerson" onchange="onPayoutPersonChange()"></select>
@@ -1238,7 +1257,7 @@ body::after {
 var APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw8Tke7oCam2wRF4rKx8Nqn4cMnHNpi4E5LIU7AYijC9MAIqLFQGr0TL0xNKy-OnU5j/exec";
 
 var _tok=null, _data=null, _config=null, _chart=null, _equityChart=null;
-var _month="all", _person="all", _accountId="all";
+var _month="all", _person="all", _accountId="all", _status="all";
 var _journalState = { editing:false };
 var _accountsByPerson = {};   // from getAccounts — every status, per person
 var _accountsById = {};       // from getDashboardData accounts list
@@ -1380,10 +1399,11 @@ function buildTicker(){
     {k:"Losses",       v:losses,  cls:"dn"},
     {k:"Payouts",      v:fmtMoney((_data.payouts&&_data.payouts.totalAll)||0), cls:"up"},
   ];
+  // Every account now, regardless of status — accountStats is
+  // built server-side across all-time, all-status trades.
   (_data.accounts||[]).forEach(function(a){
-    if(a.status!=="ACTIVE") return;
     var s = _data.accountStats[a.accountId];
-    if(!s) return;
+    if(!s || !s.total) return;
     items.push({k:a.displayLabel, v:s.winRate+"%", cls:s.winRate>=55?"up":"dn"});
   });
   var html = items.map(function(it){
@@ -1404,12 +1424,26 @@ function buildFilters(){
     mkPill("all","All","pill acc active","selPerson") +
     people.map(function(p){ return mkPill(p, p, "pill acc", "selPerson"); }).join("");
 
+  buildStatusPills();
   buildAccountPills();
+}
+
+function buildStatusPills(){
+  var statuses = (_config && _config.accountStatuses) || ["ACTIVE","PASSED","BLOWN","REMOVED"];
+  // REMOVED accounts are a soft-delete bucket, not a trading
+  // lifecycle stage — leave them out of the filter choices.
+  var shown = statuses.filter(function(s){ return s !== "REMOVED"; });
+  var html = mkPill("all","All","pill acc active","selStatus");
+  shown.forEach(function(s){
+    var lbl = (_config && _config.statusLabels && _config.statusLabels[s]) || s;
+    html += mkPill(s, lbl, "pill acc", "selStatus");
+  });
+  document.getElementById("statusPills").innerHTML = html;
 }
 
 function buildAccountPills(){
   var accs = (_data.accounts||[]).filter(function(a){
-    if(a.status!=="ACTIVE") return false; // only active accounts feed analytics
+    if(_status!=="all" && a.status!==_status) return false;
     if(_person!=="all" && a.person!==_person) return false;
     return true;
   });
@@ -1433,12 +1467,14 @@ function setActive(containerId, val){
 function selMonth(m){ _month=m; setActive('monthPills', m); renderDashboard(); }
 function selPerson(p){ _person=p; setActive('personPills', p); buildAccountPills(); renderDashboard(); }
 function selAccount(a){ _accountId=a; setActive('accountPills', a); renderDashboard(); }
+function selStatus(s){ _status=s; setActive('statusPills', s); buildAccountPills(); renderDashboard(); }
 
 function getFiltered(){
   return (_data?_data.trades:[]).filter(function(t){
     if(_person!=="all" && t.person!==_person) return false;
     if(_accountId!=="all" && t.accountId!==_accountId) return false;
     if(_month!=="all" && t.month!==_month) return false;
+    if(_status!=="all" && t.accountStatus!==_status) return false;
     return true;
   });
 }
@@ -1449,13 +1485,17 @@ function renderDashboard(){
   var s = stats(trades);
   document.getElementById("tradeMeta").textContent = s.total + " trades";
   renderKPI(s); renderResults(s); renderMistakes(s);
+  renderPctKpi(s); renderPctPerformance();
   renderDays(s); renderRR(s); renderCompliance(s);
   renderTrend(); renderWeekly(); renderAccounts(); renderEquity();
   renderPayoutMiniKpi();
   onRawFilterChange();
 }
 
-/* ── STATS ── */
+/* ── STATS ──
+   Mirrors the server's _buildStats() so every panel (KPI strip,
+   account cards, percentage panels) can be recomputed client-side
+   against whatever slice of trades the current filters produce. */
 function stats(trades){
   var total   = trades.length;
   var wins    = trades.filter(function(t){ return t.result==="TP"||t.result==="PARTIAL TP"; }).length;
@@ -1475,16 +1515,48 @@ function stats(trades){
   ["TP","SL","BE","PARTIAL TP","MANUAL CLOSE"].forEach(function(r){
     breakdown[r] = trades.filter(function(t){ return t.result===r; }).length;
   });
-  return{ total, wins, losses, be, winRate: total?parseFloat(((wins/total)*100).toFixed(1)):0, lossRate: total?parseFloat(((losses/total)*100).toFixed(1)):0, ruleOk, compliance: total?parseFloat(((ruleOk/total)*100).toFixed(1)):0, avgRR, mkMap, dCount, breakdown };
+
+  var totalPnL = trades.reduce(function(a,t){ return a+(t.pnl||0); }, 0);
+  totalPnL = parseFloat(totalPnL.toFixed(2));
+
+  // ── Risk-normalized % metrics — uses the pnlPercent the backend
+  //    already computed per trade (pnl / that trade's account's
+  //    starting balance * 100). Averaging these percentages, not
+  //    the raw dollars, is what makes a $50 loss on a 5k account
+  //    and a $250 loss on a 25k account both count as -1%. ──
+  var pctVals = trades.map(function(t){ return t.pnlPercent; })
+    .filter(function(v){ return v!==null && v!==undefined && !isNaN(v); });
+  var avgPnlPercent = pctVals.length ? parseFloat((pctVals.reduce(function(a,b){return a+b;},0)/pctVals.length).toFixed(3)) : 0;
+
+  var winPctVals = trades.filter(function(t){ return (t.pnl||0)>0; })
+    .map(function(t){ return t.pnlPercent; })
+    .filter(function(v){ return v!==null && v!==undefined && !isNaN(v); });
+  var avgWinPercent = winPctVals.length ? parseFloat((winPctVals.reduce(function(a,b){return a+b;},0)/winPctVals.length).toFixed(3)) : 0;
+
+  var lossPctVals = trades.filter(function(t){ return (t.pnl||0)<0; })
+    .map(function(t){ return t.pnlPercent; })
+    .filter(function(v){ return v!==null && v!==undefined && !isNaN(v); });
+  var avgLossPercent = lossPctVals.length ? parseFloat((lossPctVals.reduce(function(a,b){return a+b;},0)/lossPctVals.length).toFixed(3)) : 0;
+
+  return{
+    total, wins, losses, be,
+    winRate: total?parseFloat(((wins/total)*100).toFixed(1)):0,
+    lossRate: total?parseFloat(((losses/total)*100).toFixed(1)):0,
+    ruleOk, compliance: total?parseFloat(((ruleOk/total)*100).toFixed(1)):0,
+    avgRR, mkMap, dCount, breakdown, totalPnL,
+    avgPnlPercent, avgWinPercent, avgLossPercent,
+  };
 }
 
 /* ── KPI ── */
 function renderKPI(s){
+  var pctCls = s.avgPnlPercent>0 ? "g" : s.avgPnlPercent<0 ? "r" : "a";
   document.getElementById("kpiStrip").innerHTML =
     kp("Win Rate",   s.winRate+"%",   "g", s.wins+" wins · "+s.total+" trades", "d1") +
     kp("Loss Rate",  s.lossRate+"%",  "r", s.losses+" stop-outs",               "d2") +
     kp("Compliance", s.compliance+"%","a", s.ruleOk+" on-rule",                 "d3") +
-    kp("Avg R:R",    "1:"+s.avgRR,    "b", "risk to reward",                    "d4");
+    kp("Avg R:R",    "1:"+s.avgRR,    "b", "risk to reward",                    "d4") +
+    kp("Avg P&amp;L %", (s.avgPnlPercent>0?"+":"")+s.avgPnlPercent+"%", pctCls, "per trade, of starting balance", "d5");
 }
 function kp(label,val,cls,sub,d){
   return '<div class="kpi '+cls+' '+d+'">'+
@@ -1541,6 +1613,71 @@ function renderMistakes(s){
   document.getElementById("mistakePanel").innerHTML = h;
 }
 
+/* ══════════════════════════════════════
+   PERCENTAGE PERFORMANCE (section 02)
+   Risk-normalized: each trade's % is (pnl / that account's
+   starting balance) * 100 — averaging % instead of $ means a
+   $50 loss on a 5k account and a $250 loss on a 25k account both
+   register as -1%, so accounts of different sizes compare fairly.
+══════════════════════════════════════ */
+function renderPctKpi(s){
+  var overallCls = s.avgPnlPercent>0 ? "g" : s.avgPnlPercent<0 ? "r" : "a";
+  document.getElementById("pctKpiStrip").innerHTML =
+    kp("Avg P&amp;L % / Trade", (s.avgPnlPercent>0?"+":"")+s.avgPnlPercent+"%", overallCls, "mean of every trade's %", "d1") +
+    kp("Avg Win %",  "+"+s.avgWinPercent+"%", "g", "average size of a winning trade", "d2") +
+    kp("Avg Loss %", s.avgLossPercent+"%",    "r", "average size of a losing trade",  "d3");
+}
+
+function renderPctPerformance(){
+  var trades = getFiltered();
+  renderPctGroupPanel("pctAccountPanel", "Avg % by Account", groupTradesByAccount(trades));
+  renderPctGroupPanel("pctPersonPanel",  "Avg % by Person",  groupTradesByPerson(trades));
+}
+
+function groupTradesByAccount(trades){
+  var map = {};
+  trades.forEach(function(t){ (map[t.accountId]=map[t.accountId]||[]).push(t); });
+  return Object.keys(map).map(function(id){
+    var acc = _accountsById[id];
+    var s = stats(map[id]);
+    return {
+      label: acc ? acc.displayLabel : id,
+      badge: acc ? (phaseBadge(acc.phase) + statusBadge(acc.status)) : "",
+      stat: s
+    };
+  }).sort(function(a,b){ return b.stat.avgPnlPercent - a.stat.avgPnlPercent; });
+}
+
+function groupTradesByPerson(trades){
+  var map = {};
+  trades.forEach(function(t){ (map[t.person]=map[t.person]||[]).push(t); });
+  return Object.keys(map).map(function(p){
+    return { label:p, badge:"", stat: stats(map[p]) };
+  }).sort(function(a,b){ return b.stat.avgPnlPercent - a.stat.avgPnlPercent; });
+}
+
+function renderPctGroupPanel(elId, title, groups){
+  var h = '<div class="ptitle">'+title+'</div><div class="psub">Average P&amp;L as % of starting balance</div>';
+  if(!groups.length){
+    h += '<div class="empty">No trades match these filters</div>';
+  } else {
+    var maxAbs = Math.max.apply(null, groups.map(function(g){ return Math.abs(g.stat.avgPnlPercent); })) || 1;
+    groups.forEach(function(g){
+      var v = g.stat.avgPnlPercent;
+      var pos = v >= 0;
+      var w = Math.min(100, (Math.abs(v)/maxAbs)*100).toFixed(0);
+      var col = pos ? "var(--green)" : "var(--red)";
+      h += '<div class="brow">'+
+        '<div class="blabel" style="width:auto;flex:1 1 130px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">'+esc(g.label)+g.badge+'</div>'+
+        '<div class="btrack" style="max-width:110px;"><div class="bfill" style="width:'+w+'%;background:'+col+'"></div></div>'+
+        '<div class="bnum" style="color:'+col+';width:60px;">'+(pos?"+":"")+v+'%</div>'+
+        '<div class="bpct">'+g.stat.total+'t</div>'+
+      '</div>';
+    });
+  }
+  document.getElementById(elId).innerHTML = h;
+}
+
 /* ── DAY GRID ── */
 function renderDays(s){
   var days = ["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY"];
@@ -1568,12 +1705,13 @@ function renderRR(s){
 }
 
 /* ── EQUITY ── */
-// Equity is cumulative by nature, so it always uses ALL analytics-scope
-// (active-account) trades in time order (ignores the Period pill) — it
-// only respects the Person/Account filters. Baseline = sum of starting
-// balances of every ACTIVE account currently in scope.
+// Equity is cumulative by nature, so it always uses ALL trades in
+// time order (ignores the Period pill) — it respects Person,
+// Account, and Status. Baseline = sum of starting balances of
+// every account currently matching those filters.
 function computeEquity(){
-  var accs = (_data.accounts||[]).filter(function(a){ return a.status==="ACTIVE"; })
+  var accs = (_data.accounts||[])
+    .filter(function(a){ return _status==="all" || a.status===_status; })
     .filter(function(a){ return _person==="all" || a.person===_person; })
     .filter(function(a){ return _accountId==="all" || a.accountId===_accountId; });
   var baseline = accs.reduce(function(sum,a){ return sum + (a.startingBalance||0); }, 0);
@@ -1581,6 +1719,7 @@ function computeEquity(){
   var trades = (_data.trades||[]).filter(function(t){
     if(_person!=="all" && t.person!==_person) return false;
     if(_accountId!=="all" && t.accountId!==_accountId) return false;
+    if(_status!=="all" && t.accountStatus!==_status) return false;
     return true;
   }).slice().sort(function(a,b){ return new Date(a.date) - new Date(b.date); });
 
@@ -1718,6 +1857,7 @@ function renderTrend(){
   var trades = (_data.trades||[]).filter(function(t){
     if(_person!=="all" && t.person!==_person) return false;
     if(_accountId!=="all" && t.accountId!==_accountId) return false;
+    if(_status!=="all" && t.accountStatus!==_status) return false;
     return true;
   });
   var mMap   = {};
@@ -1804,6 +1944,7 @@ function renderTrend(){
 function matchesAccountId(accountId){
   var acc = _accountsById[accountId];
   if(!acc) return false;
+  if(_status!=="all" && acc.status!==_status) return false;
   if(_person!=="all" && acc.person!==_person) return false;
   if(_accountId!=="all" && accountId!==_accountId) return false;
   return true;
@@ -1837,31 +1978,47 @@ function renderWeekly(){
   document.getElementById("weeklyTable").innerHTML = h;
 }
 
-/* ── ACCOUNT CARDS (Active only) ── */
+/* ── ACCOUNT CARDS ──
+   Every account matching the current Person/Status/Account
+   filters — not just Active anymore — recomputed live from the
+   currently filtered trade set so it always matches what the
+   rest of the page shows. */
 function renderAccounts(){
-  if(!_data.accountStats) return;
+  var trades = getFiltered();
+  var byAcc = {};
+  trades.forEach(function(t){ (byAcc[t.accountId]=byAcc[t.accountId]||[]).push(t); });
+
+  var accs = (_data.accounts||[]).filter(function(a){
+    if(_status!=="all" && a.status!==_status) return false;
+    if(_person!=="all" && a.person!==_person) return false;
+    if(_accountId!=="all" && a.accountId!==_accountId) return false;
+    return true;
+  });
+
   var h = "";
-  (_data.accounts||[]).forEach(function(a){
-    if(a.status!=="ACTIVE") return;
-    var s = _data.accountStats[a.accountId];
-    if(!s) return;
-    var col = s.winRate>=60 ? "var(--green)" : s.winRate>=40 ? "var(--gold)" : "var(--red)";
+  accs.forEach(function(a){
+    var ts = byAcc[a.accountId] || [];
+    var s = stats(ts);
+    var col = s.total ? (s.winRate>=60 ? "var(--green)" : s.winRate>=40 ? "var(--gold)" : "var(--red)") : "var(--txt4)";
+    var pctCol = s.avgPnlPercent>0 ? "var(--green)" : s.avgPnlPercent<0 ? "var(--red)" : "var(--txt3)";
     h += '<div class="acc-card">'+
-      '<div class="acc-name">'+esc(a.displayLabel)+phaseBadge(a.phase)+'</div>'+
-      '<div class="acc-wr" style="color:'+col+'">'+s.winRate+'%</div>'+
+      '<div class="acc-name">'+esc(a.displayLabel)+phaseBadge(a.phase)+statusBadge(a.status)+'</div>'+
+      '<div class="acc-wr" style="color:'+col+'">'+(s.total ? s.winRate+"%" : "—")+'</div>'+
       '<div class="acc-grid">'+
         '<div><div class="acc-sv">'+s.total+'</div><div class="acc-sl">Trades</div></div>'+
         '<div><div class="acc-sv" style="color:var(--gold)">'+s.compliance+'%</div><div class="acc-sl">Compliance</div></div>'+
         '<div><div class="acc-sv" style="color:var(--blue)">1:'+s.avgRR+'</div><div class="acc-sl">Avg R:R</div></div>'+
         '<div><div class="acc-sv" style="color:var(--red)">'+s.losses+'</div><div class="acc-sl">Losses</div></div>'+
+        '<div><div class="acc-sv" style="color:'+pctCol+'">'+(s.avgPnlPercent>0?"+":"")+s.avgPnlPercent+'%</div><div class="acc-sl">Avg % / Trade</div></div>'+
+        '<div><div class="acc-sv" style="color:'+(s.totalPnL>=0?"var(--green)":"var(--red)")+'">'+fmtMoney(s.totalPnL)+'</div><div class="acc-sl">Total P&amp;L</div></div>'+
       '</div>'+
     '</div>';
   });
-  document.getElementById("accCards").innerHTML = h || '<div class="empty">No active accounts yet — add one from Add Account</div>';
+  document.getElementById("accCards").innerHTML = h || '<div class="empty">No accounts match these filters</div>';
 }
 
 /* ══════════════════════════════════════
-   RAW TRADE LOG (Analytics page, section 07)
+   RAW TRADE LOG (Analytics page, section 08)
 ══════════════════════════════════════ */
 function populateRawFilters(){
   var personSel = document.getElementById("rawPersonSel");
@@ -1919,11 +2076,12 @@ function renderRawLog(){
 
   var h = '<table class="wtable"><thead><tr>'+
     '<th>Date</th><th>Person</th><th>Account</th><th>Pair</th><th>TF</th><th>Type</th>'+
-    '<th>RR</th><th>Result</th><th>Risk</th><th>P&amp;L</th><th>Rules</th><th>Mistake</th>'+
+    '<th>RR</th><th>Result</th><th>Risk</th><th>P&amp;L</th><th>%</th><th>Rules</th><th>Mistake</th>'+
     '</tr></thead><tbody>';
   shown.forEach(function(t){
     var pnlCol = t.pnl>0?"var(--green)":t.pnl<0?"var(--red)":"var(--txt3)";
     var rulesCol = t.rules==="TRUE" ? "var(--green)" : "var(--red)";
+    var pctTxt = (t.pnlPercent===null||t.pnlPercent===undefined) ? "—" : ((t.pnlPercent>0?"+":"")+t.pnlPercent.toFixed(2)+"%");
     h += '<tr>'+
       '<td>'+esc(t.dateKey)+'</td>'+
       '<td>'+esc(t.person)+'</td>'+
@@ -1935,6 +2093,7 @@ function renderRawLog(){
       '<td>'+esc(t.result)+'</td>'+
       '<td>'+fmtMoney(t.riskAmount)+'</td>'+
       '<td style="color:'+pnlCol+'">'+fmtMoney(t.pnl)+'</td>'+
+      '<td style="color:'+pnlCol+'">'+pctTxt+'</td>'+
       '<td style="color:'+rulesCol+'">'+(t.rules==="TRUE"?"✓":"✗")+'</td>'+
       '<td>'+esc(t.mistake||"—")+'</td>'+
     '</tr>';
@@ -1961,6 +2120,9 @@ function initPayoutsTab(){
 
 function onPayoutPersonChange(){
   var p = document.getElementById("poPerson").value;
+  // Every Master account regardless of status — a Master account
+  // can be Active, Passed, or already Blown and still take a
+  // payout entry (or show its existing ones).
   var masters = (_accountsByPerson[p]||[]).filter(function(a){ return a.phase==="MASTER"; });
   var sel = document.getElementById("poAccount");
   if(!masters.length){
@@ -2136,6 +2298,8 @@ function maccCardHTML(a){
   }).join("");
 
   var quickBtns = "";
+  // These work identically regardless of phase — a Master account
+  // can be Marked Passed / Blown exactly like a Phase 1/2 account.
   if(a.status==="ACTIVE"){
     quickBtns += '<button class="jbtn-sm gold" onclick="quickAccountStatus(\''+a.accountId+'\',\'PASSED\')">Mark Passed</button>';
     quickBtns += '<button class="jbtn-sm remove" onclick="quickAccountStatus(\''+a.accountId+'\',\'BLOWN\')">Mark Blown</button>';
@@ -2206,9 +2370,9 @@ function saveAccountEdit(accountId){
 
 function quickAccountStatus(accountId, status){
   var msgs = {
-    PASSED: "Mark this account as Passed? It will stop appearing for new trades and drop out of analytics.",
-    BLOWN:  "Mark this account as Blown? It will stop appearing for new trades and drop out of analytics.",
-    ACTIVE: "Reactivate this account? It'll be selectable again and count toward analytics.",
+    PASSED: "Mark this account as Passed? It will stop appearing for new trades. Its history keeps counting toward analytics — use the Status filter to include/exclude it.",
+    BLOWN:  "Mark this account as Blown? It will stop appearing for new trades. Its history keeps counting toward analytics — use the Status filter to include/exclude it. If this is a Master account, any payouts already logged against it are untouched.",
+    ACTIVE: "Reactivate this account? It'll be selectable again for new trades.",
   };
   if(msgs[status] && !confirm(msgs[status])) return;
 
@@ -2277,6 +2441,9 @@ function refreshAccountsList(afterCb){
 
 function onPersonChange(){
   var p = document.getElementById("jPerson").value;
+  // New trades can still only be logged against an ACTIVE account —
+  // this is unrelated to analytics scope, it's just "what's still
+  // being traded right now".
   var accounts = (_accountsByPerson[p]||[]).filter(function(a){ return a.status==="ACTIVE"; });
   var sel = document.getElementById("jAccount");
 
