@@ -937,6 +937,21 @@ body::after {
     <div class="sec">
       <div class="sh">
         <div class="sh-num">03</div>
+        <div class="sh-title">Equity</div>
+        <div class="sh-line"></div>
+        <div class="sh-tag">Real balance — ignores period filter</div>
+      </div>
+      <div class="kpi-strip" id="equityKpiStrip"></div>
+      <div class="panel d1">
+        <div class="ptitle">Equity Curve</div>
+        <div class="psub">Cumulative balance over time</div>
+        <div class="chart-wrap"><canvas id="equityChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sh">
+        <div class="sh-num">04</div>
         <div class="sh-title">Monthly Trend</div>
         <div class="sh-line"></div>
         <div class="sh-tag">Edge over time</div>
@@ -950,7 +965,7 @@ body::after {
 
     <div class="sec">
       <div class="sh">
-        <div class="sh-num">04</div>
+        <div class="sh-num">05</div>
         <div class="sh-title">Detail</div>
         <div class="sh-line"></div>
         <div class="sh-tag">Per-week & per-account</div>
@@ -994,6 +1009,7 @@ body::after {
 
         <div class="jaccount-row">
           <input class="jinput" type="text" id="jNewAccountName" placeholder="New account name, e.g. 100k" maxlength="40">
+          <input class="jinput" type="number" id="jNewAccountBalance" placeholder="Starting balance $" min="0" step="0.01" style="max-width:170px;">
           <button class="jbtn-sm add" id="jAddAccountBtn" onclick="addNewAccount()">+ Add Account</button>
           <button class="jbtn-sm remove" id="jRemoveAccountBtn" style="display:none" onclick="removeCurrentAccount()">Remove Selected</button>
         </div>
@@ -1010,12 +1026,19 @@ body::after {
             <div class="jgrid">
               <div class="jfield"><label class="jlabel">Pair</label><select class="jselect" id="jPair" onchange="updateRulesPreview()"></select></div>
               <div class="jfield"><label class="jlabel">Timeframe</label><select class="jselect" id="jTimeframe" onchange="updateRulesPreview()"></select></div>
-              <div class="jfield"><label class="jlabel">RR</label><select class="jselect" id="jRR" onchange="updateRulesPreview()"></select></div>
+              <div class="jfield"><label class="jlabel">RR</label><select class="jselect" id="jRR" onchange="updateRulesPreview(); suggestPnl();"></select></div>
             </div>
             <div class="jgrid">
               <div class="jfield"><label class="jlabel">Trade Type</label><select class="jselect" id="jTradeType"></select></div>
-              <div class="jfield"><label class="jlabel">Result</label><select class="jselect" id="jResult"></select></div>
+              <div class="jfield"><label class="jlabel">Result</label><select class="jselect" id="jResult" onchange="suggestPnl()"></select></div>
               <div class="jfield"><label class="jlabel">Bias</label><select class="jselect" id="jBias"></select></div>
+            </div>
+            <div class="jgrid">
+              <div class="jfield"><label class="jlabel">Risk Amount ($)</label><input class="jinput" type="number" id="jRisk" min="0" step="0.01" placeholder="0.00" oninput="suggestPnl()"></div>
+              <div class="jfield">
+                <label class="jlabel">P&amp;L ($) <span style="color:var(--txt4);cursor:pointer;text-decoration:underline;" onclick="suggestPnl(true)">↺ recalc</span></label>
+                <input class="jinput" type="number" id="jPnl" step="0.01" placeholder="0.00">
+              </div>
             </div>
             <div class="jfield"><label class="jlabel">Strategy</label><input class="jinput" type="text" id="jStrategy" placeholder="e.g. Liquidity sweep + FVG entry"></div>
             <div class="jfield"><label class="jlabel">Mistake (if any)</label><select class="jselect" id="jMistake"><option value="">— none —</option></select></div>
@@ -1076,7 +1099,7 @@ body::after {
 ══════════════════════════════════════ */
 var APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw8Tke7oCam2wRF4rKx8Nqn4cMnHNpi4E5LIU7AYijC9MAIqLFQGr0TL0xNKy-OnU5j/exec";
 
-var _tok=null, _data=null, _config=null, _chart=null;
+var _tok=null, _data=null, _config=null, _chart=null, _equityChart=null;
 var _month="all", _person="all", _accountId="all";
 var _journalState = { editing:false };
 var _accountsByPerson = {};   // from getAccounts — active + inactive, per person
@@ -1264,7 +1287,7 @@ function renderDashboard(){
   document.getElementById("tradeMeta").textContent = s.total + " trades";
   renderKPI(s); renderResults(s); renderMistakes(s);
   renderDays(s); renderRR(s); renderCompliance(s);
-  renderTrend(); renderWeekly(); renderAccounts();
+  renderTrend(); renderWeekly(); renderAccounts(); renderEquity();
 }
 
 /* ── STATS ── */
@@ -1377,6 +1400,129 @@ function renderRR(s){
     '<div class="rr-pre">1 :</div>'+
     '<div class="rr-num">'+s.avgRR+'</div>'+
     '<div class="rr-cap">Risk / Reward</div>';
+}
+
+/* ── EQUITY ── */
+// Equity is cumulative by nature, so it always uses ALL trades in
+// time order (ignores the Period pill) — it only respects the
+// Person/Account filters. Baseline = sum of starting balances of
+// every account currently in scope.
+function computeEquity(){
+  var accs = (_data.accounts||[]).filter(function(a){
+    return _person==="all" || a.person===_person;
+  }).filter(function(a){
+    return _accountId==="all" || a.accountId===_accountId;
+  });
+  var baseline = accs.reduce(function(sum,a){ return sum + (a.startingBalance||0); }, 0);
+
+  var trades = (_data.trades||[]).filter(function(t){
+    if(_person!=="all" && t.person!==_person) return false;
+    if(_accountId!=="all" && t.accountId!==_accountId) return false;
+    return true;
+  }).slice().sort(function(a,b){ return new Date(a.date) - new Date(b.date); });
+
+  // Aggregate P&L by date so multiple accounts on the same day
+  // become one step in the curve rather than an arbitrary order.
+  var byDate = {};
+  var order  = [];
+  trades.forEach(function(t){
+    if(!byDate[t.dateKey]){ byDate[t.dateKey]=0; order.push(t.dateKey); }
+    byDate[t.dateKey] += (t.pnl||0);
+  });
+
+  var running = baseline, peak = baseline, maxDrawdown = 0;
+  var labels = ["Start"], values = [baseline];
+  order.forEach(function(dk){
+    running += byDate[dk];
+    peak = Math.max(peak, running);
+    maxDrawdown = Math.max(maxDrawdown, peak - running);
+    labels.push(dk);
+    values.push(parseFloat(running.toFixed(2)));
+  });
+
+  var totalPnL = trades.reduce(function(a,t){ return a+(t.pnl||0); }, 0);
+  var grossProfit = trades.filter(function(t){return (t.pnl||0)>0;}).reduce(function(a,t){return a+t.pnl;},0);
+  var grossLoss   = trades.filter(function(t){return (t.pnl||0)<0;}).reduce(function(a,t){return a+Math.abs(t.pnl);},0);
+  var profitFactor = grossLoss>0 ? (grossProfit/grossLoss) : (grossProfit>0 ? null : 0);
+
+  return {
+    baseline: baseline,
+    currentBalance: parseFloat(running.toFixed(2)),
+    totalPnL: parseFloat(totalPnL.toFixed(2)),
+    maxDrawdown: parseFloat(maxDrawdown.toFixed(2)),
+    profitFactor: profitFactor,
+    labels: labels, values: values,
+    hasAny: trades.length>0,
+  };
+}
+
+function fmtMoney(v){
+  var sign = v<0 ? "-" : "";
+  return sign + "$" + Math.abs(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+function renderEquity(){
+  var eq = computeEquity();
+  var pnlCls = eq.totalPnL>0 ? "g" : eq.totalPnL<0 ? "r" : "a";
+  var pfLabel = eq.profitFactor===null ? "∞" : eq.profitFactor.toFixed(2);
+  document.getElementById("equityKpiStrip").innerHTML =
+    kp("Total P&amp;L", fmtMoney(eq.totalPnL), pnlCls, "since starting balance", "d1") +
+    kp("Current Balance", fmtMoney(eq.currentBalance), "b", "baseline "+fmtMoney(eq.baseline), "d2") +
+    kp("Max Drawdown", fmtMoney(-eq.maxDrawdown), "r", "peak to trough", "d3") +
+    kp("Profit Factor", pfLabel, "a", "gross profit / gross loss", "d4");
+
+  var canvas = document.getElementById("equityChart");
+  if(!canvas) return;
+  if(!eq.hasAny){
+    if(_equityChart){ try{_equityChart.destroy();}catch(e){} _equityChart=null; }
+    canvas.parentNode.innerHTML = '<div class="empty" style="height:210px;display:flex;align-items:center;justify-content:center;">No trades with P&amp;L logged yet</div>';
+    return;
+  }
+  if(!document.getElementById("equityChart")){
+    var wrap = document.querySelectorAll(".chart-wrap")[document.querySelectorAll(".chart-wrap").length-1];
+  }
+  if(_equityChart){ try{_equityChart.destroy();}catch(e){} _equityChart=null; }
+  var lineColor = eq.currentBalance>=eq.baseline ? "#3ECFB5" : "#E05252";
+  _equityChart = new Chart(canvas, {
+    type: "line",
+    data: { labels: eq.labels, datasets:[{
+      label:"Balance", data: eq.values,
+      borderColor: lineColor,
+      backgroundColor: function(ctx){
+        var g = ctx.chart.ctx.createLinearGradient(0,0,0,210);
+        g.addColorStop(0, lineColor+"22");
+        g.addColorStop(1, lineColor+"00");
+        return g;
+      },
+      borderWidth:2, fill:true, tension:0.25,
+      pointRadius:0, pointHoverRadius:5,
+      pointBackgroundColor:lineColor, pointBorderColor:"#0A0A0C",
+    }]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:"#111115", borderColor:"rgba(255,255,255,0.08)", borderWidth:1,
+          titleColor:"#F2F0EC", titleFont:{family:"'Sora',sans-serif",size:12,weight:"700"},
+          bodyColor:"#AEAAA4", bodyFont:{family:"'JetBrains Mono',monospace",size:10},
+          padding:16, cornerRadius:10,
+          callbacks:{ label:function(c){ return fmtMoney(c.parsed.y); } }
+        }
+      },
+      scales:{
+        y:{
+          grid:{color:"rgba(255,255,255,0.03)", drawBorder:false},
+          border:{color:"transparent"},
+          ticks:{color:"#3E3C38", font:{family:"'JetBrains Mono',monospace",size:9}, callback:function(v){return "$"+v;}}
+        },
+        x:{
+          grid:{display:false}, border:{color:"rgba(255,255,255,0.05)"},
+          ticks:{color:"#3E3C38", font:{family:"'JetBrains Mono',monospace",size:9}, maxRotation:40, autoSkip:true, maxTicksLimit:10}
+        }
+      }
+    }
+  });
 }
 
 /* ── GAUGE ── */
