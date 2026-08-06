@@ -679,7 +679,7 @@ body::after {
 
 .empty { text-align: center; padding: 36px; font-family: var(--font-display); font-size: 11px; font-weight: 400; color: var(--txt4); letter-spacing: 0.16em; }
 
-.journal-wrap { max-width: 680px; margin: 0 auto; }
+.journal-wrap { max-width: 880px; margin: 0 auto; }
 
 .jgrid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 14px; }
 .jfield { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
@@ -832,11 +832,20 @@ body::after {
   font-size: 14px; pointer-events: none; opacity: 0.6;
 }
 .dp-pop {
-  position: absolute; z-index: 5000;
+  /* position:fixed (not absolute) — the popup is anchored to the
+     viewport, not to document flow. This keeps it from getting
+     dragged around or clipped when it's appended to <body> and
+     also keeps positioning math simple: no scroll offsets needed. */
+  position: fixed;
+  z-index: 10001; /* above #cursorCanvas (9998) so the mouse-trail
+                      dots never render on top of the calendar */
   background: var(--bg3); border: 1px solid var(--border3);
   border-radius: var(--r2); padding: 14px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.6);
   width: 264px;
+  max-width: calc(100vw - 16px);
+  max-height: calc(100vh - 16px);
+  overflow-y: auto;
   font-family: var(--font-display);
   animation: fadeUp 0.15s ease both;
 }
@@ -845,6 +854,7 @@ body::after {
   background: var(--bg4); border: 1px solid var(--border2); color: var(--txt2);
   width: 26px; height: 26px; border-radius: 6px; cursor: pointer; font-size: 14px;
   display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
 }
 .dp-nav:hover { border-color: var(--gold-rim); color: var(--gold); }
 .dp-title { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: var(--txt); text-transform: uppercase; }
@@ -2483,6 +2493,14 @@ function gotoPayout(accountId){
    letting the user type. The field's visible text is dd/mm/yyyy;
    the real yyyy-mm-dd value used for backend calls lives in the
    input's `data-iso` attribute, accessed via getDateISO/setDateISO.
+
+   Positioning: the popup is appended to <body> and positioned with
+   position:fixed, measured against the input's own
+   getBoundingClientRect(). It's clamped on BOTH axes so it can
+   never render partially off-screen (that was previously only
+   done horizontally), and it flips above the input if there isn't
+   room below. z-index is kept above #cursorCanvas so the mouse
+   trail effect never paints over it.
 ══════════════════════════════════════ */
 var _dpActiveInput = null, _dpViewDate = null;
 
@@ -2516,17 +2534,14 @@ function openDatePicker(inputId){
   var pop = document.createElement("div");
   pop.className = "dp-pop";
   pop.id = "dpPop";
+  // Render invisibly first so we can measure its real size (it can
+  // be narrower than 264px on small viewports because of the
+  // max-width clamp), then position it precisely against the input.
+  pop.style.visibility = "hidden";
   document.body.appendChild(pop);
   renderDatePicker();
-
-  var rect = input.getBoundingClientRect();
-  var popW = 264;
-  var left = window.scrollX + rect.left;
-  // Keep the popup from overflowing off the right edge of the viewport.
-  var maxLeft = window.scrollX + document.documentElement.clientWidth - popW - 8;
-  if(left > maxLeft) left = Math.max(window.scrollX + 8, maxLeft);
-  pop.style.top = (window.scrollY + rect.bottom + 6) + "px";
-  pop.style.left = left + "px";
+  positionDatePicker(input);
+  pop.style.visibility = "visible";
 
   // Use a flag instead of a delayed listener so that clicks on the
   // popup's own controls (month nav, day cells) never trigger a
@@ -2534,14 +2549,50 @@ function openDatePicker(inputId){
   _dpJustOpened = true;
   document.addEventListener("click", onDpOutsideClick, true);
   document.addEventListener("scroll", closeDatePicker, true);
+  window.addEventListener("resize", closeDatePicker, true);
   setTimeout(function(){ _dpJustOpened = false; }, 0);
 }
+
+function positionDatePicker(input){
+  var pop = document.getElementById("dpPop");
+  if(!pop || !input) return;
+  var rect = input.getBoundingClientRect();
+  var vw = document.documentElement.clientWidth;
+  var vh = document.documentElement.clientHeight;
+  var popRect = pop.getBoundingClientRect();
+  var popW = popRect.width;
+  var popH = popRect.height;
+
+  // Horizontal: align to the input's left edge, but never let the
+  // popup spill past either side of the viewport.
+  var left = rect.left;
+  var maxLeft = vw - popW - 8;
+  if(left > maxLeft) left = Math.max(8, maxLeft);
+  if(left < 8) left = 8;
+
+  // Vertical: prefer just below the input; if there isn't room
+  // underneath, flip it above the input instead of letting it run
+  // off the bottom of the screen.
+  var top = rect.bottom + 6;
+  if(top + popH > vh - 8){
+    var above = rect.top - popH - 6;
+    top = above > 8 ? above : Math.max(8, vh - popH - 8);
+  }
+
+  // position:fixed is relative to the viewport, so no scroll offset
+  // is needed here — this also means the popup can never get cut
+  // off by an ancestor element's overflow clipping.
+  pop.style.top = top + "px";
+  pop.style.left = left + "px";
+}
+
 var _dpJustOpened = false;
 function closeDatePicker(){
   var pop = document.getElementById("dpPop");
   if(pop) pop.remove();
   document.removeEventListener("click", onDpOutsideClick, true);
   document.removeEventListener("scroll", closeDatePicker, true);
+  window.removeEventListener("resize", closeDatePicker, true);
   _dpActiveInput = null;
 }
 function onDpOutsideClick(e){
@@ -2565,6 +2616,10 @@ function onDpOutsideClick(e){
 function dpChangeMonth(delta){
   _dpViewDate = new Date(_dpViewDate.getFullYear(), _dpViewDate.getMonth()+delta, 1);
   renderDatePicker();
+  // Row count (4/5/6 weeks) can change between months, which changes
+  // the popup's height — reposition so it stays clamped in view.
+  var input = _dpActiveInput ? document.getElementById(_dpActiveInput) : null;
+  if(input) positionDatePicker(input);
 }
 function renderDatePicker(){
   var pop = document.getElementById("dpPop");
