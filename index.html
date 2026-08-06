@@ -377,7 +377,6 @@ body::after {
   -webkit-backdrop-filter: blur(24px) saturate(1.8);
   border-bottom: 1px solid var(--border2);
 }
-/* Subtle golden underline on topbar */
 .topbar::after {
   content: '';
   position: absolute; left: 0; right: 0; bottom: 0; height: 1px;
@@ -468,6 +467,29 @@ body::after {
   transition: all 0.2s;
 }
 .logout-btn:hover { border-color: var(--red-rim); color: var(--red); background: var(--red-bg); }
+
+/* ══════════════════════════════════════
+   NAV TABS
+══════════════════════════════════════ */
+.navbar {
+  display: flex; gap: 4px;
+  padding: 10px 32px 0;
+  background: rgba(10,10,12,0.88);
+  border-bottom: 1px solid var(--border);
+}
+.navtab {
+  font-family: var(--font-display);
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--txt3);
+  background: none; border: none;
+  padding: 10px 18px 12px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+.navtab:hover { color: var(--txt2); }
+.navtab.active { color: var(--gold); border-bottom-color: var(--gold); }
 
 /* ══════════════════════════════════════
    TICKER
@@ -617,7 +639,6 @@ body::after {
   box-shadow: 0 20px 60px rgba(0,0,0,0.6);
 }
 
-/* Top accent line */
 .kpi::before {
   content: '';
   position: absolute; top:0; left: 20%; right: 20%; height: 1px;
@@ -630,7 +651,6 @@ body::after {
 .kpi.a::before { background: linear-gradient(90deg, transparent, var(--gold),  transparent); box-shadow: 0 0 12px var(--gold); }
 .kpi.b::before { background: linear-gradient(90deg, transparent, var(--blue),  transparent); box-shadow: 0 0 12px var(--blue); }
 
-/* BG blob */
 .kpi::after {
   content: '';
   position: absolute;
@@ -904,7 +924,7 @@ body::after {
 /* ══════════════════════════════════════
    ACCOUNT CARDS
 ══════════════════════════════════════ */
-.acc-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.acc-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
 
 .acc-card {
   background: var(--bg3);
@@ -963,6 +983,108 @@ body::after {
 .empty { text-align: center; padding: 36px; font-family: var(--font-display); font-size: 11px; font-weight: 400; color: var(--txt4); letter-spacing: 0.16em; }
 
 /* ══════════════════════════════════════
+   LOG TRADE FORM
+══════════════════════════════════════ */
+.journal-wrap { max-width: 680px; margin: 0 auto; }
+
+.jgrid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+.jfield { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.jgrid .jfield { margin-bottom: 0; }
+.jlabel {
+  font-family: var(--font-display);
+  font-size: 9px; font-weight: 600;
+  color: var(--txt3);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.jselect, .jinput {
+  padding: 12px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: var(--r2);
+  color: var(--txt);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.jselect:focus, .jinput:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--gold-glow);
+}
+.jcheck {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--font-display); font-size: 11px; color: var(--txt2);
+  margin-bottom: 18px; cursor: pointer;
+}
+.jcheck input { width: 15px; height: 15px; accent-color: var(--gold); cursor: pointer; }
+
+.jstatus {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--txt3);
+  padding: 11px 14px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  margin-bottom: 18px;
+}
+.jstatus b { color: var(--gold); font-weight: 600; }
+
+.jrules {
+  font-family: var(--font-display);
+  font-size: 12px; font-weight: 600;
+  padding: 12px 16px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  margin: 4px 0 22px;
+}
+
+.jactions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.jsubmit-btn {
+  padding: 16px 32px;
+  background: var(--gold);
+  color: #08070A;
+  border: none;
+  border-radius: var(--r2);
+  font-family: var(--font-display);
+  font-size: 12px; font-weight: 700;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.jsubmit-btn:hover { background: var(--gold-lt); box-shadow: 0 0 30px rgba(200,168,75,0.3); }
+.jsubmit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.jdelete-btn {
+  padding: 16px 24px;
+  background: none;
+  border: 1px solid var(--red-rim);
+  color: var(--red);
+  border-radius: var(--r2);
+  font-family: var(--font-display);
+  font-size: 12px; font-weight: 700;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.jdelete-btn:hover { background: var(--red-bg); }
+
+.jerr {
+  margin-top: 14px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  color: var(--red);
+}
+.jok {
+  margin-top: 14px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  color: var(--green);
+}
+
+/* ══════════════════════════════════════
    STAGGER DELAYS
 ══════════════════════════════════════ */
 .d1{animation-delay:.06s}.d2{animation-delay:.12s}.d3{animation-delay:.18s}
@@ -997,10 +1119,11 @@ body::after {
 }
 @media(max-width:780px) {
   .g21,.g2 { grid-template-columns: 1fr; }
-  .acc-cards { grid-template-columns: 1fr; }
   .page { padding: 18px 16px 80px; }
   .topbar { padding: 0 18px; }
+  .navbar { padding: 10px 18px 0; }
   .kpi-val { font-size: 44px; }
+  .jgrid { grid-template-columns: 1fr; }
 }
 @media(max-width:520px) {
   .kpi-strip { grid-template-columns: 1fr 1fr; }
@@ -1083,20 +1206,30 @@ body::after {
     </div>
   </div>
 
+  <!-- NAV TABS -->
+  <div class="navbar">
+    <button class="navtab active" data-tab="analytics" onclick="showTab('analytics')">📊 Analytics</button>
+    <button class="navtab" data-tab="journal" onclick="showTab('journal')">📝 Log Trade</button>
+  </div>
+
   <!-- TICKER -->
   <div class="ticker-wrap">
     <div class="ticker-inner" id="tickerInner"></div>
   </div>
 
-  <div class="page">
+  <!-- ══════ ANALYTICS PAGE ══════ -->
+  <div class="page" id="analyticsPage">
 
     <!-- FILTER ROW -->
     <div class="filter-row">
       <span class="filter-label">Period</span>
       <div id="monthPills"></div>
       <div class="f-sep"></div>
+      <span class="filter-label">Person</span>
+      <div id="personPills"></div>
+      <div class="f-sep"></div>
       <span class="filter-label">Account</span>
-      <div id="accPills"></div>
+      <div id="accountPills"></div>
     </div>
 
     <!-- KPI STRIP -->
@@ -1181,6 +1314,65 @@ body::after {
     </div>
 
   </div>
+
+  <!-- ══════ JOURNAL PAGE ══════ -->
+  <div class="page" id="journalPage" style="display:none">
+    <div class="journal-wrap">
+      <div class="panel d1">
+        <div class="ptitle">Log a Trade</div>
+        <div class="psub">Writes straight to the sheet — one entry per account per day</div>
+
+        <div class="jgrid">
+          <div class="jfield">
+            <label class="jlabel">Person</label>
+            <select class="jselect" id="jPerson" onchange="onPersonChange()"></select>
+          </div>
+          <div class="jfield">
+            <label class="jlabel">Account</label>
+            <select class="jselect" id="jAccount" onchange="onKeyFieldChange()"></select>
+          </div>
+          <div class="jfield">
+            <label class="jlabel">Date</label>
+            <input class="jinput" type="date" id="jDate" onchange="onKeyFieldChange()">
+          </div>
+        </div>
+
+        <div class="jstatus" id="jStatusBanner">Loading…</div>
+
+        <div id="jTradeFields" style="display:none;">
+          <label class="jcheck">
+            <input type="checkbox" id="jNoTrade" onchange="toggleNoTrade()">
+            No trade taken this day
+          </label>
+
+          <div id="jDetailFields">
+            <div class="jgrid">
+              <div class="jfield"><label class="jlabel">Pair</label><select class="jselect" id="jPair" onchange="updateRulesPreview()"></select></div>
+              <div class="jfield"><label class="jlabel">Timeframe</label><select class="jselect" id="jTimeframe" onchange="updateRulesPreview()"></select></div>
+              <div class="jfield"><label class="jlabel">RR</label><select class="jselect" id="jRR" onchange="updateRulesPreview()"></select></div>
+            </div>
+            <div class="jgrid">
+              <div class="jfield"><label class="jlabel">Trade Type</label><select class="jselect" id="jTradeType"></select></div>
+              <div class="jfield"><label class="jlabel">Result</label><select class="jselect" id="jResult"></select></div>
+              <div class="jfield"><label class="jlabel">Bias</label><select class="jselect" id="jBias"></select></div>
+            </div>
+            <div class="jfield"><label class="jlabel">Strategy</label><input class="jinput" type="text" id="jStrategy" placeholder="e.g. Liquidity sweep + FVG entry"></div>
+            <div class="jfield"><label class="jlabel">Mistake (if any)</label><select class="jselect" id="jMistake"><option value="">— none —</option></select></div>
+
+            <div class="jrules" id="jRulesPreview"></div>
+          </div>
+
+          <div class="jactions">
+            <button class="jsubmit-btn" id="jSubmitBtn" onclick="submitTrade()">Save Entry</button>
+            <button class="jdelete-btn" id="jDeleteBtn" style="display:none" onclick="deleteTradeEntry()">Delete Entry</button>
+          </div>
+          <div class="jerr" id="jErr"></div>
+          <div class="jok" id="jOk"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -1193,7 +1385,6 @@ body::after {
   var ctx = canvas.getContext("2d");
   var W, H;
   var dots = [];
-  var mouse = {x:-999, y:-999};
 
   function resize(){
     W = canvas.width  = window.innerWidth;
@@ -1203,7 +1394,6 @@ body::after {
   resize();
 
   window.addEventListener("mousemove", function(e){
-    mouse.x = e.clientX; mouse.y = e.clientY;
     dots.push({x:e.clientX, y:e.clientY, r:2.5, a:0.5, life:1});
   });
 
@@ -1229,7 +1419,9 @@ body::after {
 ══════════════════════════════════════ */
 var APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz3wXuBcubXfntU60v8jdXMvXahwOPAxkAbpPSvMNHrF-g7hn0bxtXwXxaKJ7OMJYiK/exec";
 
-var _tok=null, _data=null, _chart=null, _month="all", _acc="all";
+var _tok=null, _data=null, _config=null, _chart=null;
+var _month="all", _person="all", _account="all";
+var _journalState = { editing:false };
 
 /* ── LOADER ── */
 var _lp=0, _lt=setInterval(function(){
@@ -1279,7 +1471,7 @@ async function doLogin(){
 }
 
 function doLogout(){
-  sessionStorage.removeItem("tj_tok"); _tok=null; _data=null;
+  sessionStorage.removeItem("tj_tok"); _tok=null; _data=null; _config=null;
   document.getElementById("app").style.display = "none";
   document.getElementById("pw").value = ""; showLogin();
 }
@@ -1287,12 +1479,24 @@ function doLogout(){
 function fetchData(){
   document.getElementById("loaderText").textContent = "Loading trades…";
   jsonp(APPS_SCRIPT_URL + "?action=getDashboardData&token=" + encodeURIComponent(_tok), function(d){
-    finishLoader();
     if(!d || !d.success){
+      finishLoader();
       sessionStorage.removeItem("tj_tok"); _tok=null; showLogin();
       showErr((d&&d.error)||"Session expired."); return;
     }
-    _data = d; renderAll();
+    _data = d;
+    document.getElementById("loaderText").textContent = "Loading config…";
+    jsonp(APPS_SCRIPT_URL + "?action=getConfig&token=" + encodeURIComponent(_tok), function(c){
+      finishLoader();
+      if(c && c.success) _config = c;
+      renderAll();
+    });
+  });
+}
+
+function refreshDashboardQuietly(){
+  jsonp(APPS_SCRIPT_URL + "?action=getDashboardData&token=" + encodeURIComponent(_tok), function(d){
+    if(d && d.success){ _data = d; buildTicker(); buildFilters(); renderDashboard(); }
   });
 }
 
@@ -1301,6 +1505,14 @@ function renderAll(){
   document.getElementById("genTime").textContent = _data.generatedAt;
   document.getElementById("app").style.display = "block";
   buildTicker(); buildFilters(); renderDashboard();
+}
+
+/* ── TAB SWITCHING ── */
+function showTab(name){
+  document.getElementById("analyticsPage").style.display = name==="analytics" ? "block" : "none";
+  document.getElementById("journalPage").style.display   = name==="journal"   ? "block" : "none";
+  document.querySelectorAll(".navtab").forEach(function(el){ el.classList.toggle("active", el.dataset.tab===name); });
+  if(name==="journal") initJournal();
 }
 
 /* ── TICKER ── */
@@ -1315,14 +1527,13 @@ function buildTicker(){
     {k:"Win Rate",     v:wr+"%",  cls:wr>=55?"up":"dn"},
     {k:"Wins",         v:wins,    cls:"up"},
     {k:"Losses",       v:losses,  cls:"dn"},
-    {k:"Accounts",     v:(_data.accounts||[]).length, cls:""},
   ];
   (_data.accounts||[]).forEach(function(a){
-    var s = _data.accountStats[a];
-    if(s) items.push({k:a.replace(" Trades",""), v:s.winRate+"%", cls:s.winRate>=55?"up":"dn"});
+    var s = _data.accountStats[a.label];
+    if(s) items.push({k:a.label, v:s.winRate+"%", cls:s.winRate>=55?"up":"dn"});
   });
   var html = items.map(function(it){
-    return '<div class="ticker-item"><span class="ticker-key">'+it.k+'</span><span class="ticker-sep"></span><span class="ticker-val '+it.cls+'">'+it.v+'</span></div>';
+    return '<div class="ticker-item"><span class="ticker-key">'+esc(it.k)+'</span><span class="ticker-sep"></span><span class="ticker-val '+it.cls+'">'+it.v+'</span></div>';
   }).join("");
   document.getElementById("tickerInner").innerHTML = html + html;
 }
@@ -1333,27 +1544,39 @@ function buildFilters(){
   document.getElementById("monthPills").innerHTML =
     mkPill("all","All Time","pill active","selMonth") +
     months.map(function(m){ return mkPill(m, niceMonth(m), "pill", "selMonth"); }).join("");
-  document.getElementById("accPills").innerHTML =
-    mkPill("all","Both","pill acc active","selAcc") +
-    (_data.accounts||[]).map(function(a){ return mkPill(a, a.replace(" Trades",""), "pill acc", "selAcc"); }).join("");
+
+  var people = Object.keys(_data.people||{});
+  document.getElementById("personPills").innerHTML =
+    mkPill("all","All","pill acc active","selPerson") +
+    people.map(function(p){ return mkPill(p, p, "pill acc", "selPerson"); }).join("");
+
+  buildAccountPills();
+}
+
+function buildAccountPills(){
+  var accs = (_data.accounts||[]).filter(function(a){ return _person==="all" || a.person===_person; });
+  document.getElementById("accountPills").innerHTML =
+    mkPill("all","All","pill acc active","selAccount") +
+    accs.map(function(a){ return mkPill(a.label, a.account, "pill acc", "selAccount"); }).join("");
+  _account = "all";
 }
 
 function mkPill(val,label,cls,fn){
-  return '<button class="'+cls+'" data-v="'+val+'" onclick="'+fn+'(\''+val+'\')">'+label+'</button>';
+  return '<button class="'+cls+'" data-v="'+val+'" onclick="'+fn+'(\''+val.replace(/'/g,"\\'")+'\')">'+label+'</button>';
 }
-function selMonth(m){
-  _month = m;
-  document.querySelectorAll(".pill:not(.acc)").forEach(function(el){ el.classList.toggle("active", el.dataset.v===m); });
-  renderDashboard();
+function setActive(containerId, val){
+  document.querySelectorAll('#'+containerId+' .pill').forEach(function(el){
+    el.classList.toggle('active', el.dataset.v===val);
+  });
 }
-function selAcc(a){
-  _acc = a;
-  document.querySelectorAll(".acc").forEach(function(el){ el.classList.toggle("active", el.dataset.v===a); });
-  renderDashboard();
-}
+function selMonth(m){ _month=m; setActive('monthPills', m); renderDashboard(); }
+function selPerson(p){ _person=p; setActive('personPills', p); buildAccountPills(); renderDashboard(); }
+function selAccount(a){ _account=a; setActive('accountPills', a); renderDashboard(); }
+
 function getFiltered(){
   return (_data?_data.trades:[]).filter(function(t){
-    if(_acc!=="all" && t.account!==_acc) return false;
+    if(_person!=="all" && t.person!==_person) return false;
+    if(_account!=="all" && t.label!==_account) return false;
     if(_month!=="all" && t.month!==_month) return false;
     return true;
   });
@@ -1366,7 +1589,7 @@ function renderDashboard(){
   document.getElementById("tradeMeta").textContent = s.total + " trades";
   renderKPI(s); renderResults(s); renderMistakes(s);
   renderDays(s); renderRR(s); renderCompliance(s);
-  renderTrend(); renderWeekly(trades); renderAccounts();
+  renderTrend(); renderWeekly(); renderAccounts();
 }
 
 /* ── STATS ── */
@@ -1502,7 +1725,11 @@ function renderCompliance(s){
 
 /* ── MONTHLY TREND ── */
 function renderTrend(){
-  var trades = _acc==="all" ? _data.trades : _data.trades.filter(function(t){ return t.account===_acc; });
+  var trades = (_data.trades||[]).filter(function(t){
+    if(_person!=="all" && t.person!==_person) return false;
+    if(_account!=="all" && t.label!==_account) return false;
+    return true;
+  });
   var mMap   = {};
   trades.forEach(function(t){
     if(!t.month) return;
@@ -1588,10 +1815,15 @@ function renderTrend(){
 }
 
 /* ── WEEKLY TABLE ── */
-function renderWeekly(trades){
+function matchesLabel(label){
+  var person = label.split(" · ")[0];
+  if(_person!=="all" && person!==_person) return false;
+  if(_account!=="all" && label!==_account) return false;
+  return true;
+}
+function renderWeekly(){
   var weekly = (_data.weekly||[]).filter(function(w){
-    if(_acc==="all") return true;
-    return Object.keys(w.acctSplit||{}).indexOf(_acc)!==-1;
+    return Object.keys(w.labelSplit||{}).some(matchesLabel);
   }).reverse().slice(0,12);
   if(!weekly.length){
     document.getElementById("weeklyTable").innerHTML = '<div class="empty">No weekly data yet</div>';
@@ -1623,11 +1855,11 @@ function renderAccounts(){
   if(!_data.accountStats) return;
   var h = "";
   (_data.accounts||[]).forEach(function(a){
-    var s = _data.accountStats[a];
+    var s = _data.accountStats[a.label];
     if(!s) return;
     var col = s.winRate>=60 ? "var(--green)" : s.winRate>=40 ? "var(--gold)" : "var(--red)";
     h += '<div class="acc-card">'+
-      '<div class="acc-name">'+a.replace(" Trades","")+'</div>'+
+      '<div class="acc-name">'+esc(a.label)+'</div>'+
       '<div class="acc-wr" style="color:'+col+'">'+s.winRate+'%</div>'+
       '<div class="acc-grid">'+
         '<div><div class="acc-sv">'+s.total+'</div><div class="acc-sl">Trades</div></div>'+
@@ -1637,7 +1869,198 @@ function renderAccounts(){
       '</div>'+
     '</div>';
   });
-  document.getElementById("accCards").innerHTML = h;
+  document.getElementById("accCards").innerHTML = h || '<div class="empty">No accounts yet</div>';
+}
+
+/* ══════════════════════════════════════
+   LOG TRADE (JOURNAL)
+══════════════════════════════════════ */
+function todayISO(){
+  var d = new Date();
+  var tz = d.getTimezoneOffset()*60000;
+  return new Date(d - tz).toISOString().slice(0,10);
+}
+
+function optHTML(list){
+  return list.map(function(v){ return '<option value="'+v+'">'+v+'</option>'; }).join("");
+}
+
+function initJournal(){
+  if(!_config){ document.getElementById("jStatusBanner").textContent = "Config didn't load — try reloading."; return; }
+  document.getElementById("jPerson").innerHTML     = optHTML(Object.keys(_config.people));
+  document.getElementById("jPair").innerHTML       = optHTML(_config.pairs);
+  document.getElementById("jTimeframe").innerHTML  = optHTML(_config.timeframes);
+  document.getElementById("jTradeType").innerHTML  = optHTML(_config.tradeTypes);
+  document.getElementById("jRR").innerHTML         = optHTML(_config.rrOptions);
+  document.getElementById("jResult").innerHTML     = optHTML(_config.results);
+  document.getElementById("jBias").innerHTML       = optHTML(_config.biases);
+  document.getElementById("jMistake").innerHTML    = '<option value="">— none —</option>' + optHTML(_config.mistakes);
+  if(!document.getElementById("jDate").value) document.getElementById("jDate").value = todayISO();
+  onPersonChange();
+}
+
+function onPersonChange(){
+  var p = document.getElementById("jPerson").value;
+  var accs = (_config.people[p]||[]);
+  document.getElementById("jAccount").innerHTML = optHTML(accs);
+  onKeyFieldChange();
+}
+
+function onKeyFieldChange(){
+  checkExistingTrade();
+}
+
+function checkExistingTrade(){
+  var person  = document.getElementById("jPerson").value;
+  var account = document.getElementById("jAccount").value;
+  var date    = document.getElementById("jDate").value;
+  document.getElementById("jOk").textContent = "";
+  document.getElementById("jErr").textContent = "";
+  if(!person || !account || !date){
+    document.getElementById("jTradeFields").style.display = "none";
+    document.getElementById("jStatusBanner").textContent = "Pick a person, account, and date to begin";
+    return;
+  }
+  document.getElementById("jStatusBanner").textContent = "Checking…";
+  jsonp(APPS_SCRIPT_URL + "?action=getTrade&token=" + encodeURIComponent(_tok) +
+        "&person=" + encodeURIComponent(person) +
+        "&account=" + encodeURIComponent(account) +
+        "&date=" + encodeURIComponent(date), function(d){
+    document.getElementById("jTradeFields").style.display = "block";
+    if(!d || !d.success){
+      document.getElementById("jStatusBanner").textContent = (d && d.error) || "Could not check existing entry.";
+      return;
+    }
+    if(d.exists){
+      _journalState = { editing:true };
+      fillJournalForm(d.trade);
+      document.getElementById("jStatusBanner").innerHTML = '✏️ Editing existing entry for <b>'+esc(date)+'</b>';
+      document.getElementById("jSubmitBtn").textContent = "Update Entry";
+      document.getElementById("jDeleteBtn").style.display = "inline-block";
+    } else {
+      _journalState = { editing:false };
+      resetJournalForm();
+      document.getElementById("jStatusBanner").innerHTML = '🆕 New entry for <b>'+esc(date)+'</b>';
+      document.getElementById("jSubmitBtn").textContent = "Save Entry";
+      document.getElementById("jDeleteBtn").style.display = "none";
+    }
+    updateRulesPreview();
+  });
+}
+
+function fillJournalForm(t){
+  var isNoTrade = t.pair === "NO TRADE";
+  document.getElementById("jNoTrade").checked = isNoTrade;
+  toggleNoTrade();
+  if(!isNoTrade){
+    setSelectValue("jPair", t.pair);
+    setSelectValue("jTimeframe", t.timeframe);
+    setSelectValue("jTradeType", t.tradeType);
+    setSelectValue("jRR", t.rr);
+    setSelectValue("jResult", t.result);
+    setSelectValue("jBias", t.bias);
+    document.getElementById("jStrategy").value = t.strategy || "";
+    setSelectValue("jMistake", t.mistakes || "");
+  }
+}
+function setSelectValue(id, val){
+  var el = document.getElementById(id);
+  if(val) el.value = val;
+}
+function resetJournalForm(){
+  document.getElementById("jNoTrade").checked = false;
+  toggleNoTrade();
+  document.getElementById("jPair").selectedIndex = 0;
+  document.getElementById("jTimeframe").selectedIndex = 0;
+  document.getElementById("jTradeType").selectedIndex = 0;
+  document.getElementById("jRR").selectedIndex = 0;
+  document.getElementById("jResult").selectedIndex = 0;
+  document.getElementById("jBias").selectedIndex = 0;
+  document.getElementById("jStrategy").value = "";
+  document.getElementById("jMistake").value = "";
+}
+function toggleNoTrade(){
+  var on = document.getElementById("jNoTrade").checked;
+  document.getElementById("jDetailFields").style.display = on ? "none" : "block";
+}
+
+function updateRulesPreview(){
+  if(!_config) return;
+  var pair = document.getElementById("jPair").value;
+  var tf   = document.getElementById("jTimeframe").value;
+  var rr   = document.getElementById("jRR").value;
+  var pairOk  = pair === _config.sharedRules.pair;
+  var validTf = _config.timeframeRR.hasOwnProperty(tf);
+  var allowed = validTf ? _config.timeframeRR[tf] : [];
+  var rrOk    = validTf && allowed.indexOf(rr) !== -1;
+  var ok      = pairOk && validTf && rrOk;
+  var el = document.getElementById("jRulesPreview");
+  if(ok){
+    el.innerHTML = '<span style="color:var(--green)">✓ Rules followed</span>';
+  } else {
+    var hint = validTf ? ("needs RR "+allowed.join(" or ")+" on "+tf) : (tf+" is not a valid rule timeframe");
+    if(!pairOk) hint = "pair must be " + _config.sharedRules.pair + (validTf ? " · " + hint : "");
+    el.innerHTML = '<span style="color:var(--red)">✗ Rules broken — '+esc(hint)+'</span>';
+  }
+}
+
+function submitTrade(){
+  var person  = document.getElementById("jPerson").value;
+  var account = document.getElementById("jAccount").value;
+  var date    = document.getElementById("jDate").value;
+  var noTrade = document.getElementById("jNoTrade").checked;
+
+  var params = "token=" + encodeURIComponent(_tok) +
+    "&person=" + encodeURIComponent(person) +
+    "&account=" + encodeURIComponent(account) +
+    "&date=" + encodeURIComponent(date) +
+    "&noTrade=" + (noTrade ? "true" : "false");
+
+  if(!noTrade){
+    params += "&pair="      + encodeURIComponent(document.getElementById("jPair").value)
+            + "&timeframe=" + encodeURIComponent(document.getElementById("jTimeframe").value)
+            + "&tradeType=" + encodeURIComponent(document.getElementById("jTradeType").value)
+            + "&rr="        + encodeURIComponent(document.getElementById("jRR").value)
+            + "&result="    + encodeURIComponent(document.getElementById("jResult").value)
+            + "&bias="      + encodeURIComponent(document.getElementById("jBias").value)
+            + "&strategy="  + encodeURIComponent(document.getElementById("jStrategy").value)
+            + "&mistakes="  + encodeURIComponent(document.getElementById("jMistake").value);
+  }
+
+  var action = _journalState.editing ? "updateTrade" : "logTrade";
+  document.getElementById("jSubmitBtn").disabled = true;
+  document.getElementById("jErr").textContent = "";
+  document.getElementById("jOk").textContent = "";
+
+  jsonp(APPS_SCRIPT_URL + "?action=" + action + "&" + params, function(d){
+    document.getElementById("jSubmitBtn").disabled = false;
+    if(!d || !d.success){
+      document.getElementById("jErr").textContent = (d && d.error) || "Something went wrong.";
+      return;
+    }
+    document.getElementById("jOk").textContent = "Saved ✓";
+    checkExistingTrade();
+    refreshDashboardQuietly();
+  });
+}
+
+function deleteTradeEntry(){
+  if(!confirm("Delete this entry? This can't be undone.")) return;
+  var person  = document.getElementById("jPerson").value;
+  var account = document.getElementById("jAccount").value;
+  var date    = document.getElementById("jDate").value;
+  jsonp(APPS_SCRIPT_URL + "?action=deleteTrade&token=" + encodeURIComponent(_tok) +
+        "&person=" + encodeURIComponent(person) +
+        "&account=" + encodeURIComponent(account) +
+        "&date=" + encodeURIComponent(date), function(d){
+    if(!d || !d.success){
+      document.getElementById("jErr").textContent = (d && d.error) || "Could not delete.";
+      return;
+    }
+    document.getElementById("jOk").textContent = "Deleted ✓";
+    checkExistingTrade();
+    refreshDashboardQuietly();
+  });
 }
 
 /* ── UTILS ── */
