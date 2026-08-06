@@ -369,7 +369,7 @@ body::after {
 .logout-btn:hover { border-color: var(--red-rim); color: var(--red); background: var(--red-bg); }
 
 .navbar {
-  display: flex; gap: 4px; padding: 10px 32px 0;
+  display: flex; gap: 4px; padding: 10px 32px 0; flex-wrap: wrap;
   background: rgba(10,10,12,0.88);
   border-bottom: 1px solid var(--border);
 }
@@ -380,6 +380,7 @@ body::after {
   padding: 10px 18px 12px; cursor: pointer;
   border-bottom: 2px solid transparent;
   transition: color 0.2s, border-color 0.2s;
+  white-space: nowrap;
 }
 .navtab:hover { color: var(--txt2); }
 .navtab.active { color: var(--gold); border-bottom-color: var(--gold); }
@@ -460,6 +461,7 @@ body::after {
 }
 
 .kpi-strip { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 32px; }
+.kpi-strip.k3 { grid-template-columns: repeat(3,1fr); }
 
 .kpi {
   background: var(--bg2); border: 1px solid var(--border);
@@ -644,27 +646,25 @@ body::after {
 }
 .acc-card:hover { border-color: var(--border2); transform: translateY(-2px); }
 .acc-card:hover::after { background: linear-gradient(180deg, transparent, var(--gold), transparent); }
-.acc-card.inactive { opacity: 0.55; }
-.acc-card.inactive::after { background: linear-gradient(180deg, transparent, var(--red), transparent); }
 
-.acc-name { font-family: var(--font-display); font-size: 8px; font-weight: 700; letter-spacing: 0.3em; text-transform: uppercase; color: var(--txt4); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
-.acc-name .removed-tag { color: var(--red); font-weight: 600; letter-spacing: 0.1em; text-transform: none; font-size: 8px; }
+.acc-name { font-family: var(--font-display); font-size: 8px; font-weight: 700; letter-spacing: 0.3em; text-transform: uppercase; color: var(--txt4); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .acc-wr { font-family: var(--font-display); font-size: 40px; line-height: 1; font-weight: 800; margin-bottom: 18px; letter-spacing: -0.02em; }
 .acc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .acc-sv { font-family: var(--font-display); font-size: 20px; font-weight: 700; line-height: 1; letter-spacing: -0.01em; }
 .acc-sl { font-family: var(--font-display); font-size: 8px; font-weight: 400; color: var(--txt4); letter-spacing: 0.18em; text-transform: uppercase; margin-top: 4px; }
 
 .wtable { width: 100%; border-collapse: collapse; }
+.wtable-wrap { overflow-x: auto; }
 .wtable thead th {
   font-family: var(--font-display); font-size: 8px; font-weight: 700;
-  letter-spacing: 0.26em; text-transform: uppercase;
-  color: var(--txt4); padding: 0 16px 14px; text-align: left;
-  border-bottom: 1px solid var(--border2);
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--txt4); padding: 0 14px 14px; text-align: left;
+  border-bottom: 1px solid var(--border2); white-space: nowrap;
 }
 .wtable tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s, transform 0.15s; }
 .wtable tbody tr:last-child { border-bottom: none; }
 .wtable tbody tr:hover { background: var(--bg3); }
-.wtable td { padding: 10px 16px; font-family: var(--font-display); font-size: 11.5px; font-weight: 400; color: var(--txt2); }
+.wtable td { padding: 10px 14px; font-family: var(--font-display); font-size: 11.5px; font-weight: 400; color: var(--txt2); white-space: nowrap; }
 .wtable td:first-child { font-family: var(--font-mono); font-size: 10px; font-weight: 600; color: var(--txt); letter-spacing: 0.08em; }
 
 .wbadge {
@@ -694,7 +694,7 @@ body::after {
   border-radius: var(--r2);
   color: var(--txt);
   font-family: var(--font-mono); font-size: 13px;
-  outline: none;
+  outline: none; width: 100%;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 .jselect:focus, .jinput:focus {
@@ -749,24 +749,57 @@ body::after {
 .jerr { margin-top: 14px; font-family: var(--font-display); font-size: 12px; color: var(--red); }
 .jok  { margin-top: 14px; font-family: var(--font-display); font-size: 12px; color: var(--green); }
 
-/* ── Account manager row (add / remove) ── */
-.jaccount-row {
-  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
-  margin: -4px 0 18px;
-}
-.jaccount-row .jinput { flex: 1; min-width: 160px; padding: 10px 14px; font-size: 12px; }
 .jbtn-sm {
-  padding: 10px 18px; font-size: 10px;
+  padding: 9px 16px; font-size: 9.5px;
   font-family: var(--font-display); font-weight: 700;
-  letter-spacing: 0.16em; text-transform: uppercase;
+  letter-spacing: 0.14em; text-transform: uppercase;
   border-radius: var(--r2); cursor: pointer; transition: all 0.2s;
-  white-space: nowrap;
+  white-space: nowrap; border: 1px solid var(--border2); background: var(--bg4); color: var(--txt2);
 }
-.jbtn-sm.add { background: var(--green-bg); border: 1px solid var(--green-rim); color: var(--green); }
+.jbtn-sm:hover { border-color: var(--border3); color: var(--txt); }
+.jbtn-sm.add     { background: var(--green-bg); border-color: var(--green-rim); color: var(--green); }
 .jbtn-sm.add:hover { background: var(--green); color: #08070A; }
-.jbtn-sm.remove { background: none; border: 1px solid var(--red-rim); color: var(--red); }
+.jbtn-sm.remove  { background: none; border-color: var(--red-rim); color: var(--red); }
 .jbtn-sm.remove:hover { background: var(--red-bg); }
+.jbtn-sm.gold    { background: var(--gold-bg); border-color: var(--gold-rim); color: var(--gold); }
+.jbtn-sm.gold:hover { background: var(--gold); color: #08070A; }
 .jbtn-sm:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ── Badges: phase / status ── */
+.badge-phase, .badge-status {
+  display: inline-block; padding: 2px 9px; border-radius: 20px;
+  font-family: var(--font-mono); font-size: 8.5px; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase; border: 1px solid;
+  vertical-align: middle; white-space: nowrap;
+}
+.badge-phase.p1     { color: var(--blue);   border-color: var(--blue-rim);   background: var(--blue-bg); }
+.badge-phase.p2     { color: var(--orange); border-color: var(--orange-rim); background: var(--orange-bg); }
+.badge-phase.master { color: var(--gold);   border-color: var(--gold-rim);   background: var(--gold-bg); }
+.badge-status.active  { color: var(--green); border-color: var(--green-rim); background: var(--green-bg); }
+.badge-status.passed  { color: var(--gold);  border-color: var(--gold-rim);  background: var(--gold-bg); }
+.badge-status.blown   { color: var(--red);   border-color: var(--red-rim);   background: var(--red-bg); }
+.badge-status.removed { color: var(--txt4);  border-color: var(--border2);  background: var(--bg4); }
+
+/* ── Manage Accounts cards ── */
+.macc-person-header {
+  font-family: var(--font-display); font-size: 10px; font-weight: 700; letter-spacing: 0.28em;
+  text-transform: uppercase; color: var(--txt4); margin: 26px 0 12px;
+}
+.macc-person-header:first-child { margin-top: 0; }
+.macc-card {
+  background: var(--bg3); border: 1px solid var(--border); border-radius: var(--r2);
+  padding: 18px 20px; margin-bottom: 10px; transition: border-color 0.18s;
+}
+.macc-card:hover { border-color: var(--border2); }
+.macc-top { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+.macc-name { font-family: var(--font-display); font-size: 13px; font-weight: 700; color: var(--txt); display:flex; align-items:center; gap:8px; flex-wrap: wrap; }
+.macc-bal { display: flex; gap: 20px; font-family: var(--font-mono); font-size: 11px; color: var(--txt3); flex-wrap: wrap; }
+.macc-bal b { color: var(--txt2); font-weight: 700; }
+.macc-bal b.pos { color: var(--green); }
+.macc-bal b.neg { color: var(--red); }
+.macc-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.macc-edit { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); display: none; }
+.macc-edit.show { display: block; }
 
 /* ══════════════════════════════════════
    STAGGER DELAYS
@@ -776,7 +809,7 @@ body::after {
 
 @keyframes fadeUp { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: none; } }
 
-::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--bg6); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--txt4); }
@@ -785,6 +818,7 @@ body::after {
 
 @media(max-width:1100px) {
   .kpi-strip { grid-template-columns: repeat(2,1fr); }
+  .kpi-strip.k3 { grid-template-columns: repeat(2,1fr); }
   .g3 { grid-template-columns: 1fr 1fr; }
 }
 @media(max-width:780px) {
@@ -796,7 +830,7 @@ body::after {
   .jgrid { grid-template-columns: 1fr; }
 }
 @media(max-width:520px) {
-  .kpi-strip { grid-template-columns: 1fr 1fr; }
+  .kpi-strip, .kpi-strip.k3 { grid-template-columns: 1fr 1fr; }
   .g3 { grid-template-columns: 1fr; }
   .brand-text { font-size: 14px; }
   .topbar-tag,.gen-time { display: none; }
@@ -873,13 +907,17 @@ body::after {
 
   <div class="navbar">
     <button class="navtab active" data-tab="analytics" onclick="showTab('analytics')">📊 Analytics</button>
-    <button class="navtab" data-tab="journal" onclick="showTab('journal')">📝 Log Trade</button>
+    <button class="navtab" data-tab="payouts" onclick="showTab('payouts')">💰 Payouts</button>
+    <button class="navtab" data-tab="addAccount" onclick="showTab('addAccount')">➕ Add Account</button>
+    <button class="navtab" data-tab="manageAccounts" onclick="showTab('manageAccounts')">🗂️ Manage Accounts</button>
+    <button class="navtab" data-tab="journal" onclick="showTab('journal')">📝 Journal Trade</button>
   </div>
 
   <div class="ticker-wrap">
     <div class="ticker-inner" id="tickerInner"></div>
   </div>
 
+  <!-- ══════════════════ ANALYTICS ══════════════════ -->
   <div class="page" id="analyticsPage">
 
     <div class="filter-row">
@@ -892,6 +930,7 @@ body::after {
       <span class="filter-label">Account</span>
       <div id="accountPills"></div>
     </div>
+    <div class="psub" style="margin:-20px 0 24px;">Only Active accounts feed analytics — Passed / Blown accounts are excluded once they're no longer being traded</div>
 
     <div class="kpi-strip" id="kpiStrip"></div>
 
@@ -939,7 +978,7 @@ body::after {
         <div class="sh-num">03</div>
         <div class="sh-title">Equity</div>
         <div class="sh-line"></div>
-        <div class="sh-tag">Real balance — ignores period filter</div>
+        <div class="sh-tag">Active accounts only — ignores period filter</div>
       </div>
       <div class="kpi-strip" id="equityKpiStrip"></div>
       <div class="panel d1">
@@ -978,18 +1017,124 @@ body::after {
         </div>
         <div class="panel d2">
           <div class="ptitle">By Account</div>
-          <div class="psub">Split performance</div>
+          <div class="psub">Active accounts only</div>
           <div class="acc-cards" id="accCards"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sh">
+        <div class="sh-num">06</div>
+        <div class="sh-title">Payouts</div>
+        <div class="sh-line"></div>
+        <div class="sh-tag">All-time — survives blown accounts</div>
+      </div>
+      <div class="kpi-strip k3" id="payoutMiniKpi"></div>
+    </div>
+
+    <div class="sec">
+      <div class="sh">
+        <div class="sh-num">07</div>
+        <div class="sh-title">Raw Trade Log</div>
+        <div class="sh-line"></div>
+        <div class="sh-tag" id="rawLogMeta">— entries</div>
+      </div>
+      <div class="panel d1">
+        <div class="ptitle">Every Trade</div>
+        <div class="psub">All accounts, all statuses — unfiltered history</div>
+        <div class="jgrid" style="grid-template-columns:1fr 1fr;margin-bottom:20px;">
+          <div class="jfield">
+            <label class="jlabel">Person</label>
+            <select class="jselect" id="rawPersonSel" onchange="onRawFilterChange()"></select>
+          </div>
+          <div class="jfield">
+            <label class="jlabel">Account</label>
+            <select class="jselect" id="rawAccountSel" onchange="onRawFilterChange()"></select>
+          </div>
+        </div>
+        <div class="wtable-wrap" id="rawLogTable"></div>
+        <div style="text-align:center;margin-top:16px;">
+          <button class="jbtn-sm add" id="rawLoadMoreBtn" onclick="loadMoreRaw()">Show more</button>
         </div>
       </div>
     </div>
 
   </div>
 
+  <!-- ══════════════════ PAYOUTS ══════════════════ -->
+  <div class="page" id="payoutsPage" style="display:none">
+    <div class="page-header">
+      <div class="page-title">Payouts</div>
+    </div>
+    <div class="kpi-strip k3" id="payoutKpiStrip"></div>
+
+    <div class="g21">
+      <div class="panel d1">
+        <div class="ptitle">Payout Log</div>
+        <div class="psub">All-time, newest first</div>
+        <div class="wtable-wrap" id="payoutTable"></div>
+      </div>
+      <div class="panel d2">
+        <div class="ptitle">Log a Payout</div>
+        <div class="psub">Master accounts only</div>
+        <div class="jfield">
+          <label class="jlabel">Person</label>
+          <select class="jselect" id="poPerson" onchange="onPayoutPersonChange()"></select>
+        </div>
+        <div class="jfield">
+          <label class="jlabel">Master Account</label>
+          <select class="jselect" id="poAccount"></select>
+        </div>
+        <div class="jgrid" style="grid-template-columns:1fr 1fr;">
+          <div class="jfield"><label class="jlabel">Amount ($)</label><input class="jinput" type="number" id="poAmount" min="0.01" step="0.01" placeholder="0.00"></div>
+          <div class="jfield"><label class="jlabel">Date</label><input class="jinput" type="date" id="poDate"></div>
+        </div>
+        <div class="jfield"><label class="jlabel">Notes</label><input class="jinput" type="text" id="poNotes" placeholder="optional"></div>
+        <div class="jactions"><button class="jsubmit-btn" onclick="submitPayout()">Save Payout</button></div>
+        <div class="jerr" id="poErr"></div>
+        <div class="jok" id="poOk"></div>
+
+        <div class="psub" style="margin:26px 0 12px;">By Person</div>
+        <div id="payoutByPerson"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ ADD ACCOUNT ══════════════════ -->
+  <div class="page" id="addAccountPage" style="display:none">
+    <div class="journal-wrap">
+      <div class="panel d1">
+        <div class="ptitle">Add Account</div>
+        <div class="psub">New accounts start Active — mark them Passed / Blown later from Manage Accounts</div>
+
+        <div class="jgrid">
+          <div class="jfield"><label class="jlabel">Person</label><select class="jselect" id="aaPerson"></select></div>
+          <div class="jfield"><label class="jlabel">Phase</label><select class="jselect" id="aaPhase"></select></div>
+          <div class="jfield"><label class="jlabel">Starting Balance ($)</label><input class="jinput" type="number" id="aaBalance" min="0" step="0.01" placeholder="0.00"></div>
+        </div>
+        <div class="jfield"><label class="jlabel">Account Name</label><input class="jinput" type="text" id="aaName" placeholder="e.g. 5k, 100k" maxlength="40"></div>
+
+        <div class="jactions"><button class="jsubmit-btn" onclick="submitAddAccount()">+ Add Account</button></div>
+        <div class="jerr" id="aaErr"></div>
+        <div class="jok" id="aaOk"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ MANAGE ACCOUNTS ══════════════════ -->
+  <div class="page" id="manageAccountsPage" style="display:none">
+    <div class="page-header">
+      <div class="page-title">Manage Accounts</div>
+    </div>
+    <div id="maccList"></div>
+  </div>
+
+  <!-- ══════════════════ JOURNAL TRADE ══════════════════ -->
   <div class="page" id="journalPage" style="display:none">
     <div class="journal-wrap">
       <div class="panel d1">
-        <div class="ptitle">Log a Trade</div>
+        <div class="ptitle">Journal a Trade</div>
         <div class="psub">Writes straight to the sheet — one entry per account per day</div>
 
         <div class="jgrid">
@@ -1005,13 +1150,6 @@ body::after {
             <label class="jlabel">Date</label>
             <input class="jinput" type="date" id="jDate" onchange="onKeyFieldChange()">
           </div>
-        </div>
-
-        <div class="jaccount-row">
-          <input class="jinput" type="text" id="jNewAccountName" placeholder="New account name, e.g. 100k" maxlength="40">
-          <input class="jinput" type="number" id="jNewAccountBalance" placeholder="Starting balance $" min="0" step="0.01" style="max-width:170px;">
-          <button class="jbtn-sm add" id="jAddAccountBtn" onclick="addNewAccount()">+ Add Account</button>
-          <button class="jbtn-sm remove" id="jRemoveAccountBtn" style="display:none" onclick="removeCurrentAccount()">Remove Selected</button>
         </div>
 
         <div class="jstatus" id="jStatusBanner">Loading…</div>
@@ -1102,8 +1240,23 @@ var APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw8Tke7oCam2wRF4r
 var _tok=null, _data=null, _config=null, _chart=null, _equityChart=null;
 var _month="all", _person="all", _accountId="all";
 var _journalState = { editing:false };
-var _accountsByPerson = {};   // from getAccounts — active + inactive, per person
-var _accountsById = {};       // from getDashboardData accounts list — for filtering/labels
+var _accountsByPerson = {};   // from getAccounts — every status, per person
+var _accountsById = {};       // from getDashboardData accounts list
+
+var _rawPerson="all", _rawAccount="all", _rawLimit=50;
+var _maccOpen = {}; // accountId -> bool, tracks which edit forms are open
+
+var PHASE_BADGE_CLASS  = { PHASE_1:"p1", PHASE_2:"p2", MASTER:"master" };
+var STATUS_BADGE_CLASS = { ACTIVE:"active", PASSED:"passed", BLOWN:"blown", REMOVED:"removed" };
+
+function phaseBadge(phase){
+  var lbl = (_config && _config.phaseLabels && _config.phaseLabels[phase]) || phase;
+  return '<span class="badge-phase '+(PHASE_BADGE_CLASS[phase]||"p1")+'">'+esc(lbl)+'</span>';
+}
+function statusBadge(status){
+  var lbl = (_config && _config.statusLabels && _config.statusLabels[status]) || status;
+  return '<span class="badge-status '+(STATUS_BADGE_CLASS[status]||"active")+'">'+esc(lbl)+'</span>';
+}
 
 /* ── LOADER ── */
 var _lp=0, _lt=setInterval(function(){
@@ -1176,9 +1329,13 @@ function fetchData(){
   });
 }
 
-function refreshDashboardQuietly(){
+function refreshDashboardQuietly(cb){
   jsonp(APPS_SCRIPT_URL + "?action=getDashboardData&token=" + encodeURIComponent(_tok), function(d){
-    if(d && d.success){ _data = d; _rebuildAccountsById(); buildTicker(); buildFilters(); renderDashboard(); }
+    if(d && d.success){
+      _data = d; _rebuildAccountsById();
+      buildTicker(); buildFilters(); renderDashboard();
+    }
+    if(typeof cb === "function") cb();
   });
 }
 
@@ -1197,10 +1354,16 @@ function renderAll(){
 
 /* ── TAB SWITCHING ── */
 function showTab(name){
-  document.getElementById("analyticsPage").style.display = name==="analytics" ? "block" : "none";
-  document.getElementById("journalPage").style.display   = name==="journal"   ? "block" : "none";
+  ["analytics","payouts","addAccount","manageAccounts","journal"].forEach(function(id){
+    var el = document.getElementById(id+"Page");
+    if(el) el.style.display = (id===name) ? "block" : "none";
+  });
   document.querySelectorAll(".navtab").forEach(function(el){ el.classList.toggle("active", el.dataset.tab===name); });
   if(name==="journal") initJournal();
+  if(name==="addAccount") initAddAccountTab();
+  if(name==="manageAccounts") renderManageAccounts();
+  if(name==="payouts") initPayoutsTab();
+  if(name==="analytics") { onRawFilterChange(); }
 }
 
 /* ── TICKER ── */
@@ -1215,11 +1378,12 @@ function buildTicker(){
     {k:"Win Rate",     v:wr+"%",  cls:wr>=55?"up":"dn"},
     {k:"Wins",         v:wins,    cls:"up"},
     {k:"Losses",       v:losses,  cls:"dn"},
+    {k:"Payouts",      v:fmtMoney((_data.payouts&&_data.payouts.totalAll)||0), cls:"up"},
   ];
   (_data.accounts||[]).forEach(function(a){
+    if(a.status!=="ACTIVE") return;
     var s = _data.accountStats[a.accountId];
     if(!s) return;
-    if(!a.active && s.total===0) return; // skip empty removed accounts
     items.push({k:a.displayLabel, v:s.winRate+"%", cls:s.winRate>=55?"up":"dn"});
   });
   var html = items.map(function(it){
@@ -1228,7 +1392,7 @@ function buildTicker(){
   document.getElementById("tickerInner").innerHTML = html + html;
 }
 
-/* ── FILTERS ── */
+/* ── FILTERS (Analytics) ── */
 function buildFilters(){
   var months = (_data.monthly||[]).map(function(m){ return m.label; }).sort();
   document.getElementById("monthPills").innerHTML =
@@ -1245,9 +1409,8 @@ function buildFilters(){
 
 function buildAccountPills(){
   var accs = (_data.accounts||[]).filter(function(a){
+    if(a.status!=="ACTIVE") return false; // only active accounts feed analytics
     if(_person!=="all" && a.person!==_person) return false;
-    var s = _data.accountStats[a.accountId];
-    if(!a.active && (!s || s.total===0)) return false; // hide empty removed accounts
     return true;
   });
   document.getElementById("accountPills").innerHTML =
@@ -1288,6 +1451,8 @@ function renderDashboard(){
   renderKPI(s); renderResults(s); renderMistakes(s);
   renderDays(s); renderRR(s); renderCompliance(s);
   renderTrend(); renderWeekly(); renderAccounts(); renderEquity();
+  renderPayoutMiniKpi();
+  onRawFilterChange();
 }
 
 /* ── STATS ── */
@@ -1403,16 +1568,14 @@ function renderRR(s){
 }
 
 /* ── EQUITY ── */
-// Equity is cumulative by nature, so it always uses ALL trades in
-// time order (ignores the Period pill) — it only respects the
-// Person/Account filters. Baseline = sum of starting balances of
-// every account currently in scope.
+// Equity is cumulative by nature, so it always uses ALL analytics-scope
+// (active-account) trades in time order (ignores the Period pill) — it
+// only respects the Person/Account filters. Baseline = sum of starting
+// balances of every ACTIVE account currently in scope.
 function computeEquity(){
-  var accs = (_data.accounts||[]).filter(function(a){
-    return _person==="all" || a.person===_person;
-  }).filter(function(a){
-    return _accountId==="all" || a.accountId===_accountId;
-  });
+  var accs = (_data.accounts||[]).filter(function(a){ return a.status==="ACTIVE"; })
+    .filter(function(a){ return _person==="all" || a.person===_person; })
+    .filter(function(a){ return _accountId==="all" || a.accountId===_accountId; });
   var baseline = accs.reduce(function(sum,a){ return sum + (a.startingBalance||0); }, 0);
 
   var trades = (_data.trades||[]).filter(function(t){
@@ -1478,9 +1641,6 @@ function renderEquity(){
     canvas.parentNode.innerHTML = '<div class="empty" style="height:210px;display:flex;align-items:center;justify-content:center;">No trades with P&amp;L logged yet</div>';
     return;
   }
-  if(!document.getElementById("equityChart")){
-    var wrap = document.querySelectorAll(".chart-wrap")[document.querySelectorAll(".chart-wrap").length-1];
-  }
   if(_equityChart){ try{_equityChart.destroy();}catch(e){} _equityChart=null; }
   var lineColor = eq.currentBalance>=eq.baseline ? "#3ECFB5" : "#E05252";
   _equityChart = new Chart(canvas, {
@@ -1525,6 +1685,15 @@ function renderEquity(){
   });
 }
 
+/* ── PAYOUTS mini-panel on Analytics page ── */
+function renderPayoutMiniKpi(){
+  var p = (_data && _data.payouts) || {totalAll:0,totalMonth:0,list:[]};
+  document.getElementById("payoutMiniKpi").innerHTML =
+    kp("Total Received", fmtMoney(p.totalAll), "g", "all-time, all accounts", "d1") +
+    kp("This Month",     fmtMoney(p.totalMonth), "a", "current calendar month", "d2") +
+    kp("Payout Count",   String((p.list||[]).length), "b", "individual withdrawals", "d3");
+}
+
 /* ── GAUGE ── */
 function renderCompliance(s){
   var p   = s.compliance;
@@ -1565,10 +1734,6 @@ function renderTrend(){
     if(_chart){ try{_chart.destroy();}catch(e){} _chart=null; }
     canvas.parentNode.innerHTML='<div class="empty" style="height:210px;display:flex;align-items:center;justify-content:center;">Insufficient data</div>';
     return;
-  }
-  if(!document.getElementById("trendChart")){
-    var wrap = document.querySelector(".chart-wrap");
-    if(wrap){ wrap.innerHTML='<canvas id="trendChart"></canvas>'; canvas=document.getElementById("trendChart"); }
   }
   var mn       = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   var labels   = keys.map(function(k){ var p=k.split("-"); return mn[parseInt(p[1])-1]+" '"+p[0].slice(2); });
@@ -1672,17 +1837,17 @@ function renderWeekly(){
   document.getElementById("weeklyTable").innerHTML = h;
 }
 
-/* ── ACCOUNT CARDS ── */
+/* ── ACCOUNT CARDS (Active only) ── */
 function renderAccounts(){
   if(!_data.accountStats) return;
   var h = "";
   (_data.accounts||[]).forEach(function(a){
+    if(a.status!=="ACTIVE") return;
     var s = _data.accountStats[a.accountId];
     if(!s) return;
-    if(!a.active && s.total===0) return; // hide empty removed accounts
     var col = s.winRate>=60 ? "var(--green)" : s.winRate>=40 ? "var(--gold)" : "var(--red)";
-    h += '<div class="acc-card'+(a.active?"":" inactive")+'">'+
-      '<div class="acc-name">'+esc(a.displayLabel)+(a.active?"":' <span class="removed-tag">removed</span>')+'</div>'+
+    h += '<div class="acc-card">'+
+      '<div class="acc-name">'+esc(a.displayLabel)+phaseBadge(a.phase)+'</div>'+
       '<div class="acc-wr" style="color:'+col+'">'+s.winRate+'%</div>'+
       '<div class="acc-grid">'+
         '<div><div class="acc-sv">'+s.total+'</div><div class="acc-sl">Trades</div></div>'+
@@ -1692,7 +1857,378 @@ function renderAccounts(){
       '</div>'+
     '</div>';
   });
-  document.getElementById("accCards").innerHTML = h || '<div class="empty">No accounts yet — add one from Log Trade</div>';
+  document.getElementById("accCards").innerHTML = h || '<div class="empty">No active accounts yet — add one from Add Account</div>';
+}
+
+/* ══════════════════════════════════════
+   RAW TRADE LOG (Analytics page, section 07)
+══════════════════════════════════════ */
+function populateRawFilters(){
+  var personSel = document.getElementById("rawPersonSel");
+  var accSel    = document.getElementById("rawAccountSel");
+  if(!personSel || !accSel) return;
+
+  var curPerson = personSel.value || "all";
+  personSel.innerHTML = '<option value="all">All People</option>' +
+    (_data.people||[]).map(function(p){ return '<option value="'+esc(p)+'">'+esc(p)+'</option>'; }).join("");
+  personSel.value = curPerson && [...personSel.options].some(o=>o.value===curPerson) ? curPerson : "all";
+
+  var curAcc = accSel.value || "all";
+  var accs = (_data.accounts||[]).filter(function(a){ return curPerson==="all" || a.person===curPerson; });
+  accSel.innerHTML = '<option value="all">All Accounts</option>' +
+    accs.map(function(a){
+      var lbl = a.displayLabel + " — " + ((_config&&_config.phaseLabels&&_config.phaseLabels[a.phase])||a.phase) + " · " + ((_config&&_config.statusLabels&&_config.statusLabels[a.status])||a.status);
+      return '<option value="'+esc(a.accountId)+'">'+esc(lbl)+'</option>';
+    }).join("");
+  accSel.value = curAcc && [...accSel.options].some(o=>o.value===curAcc) ? curAcc : "all";
+
+  _rawPerson = personSel.value;
+  _rawAccount = accSel.value;
+}
+
+function onRawFilterChange(){
+  populateRawFilters();
+  var personSel = document.getElementById("rawPersonSel");
+  var accSel    = document.getElementById("rawAccountSel");
+  if(!personSel || !accSel) return;
+  _rawPerson  = personSel.value;
+  _rawAccount = accSel.value;
+  _rawLimit = 50;
+  renderRawLog();
+}
+
+function loadMoreRaw(){ _rawLimit += 50; renderRawLog(); }
+
+function renderRawLog(){
+  var all = (_data.rawTrades||[]).filter(function(t){
+    if(_rawPerson!=="all" && t.person!==_rawPerson) return false;
+    if(_rawAccount!=="all" && t.accountId!==_rawAccount) return false;
+    return true;
+  }).slice().sort(function(a,b){ return new Date(b.date) - new Date(a.date); });
+
+  document.getElementById("rawLogMeta").textContent = all.length + " entries";
+
+  var shown = all.slice(0, _rawLimit);
+  var btn = document.getElementById("rawLoadMoreBtn");
+  if(btn) btn.style.display = (all.length > _rawLimit) ? "inline-block" : "none";
+
+  if(!shown.length){
+    document.getElementById("rawLogTable").innerHTML = '<div class="empty">No trades match these filters</div>';
+    return;
+  }
+
+  var h = '<table class="wtable"><thead><tr>'+
+    '<th>Date</th><th>Person</th><th>Account</th><th>Pair</th><th>TF</th><th>Type</th>'+
+    '<th>RR</th><th>Result</th><th>Risk</th><th>P&amp;L</th><th>Rules</th><th>Mistake</th>'+
+    '</tr></thead><tbody>';
+  shown.forEach(function(t){
+    var pnlCol = t.pnl>0?"var(--green)":t.pnl<0?"var(--red)":"var(--txt3)";
+    var rulesCol = t.rules==="TRUE" ? "var(--green)" : "var(--red)";
+    h += '<tr>'+
+      '<td>'+esc(t.dateKey)+'</td>'+
+      '<td>'+esc(t.person)+'</td>'+
+      '<td>'+esc(t.accountName)+' '+phaseBadge(t.accountPhase)+' '+statusBadge(t.accountStatus)+'</td>'+
+      '<td>'+esc(t.pair)+'</td>'+
+      '<td>'+esc(t.timeframe)+'</td>'+
+      '<td>'+esc(t.tradeType)+'</td>'+
+      '<td>'+esc(t.rr)+'</td>'+
+      '<td>'+esc(t.result)+'</td>'+
+      '<td>'+fmtMoney(t.riskAmount)+'</td>'+
+      '<td style="color:'+pnlCol+'">'+fmtMoney(t.pnl)+'</td>'+
+      '<td style="color:'+rulesCol+'">'+(t.rules==="TRUE"?"✓":"✗")+'</td>'+
+      '<td>'+esc(t.mistake||"—")+'</td>'+
+    '</tr>';
+  });
+  h += '</tbody></table>';
+  document.getElementById("rawLogTable").innerHTML = h;
+}
+
+/* ══════════════════════════════════════
+   PAYOUTS TAB
+══════════════════════════════════════ */
+function initPayoutsTab(){
+  if(!_config){ return; }
+  var personSel = document.getElementById("poPerson");
+  personSel.innerHTML = optHTML(_config.people);
+  if(!document.getElementById("poDate").value) document.getElementById("poDate").value = todayISO();
+  refreshAccountsList(function(){
+    onPayoutPersonChange();
+    renderPayoutsKPI();
+    renderPayoutTable();
+    renderPayoutByPerson();
+  });
+}
+
+function onPayoutPersonChange(){
+  var p = document.getElementById("poPerson").value;
+  var masters = (_accountsByPerson[p]||[]).filter(function(a){ return a.phase==="MASTER"; });
+  var sel = document.getElementById("poAccount");
+  if(!masters.length){
+    sel.innerHTML = '<option value="">— no Master accounts yet —</option>';
+    sel.disabled = true;
+    return;
+  }
+  sel.disabled = false;
+  sel.innerHTML = masters.map(function(a){
+    var lbl = a.name + " (" + ((_config&&_config.statusLabels&&_config.statusLabels[a.status])||a.status) + ")";
+    return '<option value="'+esc(a.id)+'">'+esc(lbl)+'</option>';
+  }).join("");
+}
+
+function renderPayoutsKPI(){
+  var p = (_data && _data.payouts) || {totalAll:0,totalMonth:0,list:[]};
+  document.getElementById("payoutKpiStrip").innerHTML =
+    kp("Total Received", fmtMoney(p.totalAll), "g", "all-time, all accounts", "d1") +
+    kp("This Month",     fmtMoney(p.totalMonth), "a", "current calendar month", "d2") +
+    kp("Payout Count",   String((p.list||[]).length), "b", "individual withdrawals", "d3");
+}
+
+function renderPayoutTable(){
+  var list = (_data && _data.payouts && _data.payouts.list) || [];
+  if(!list.length){
+    document.getElementById("payoutTable").innerHTML = '<div class="empty">No payouts logged yet</div>';
+    return;
+  }
+  var h = '<table class="wtable"><thead><tr>'+
+    '<th>Date</th><th>Person</th><th>Account</th><th>Amount</th><th>Notes</th><th></th>'+
+    '</tr></thead><tbody>';
+  list.forEach(function(p){
+    var acc = _accountsById[p.accountId];
+    var statusTag = acc ? statusBadge(acc.status) : "";
+    h += '<tr>'+
+      '<td>'+esc(p.date)+'</td>'+
+      '<td>'+esc(p.person)+'</td>'+
+      '<td>'+esc(p.accountName)+' '+statusTag+'</td>'+
+      '<td style="color:var(--green);font-weight:700;">'+fmtMoney(p.amount)+'</td>'+
+      '<td style="color:var(--txt3)">'+esc(p.notes||"—")+'</td>'+
+      '<td><button class="jbtn-sm remove" onclick="removePayout(\''+p.id+'\')">Delete</button></td>'+
+    '</tr>';
+  });
+  h += '</tbody></table>';
+  document.getElementById("payoutTable").innerHTML = h;
+}
+
+function renderPayoutByPerson(){
+  var byPerson = (_data && _data.payouts && _data.payouts.byPerson) || {};
+  var h = "";
+  (_data.people||[]).forEach(function(p){
+    h += '<div class="brow"><div class="blabel">'+esc(p)+'</div><div class="btrack"></div><div class="bnum" style="color:var(--green);width:auto;">'+fmtMoney(byPerson[p]||0)+'</div></div>';
+  });
+  document.getElementById("payoutByPerson").innerHTML = h || '<div class="empty">No data</div>';
+}
+
+function submitPayout(){
+  var person    = document.getElementById("poPerson").value;
+  var accountId = document.getElementById("poAccount").value;
+  var amount    = document.getElementById("poAmount").value;
+  var date      = document.getElementById("poDate").value;
+  var notes     = document.getElementById("poNotes").value;
+
+  document.getElementById("poErr").textContent = "";
+  document.getElementById("poOk").textContent = "";
+
+  if(!accountId){ document.getElementById("poErr").textContent = "Add a Master account for this person first."; return; }
+  if(!amount || parseFloat(amount) <= 0){ document.getElementById("poErr").textContent = "Enter a payout amount."; return; }
+
+  var params = "token=" + encodeURIComponent(_tok) +
+    "&person=" + encodeURIComponent(person) +
+    "&accountId=" + encodeURIComponent(accountId) +
+    "&amount=" + encodeURIComponent(amount) +
+    "&date=" + encodeURIComponent(date) +
+    "&notes=" + encodeURIComponent(notes);
+
+  jsonp(APPS_SCRIPT_URL + "?action=addPayout&" + params, function(d){
+    if(!d || !d.success){
+      document.getElementById("poErr").textContent = (d && d.error) || "Could not save payout.";
+      return;
+    }
+    document.getElementById("poOk").textContent = "Payout saved ✓";
+    document.getElementById("poAmount").value = "";
+    document.getElementById("poNotes").value = "";
+    refreshDashboardQuietly(function(){
+      renderPayoutsKPI(); renderPayoutTable(); renderPayoutByPerson();
+    });
+  });
+}
+
+function removePayout(payoutId){
+  if(!confirm("Delete this payout entry? This can't be undone.")) return;
+  jsonp(APPS_SCRIPT_URL + "?action=deletePayout&token=" + encodeURIComponent(_tok) + "&payoutId=" + encodeURIComponent(payoutId), function(d){
+    if(!d || !d.success){ alert((d&&d.error)||"Could not delete payout."); return; }
+    refreshDashboardQuietly(function(){
+      renderPayoutsKPI(); renderPayoutTable(); renderPayoutByPerson();
+    });
+  });
+}
+
+/* ══════════════════════════════════════
+   ADD ACCOUNT TAB
+══════════════════════════════════════ */
+function initAddAccountTab(){
+  if(!_config) return;
+  document.getElementById("aaPerson").innerHTML = optHTML(_config.people);
+  document.getElementById("aaPhase").innerHTML = _config.phases.map(function(ph){
+    return '<option value="'+esc(ph)+'">'+esc(_config.phaseLabels[ph]||ph)+'</option>';
+  }).join("");
+}
+
+function submitAddAccount(){
+  var person = document.getElementById("aaPerson").value;
+  var phase  = document.getElementById("aaPhase").value;
+  var name   = document.getElementById("aaName").value.trim();
+  var balance = document.getElementById("aaBalance").value;
+
+  document.getElementById("aaErr").textContent = "";
+  document.getElementById("aaOk").textContent = "";
+
+  if(!name){ document.getElementById("aaErr").textContent = "Enter an account name."; return; }
+
+  var params = "token=" + encodeURIComponent(_tok) +
+    "&person=" + encodeURIComponent(person) +
+    "&name=" + encodeURIComponent(name) +
+    "&phase=" + encodeURIComponent(phase) +
+    "&startingBalance=" + encodeURIComponent(balance || "0");
+
+  jsonp(APPS_SCRIPT_URL + "?action=addAccount&" + params, function(d){
+    if(!d || !d.success){
+      document.getElementById("aaErr").textContent = (d && d.error) || "Could not add account.";
+      return;
+    }
+    document.getElementById("aaOk").textContent = "Account added ✓ — go to Journal Trade or Manage Accounts.";
+    document.getElementById("aaName").value = "";
+    document.getElementById("aaBalance").value = "";
+    refreshAccountsList();
+    refreshDashboardQuietly();
+  });
+}
+
+/* ══════════════════════════════════════
+   MANAGE ACCOUNTS TAB
+══════════════════════════════════════ */
+function renderManageAccounts(){
+  if(!_data || !_data.accounts){
+    document.getElementById("maccList").innerHTML = '<div class="empty">Loading…</div>';
+    return;
+  }
+  var people = _data.people || [];
+  var html = "";
+  people.forEach(function(person){
+    var accs = _data.accounts.filter(function(a){ return a.person===person; })
+      .sort(function(a,b){ return new Date(a.createdAt) - new Date(b.createdAt); });
+    html += '<div class="macc-person-header">'+esc(person)+'</div>';
+    if(!accs.length){
+      html += '<div class="empty">No accounts yet</div>';
+      return;
+    }
+    accs.forEach(function(a){ html += maccCardHTML(a); });
+  });
+  document.getElementById("maccList").innerHTML = html;
+}
+
+function maccCardHTML(a){
+  var balCls = a.currentBalance >= a.startingBalance ? "pos" : "neg";
+  var editing = !!_maccOpen[a.accountId];
+  var phaseOpts = (_config.phases||[]).map(function(ph){
+    return '<option value="'+ph+'"'+(ph===a.phase?" selected":"")+'>'+esc(_config.phaseLabels[ph]||ph)+'</option>';
+  }).join("");
+  var statusOpts = (_config.accountStatuses||[]).map(function(st){
+    return '<option value="'+st+'"'+(st===a.status?" selected":"")+'>'+esc(_config.statusLabels[st]||st)+'</option>';
+  }).join("");
+
+  var quickBtns = "";
+  if(a.status==="ACTIVE"){
+    quickBtns += '<button class="jbtn-sm gold" onclick="quickAccountStatus(\''+a.accountId+'\',\'PASSED\')">Mark Passed</button>';
+    quickBtns += '<button class="jbtn-sm remove" onclick="quickAccountStatus(\''+a.accountId+'\',\'BLOWN\')">Mark Blown</button>';
+  } else {
+    quickBtns += '<button class="jbtn-sm add" onclick="quickAccountStatus(\''+a.accountId+'\',\'ACTIVE\')">Reactivate</button>';
+  }
+  if(a.phase==="MASTER"){
+    quickBtns += '<button class="jbtn-sm gold" onclick="gotoPayout(\''+a.accountId+'\')">+ Log Payout</button>';
+  }
+  quickBtns += '<button class="jbtn-sm" onclick="toggleAccountEdit(\''+a.accountId+'\')">'+(editing?"Close":"Edit")+'</button>';
+
+  return '<div class="macc-card">'+
+    '<div class="macc-top">'+
+      '<div>'+
+        '<div class="macc-name">'+esc(a.name)+phaseBadge(a.phase)+statusBadge(a.status)+'</div>'+
+        '<div class="macc-bal">'+
+          '<div>Start: <b>'+fmtMoney(a.startingBalance)+'</b></div>'+
+          '<div>Current: <b class="'+balCls+'">'+fmtMoney(a.currentBalance)+'</b></div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="macc-actions">'+quickBtns+'</div>'+
+    '</div>'+
+    '<div class="macc-edit'+(editing?" show":"")+'" id="maccEdit_'+a.accountId+'">'+
+      '<div class="jgrid">'+
+        '<div class="jfield"><label class="jlabel">Name</label><input class="jinput" type="text" id="edtName_'+a.accountId+'" value="'+esc(a.name)+'" maxlength="40"></div>'+
+        '<div class="jfield"><label class="jlabel">Phase</label><select class="jselect" id="edtPhase_'+a.accountId+'">'+phaseOpts+'</select></div>'+
+        '<div class="jfield"><label class="jlabel">Status</label><select class="jselect" id="edtStatus_'+a.accountId+'">'+statusOpts+'</select></div>'+
+      '</div>'+
+      '<div class="jfield" style="max-width:220px;margin-top:12px;"><label class="jlabel">Starting Balance ($)</label><input class="jinput" type="number" id="edtBalance_'+a.accountId+'" value="'+a.startingBalance+'" min="0" step="0.01"></div>'+
+      '<div class="jactions" style="margin-top:14px;"><button class="jsubmit-btn" onclick="saveAccountEdit(\''+a.accountId+'\')">Save Changes</button></div>'+
+      '<div class="jerr" id="edtErr_'+a.accountId+'"></div>'+
+      '<div class="jok" id="edtOk_'+a.accountId+'"></div>'+
+    '</div>'+
+  '</div>';
+}
+
+function toggleAccountEdit(accountId){
+  _maccOpen[accountId] = !_maccOpen[accountId];
+  renderManageAccounts();
+}
+
+function saveAccountEdit(accountId){
+  var name    = document.getElementById("edtName_"+accountId).value.trim();
+  var phase   = document.getElementById("edtPhase_"+accountId).value;
+  var status  = document.getElementById("edtStatus_"+accountId).value;
+  var balance = document.getElementById("edtBalance_"+accountId).value;
+  var errEl = document.getElementById("edtErr_"+accountId);
+  var okEl  = document.getElementById("edtOk_"+accountId);
+  errEl.textContent = ""; okEl.textContent = "";
+
+  if(!name){ errEl.textContent = "Name cannot be empty."; return; }
+
+  var params = "token=" + encodeURIComponent(_tok) +
+    "&accountId=" + encodeURIComponent(accountId) +
+    "&name=" + encodeURIComponent(name) +
+    "&phase=" + encodeURIComponent(phase) +
+    "&status=" + encodeURIComponent(status) +
+    "&startingBalance=" + encodeURIComponent(balance || "0");
+
+  jsonp(APPS_SCRIPT_URL + "?action=updateAccount&" + params, function(d){
+    if(!d || !d.success){ errEl.textContent = (d && d.error) || "Could not save changes."; return; }
+    okEl.textContent = "Saved ✓";
+    _maccOpen[accountId] = false;
+    refreshAccountsList();
+    refreshDashboardQuietly(function(){ renderManageAccounts(); });
+  });
+}
+
+function quickAccountStatus(accountId, status){
+  var msgs = {
+    PASSED: "Mark this account as Passed? It will stop appearing for new trades and drop out of analytics.",
+    BLOWN:  "Mark this account as Blown? It will stop appearing for new trades and drop out of analytics.",
+    ACTIVE: "Reactivate this account? It'll be selectable again and count toward analytics.",
+  };
+  if(msgs[status] && !confirm(msgs[status])) return;
+
+  jsonp(APPS_SCRIPT_URL + "?action=updateAccount&token=" + encodeURIComponent(_tok) +
+        "&accountId=" + encodeURIComponent(accountId) +
+        "&status=" + encodeURIComponent(status), function(d){
+    if(!d || !d.success){ alert((d&&d.error)||"Could not update account."); return; }
+    refreshAccountsList();
+    refreshDashboardQuietly(function(){ renderManageAccounts(); });
+  });
+}
+
+function gotoPayout(accountId){
+  var acc = _accountsById[accountId];
+  showTab("payouts");
+  setTimeout(function(){
+    if(acc) document.getElementById("poPerson").value = acc.person;
+    onPayoutPersonChange();
+    if(acc) document.getElementById("poAccount").value = accountId;
+  }, 50);
 }
 
 /* ══════════════════════════════════════
@@ -1729,7 +2265,8 @@ function initJournal(){
 }
 
 /* Pulls the latest account list from the backend (fresh every time,
-   since accounts can be added/removed at any point). */
+   since accounts can be added/changed at any point). Used by Journal
+   Trade's account dropdown and the Payouts tab's Master picker. */
 function refreshAccountsList(afterCb){
   jsonp(APPS_SCRIPT_URL + "?action=getAccounts&token=" + encodeURIComponent(_tok), function(d){
     if(d && d.success){ _accountsByPerson = d.accountsByPerson || {}; }
@@ -1740,21 +2277,19 @@ function refreshAccountsList(afterCb){
 
 function onPersonChange(){
   var p = document.getElementById("jPerson").value;
-  var accounts = (_accountsByPerson[p]||[]).filter(function(a){ return a.active; });
+  var accounts = (_accountsByPerson[p]||[]).filter(function(a){ return a.status==="ACTIVE"; });
   var sel = document.getElementById("jAccount");
 
   if(!accounts.length){
-    sel.innerHTML = '<option value="">— no accounts yet —</option>';
+    sel.innerHTML = '<option value="">— no active accounts —</option>';
     sel.disabled = true;
-    document.getElementById("jRemoveAccountBtn").style.display = "none";
     document.getElementById("jTradeFields").style.display = "none";
-    document.getElementById("jStatusBanner").innerHTML = 'No accounts for <b>'+esc(p)+'</b> yet — add one above to get started';
+    document.getElementById("jStatusBanner").innerHTML = 'No active accounts for <b>'+esc(p)+'</b> — add one from the Add Account tab';
     return;
   }
 
   sel.disabled = false;
-  sel.innerHTML = accounts.map(function(a){ return '<option value="'+esc(a.id)+'">'+esc(a.name)+'</option>'; }).join("");
-  document.getElementById("jRemoveAccountBtn").style.display = "inline-block";
+  sel.innerHTML = accounts.map(function(a){ return '<option value="'+esc(a.id)+'">'+esc(a.name)+' — '+esc((_config&&_config.phaseLabels&&_config.phaseLabels[a.phase])||a.phase)+'</option>'; }).join("");
   onKeyFieldChange();
 }
 
@@ -1772,7 +2307,7 @@ function checkExistingTrade(){
   if(!person || !accountId || !date){
     document.getElementById("jTradeFields").style.display = "none";
     if(person && !accountId){
-      document.getElementById("jStatusBanner").innerHTML = 'No accounts for <b>'+esc(person)+'</b> yet — add one above to get started';
+      document.getElementById("jStatusBanner").innerHTML = 'No active accounts for <b>'+esc(person)+'</b> — add one from the Add Account tab';
     } else {
       document.getElementById("jStatusBanner").textContent = "Pick a person, account, and date to begin";
     }
@@ -1825,6 +2360,8 @@ function fillJournalForm(t){
     setSelectValue("jBias", t.bias);
     document.getElementById("jStrategy").value = t.strategy || "";
     setSelectValue("jMistake", t.mistakes || "");
+    document.getElementById("jRisk").value = t.riskAmount || "";
+    document.getElementById("jPnl").value = t.pnl || "";
   }
 }
 function setSelectValue(id, val){
@@ -1842,6 +2379,8 @@ function resetJournalForm(){
   document.getElementById("jBias").selectedIndex = 0;
   document.getElementById("jStrategy").value = "";
   document.getElementById("jMistake").value = "";
+  document.getElementById("jRisk").value = "";
+  document.getElementById("jPnl").value = "";
 }
 function toggleNoTrade(){
   var on = document.getElementById("jNoTrade").checked;
@@ -1868,13 +2407,34 @@ function updateRulesPreview(){
   }
 }
 
+// Suggests a P&L from Risk × RR based on the selected result. Always
+// editable afterwards — this is just a convenience starting point for
+// partial closes / manual closes, which rarely match the exact ratio.
+function suggestPnl(force){
+  var pnlInput = document.getElementById("jPnl");
+  if(!force && pnlInput.dataset.touched === "1") return;
+  var risk = parseFloat(document.getElementById("jRisk").value);
+  var rr   = document.getElementById("jRR").value;
+  var result = document.getElementById("jResult").value;
+  if(isNaN(risk) || !rr) return;
+  var rrMult = parseFloat(rr.split(":")[1]);
+  if(isNaN(rrMult)) return;
+  var val = 0;
+  if(result === "TP") val = risk * rrMult;
+  else if(result === "SL") val = -risk;
+  else if(result === "BE") val = 0;
+  else if(result === "PARTIAL TP") val = (risk * rrMult) / 2;
+  else if(result === "MANUAL CLOSE") val = 0;
+  pnlInput.value = val.toFixed(2);
+}
+
 function submitTrade(){
   var person    = document.getElementById("jPerson").value;
   var accountId = document.getElementById("jAccount").value;
   var date      = document.getElementById("jDate").value;
   var noTrade   = document.getElementById("jNoTrade").checked;
 
-  if(!accountId){ document.getElementById("jErr").textContent = "Add an account first."; return; }
+  if(!accountId){ document.getElementById("jErr").textContent = "Pick an active account first."; return; }
 
   var params = "token=" + encodeURIComponent(_tok) +
     "&person=" + encodeURIComponent(person) +
@@ -1890,7 +2450,9 @@ function submitTrade(){
             + "&result="    + encodeURIComponent(document.getElementById("jResult").value)
             + "&bias="      + encodeURIComponent(document.getElementById("jBias").value)
             + "&strategy="  + encodeURIComponent(document.getElementById("jStrategy").value)
-            + "&mistakes="  + encodeURIComponent(document.getElementById("jMistake").value);
+            + "&mistakes="  + encodeURIComponent(document.getElementById("jMistake").value)
+            + "&riskAmount="+ encodeURIComponent(document.getElementById("jRisk").value || "0")
+            + "&pnl="       + encodeURIComponent(document.getElementById("jPnl").value || "0");
   }
 
   var action = _journalState.editing ? "updateTrade" : "logTrade";
@@ -1929,54 +2491,11 @@ function deleteTradeEntry(){
   });
 }
 
-/* ── ACCOUNT MANAGEMENT ── */
-function addNewAccount(){
-  var person = document.getElementById("jPerson").value;
-  var nameInput = document.getElementById("jNewAccountName");
-  var name = nameInput.value.trim();
-  document.getElementById("jErr").textContent = "";
-  document.getElementById("jOk").textContent = "";
-
-  if(!person){ document.getElementById("jErr").textContent = "Pick a person first."; return; }
-  if(!name){ document.getElementById("jErr").textContent = "Enter an account name."; return; }
-
-  document.getElementById("jAddAccountBtn").disabled = true;
-  jsonp(APPS_SCRIPT_URL + "?action=addAccount&token=" + encodeURIComponent(_tok) +
-        "&person=" + encodeURIComponent(person) +
-        "&name=" + encodeURIComponent(name), function(d){
-    document.getElementById("jAddAccountBtn").disabled = false;
-    if(!d || !d.success){
-      document.getElementById("jErr").textContent = (d && d.error) || "Could not add account.";
-      return;
-    }
-    nameInput.value = "";
-    document.getElementById("jOk").textContent = "Account added ✓";
-    refreshAccountsList(function(){
-      document.getElementById("jAccount").value = d.account.id;
-      onKeyFieldChange();
-    });
-    refreshDashboardQuietly();
-  });
-}
-
-function removeCurrentAccount(){
-  var sel = document.getElementById("jAccount");
-  var accountId = sel.value;
-  if(!accountId) return;
-  var accName = sel.selectedOptions && sel.selectedOptions[0] ? sel.selectedOptions[0].textContent : "this account";
-  if(!confirm('Remove "'+accName+'"? Past trades logged on it stay visible in Analytics, but you won\'t be able to log new ones to it.')) return;
-
-  jsonp(APPS_SCRIPT_URL + "?action=deleteAccount&token=" + encodeURIComponent(_tok) +
-        "&accountId=" + encodeURIComponent(accountId), function(d){
-    if(!d || !d.success){
-      document.getElementById("jErr").textContent = (d && d.error) || "Could not remove account.";
-      return;
-    }
-    document.getElementById("jOk").textContent = "Account removed ✓";
-    refreshAccountsList();
-    refreshDashboardQuietly();
-  });
-}
+/* ── Track manual P&L edits so suggestPnl() won't clobber them ── */
+document.addEventListener("DOMContentLoaded", function(){
+  var pnlInput = document.getElementById("jPnl");
+  if(pnlInput){ pnlInput.addEventListener("input", function(){ this.dataset.touched = "1"; }); }
+});
 
 /* ── UTILS ── */
 function niceMonth(mk){
