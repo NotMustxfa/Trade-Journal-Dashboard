@@ -703,12 +703,6 @@ body::after {
   box-shadow: 0 0 0 3px var(--gold-glow);
 }
 .jselect:disabled { opacity: 0.4; cursor: not-allowed; }
-.jcheck {
-  display: flex; align-items: center; gap: 8px;
-  font-family: var(--font-display); font-size: 11px; color: var(--txt2);
-  margin-bottom: 18px; cursor: pointer;
-}
-.jcheck input { width: 15px; height: 15px; accent-color: var(--gold); cursor: pointer; }
 
 .jstatus {
   font-family: var(--font-mono); font-size: 11px; color: var(--txt3);
@@ -801,6 +795,53 @@ body::after {
 .macc-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .macc-edit { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); display: none; }
 .macc-edit.show { display: block; }
+
+/* ── DATE PICKER ── */
+.datepicker-wrap { position: relative; }
+.datepicker-wrap .jinput { cursor: pointer; padding-right: 40px; }
+.dp-icon {
+  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  font-size: 14px; pointer-events: none; opacity: 0.6;
+}
+.dp-pop {
+  position: absolute; z-index: 5000;
+  background: var(--bg3); border: 1px solid var(--border3);
+  border-radius: var(--r2); padding: 14px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  width: 264px;
+  font-family: var(--font-display);
+  animation: fadeUp 0.15s ease both;
+}
+.dp-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.dp-nav {
+  background: var(--bg4); border: 1px solid var(--border2); color: var(--txt2);
+  width: 26px; height: 26px; border-radius: 6px; cursor: pointer; font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+}
+.dp-nav:hover { border-color: var(--gold-rim); color: var(--gold); }
+.dp-title { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: var(--txt); text-transform: uppercase; }
+.dp-dow { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; margin-bottom: 4px; }
+.dp-dow div { font-size: 8px; text-align: center; color: var(--txt4); letter-spacing: 0.08em; text-transform: uppercase; }
+.dp-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; }
+.dp-cell {
+  height: 30px; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: var(--txt2); border-radius: 6px; cursor: pointer;
+  font-family: var(--font-mono);
+}
+.dp-cell:hover { background: var(--bg5); }
+.dp-cell.empty { cursor: default; }
+.dp-cell.empty:hover { background: none; }
+.dp-cell.weekend { color: var(--txt4); }
+.dp-cell.today { border: 1px solid var(--gold-rim); color: var(--gold); }
+.dp-cell.sel { background: var(--gold); color: #08070A; font-weight: 700; }
+.dp-foot { margin-top: 10px; text-align: center; border-top: 1px solid var(--border); padding-top: 10px; }
+.dp-today {
+  background: none; border: 1px solid var(--border2); color: var(--txt3);
+  font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+  padding: 6px 14px; border-radius: 20px; cursor: pointer;
+  font-family: var(--font-display); font-weight: 600;
+}
+.dp-today:hover { border-color: var(--gold-rim); color: var(--gold); }
 
 /* ══════════════════════════════════════
    STAGGER DELAYS
@@ -1107,7 +1148,13 @@ body::after {
         </div>
         <div class="jgrid" style="grid-template-columns:1fr 1fr;">
           <div class="jfield"><label class="jlabel">Amount ($)</label><input class="jinput" type="number" id="poAmount" min="0.01" step="0.01" placeholder="0.00"></div>
-          <div class="jfield"><label class="jlabel">Date</label><input class="jinput" type="date" id="poDate"></div>
+          <div class="jfield">
+            <label class="jlabel">Date</label>
+            <div class="datepicker-wrap">
+              <input class="jinput" type="text" id="poDate" readonly placeholder="dd/mm/yyyy" onclick="openDatePicker('poDate')">
+              <span class="dp-icon">📅</span>
+            </div>
+          </div>
         </div>
         <div class="jfield"><label class="jlabel">Notes</label><input class="jinput" type="text" id="poNotes" placeholder="optional"></div>
         <div class="jactions"><button class="jsubmit-btn" onclick="submitPayout()">Save Payout</button></div>
@@ -1167,18 +1214,16 @@ body::after {
           </div>
           <div class="jfield">
             <label class="jlabel">Date</label>
-            <input class="jinput" type="date" id="jDate" onchange="onKeyFieldChange()">
+            <div class="datepicker-wrap">
+              <input class="jinput" type="text" id="jDate" readonly placeholder="dd/mm/yyyy" onclick="openDatePicker('jDate')">
+              <span class="dp-icon">📅</span>
+            </div>
           </div>
         </div>
 
         <div class="jstatus" id="jStatusBanner">Loading…</div>
 
         <div id="jTradeFields" style="display:none;">
-          <label class="jcheck">
-            <input type="checkbox" id="jNoTrade" onchange="toggleNoTrade()">
-            No trade taken this day
-          </label>
-
           <div id="jDetailFields">
             <div class="jgrid">
               <div class="jfield"><label class="jlabel">Pair</label><select class="jselect" id="jPair" onchange="updateRulesPreview()"></select></div>
@@ -1519,11 +1564,6 @@ function stats(trades){
   var totalPnL = trades.reduce(function(a,t){ return a+(t.pnl||0); }, 0);
   totalPnL = parseFloat(totalPnL.toFixed(2));
 
-  // ── Risk-normalized % metrics — uses the pnlPercent the backend
-  //    already computed per trade (pnl / that trade's account's
-  //    starting balance * 100). Averaging these percentages, not
-  //    the raw dollars, is what makes a $50 loss on a 5k account
-  //    and a $250 loss on a 25k account both count as -1%. ──
   var pctVals = trades.map(function(t){ return t.pnlPercent; })
     .filter(function(v){ return v!==null && v!==undefined && !isNaN(v); });
   var avgPnlPercent = pctVals.length ? parseFloat((pctVals.reduce(function(a,b){return a+b;},0)/pctVals.length).toFixed(3)) : 0;
@@ -1615,10 +1655,6 @@ function renderMistakes(s){
 
 /* ══════════════════════════════════════
    PERCENTAGE PERFORMANCE (section 02)
-   Risk-normalized: each trade's % is (pnl / that account's
-   starting balance) * 100 — averaging % instead of $ means a
-   $50 loss on a 5k account and a $250 loss on a 25k account both
-   register as -1%, so accounts of different sizes compare fairly.
 ══════════════════════════════════════ */
 function renderPctKpi(s){
   var overallCls = s.avgPnlPercent>0 ? "g" : s.avgPnlPercent<0 ? "r" : "a";
@@ -1705,10 +1741,6 @@ function renderRR(s){
 }
 
 /* ── EQUITY ── */
-// Equity is cumulative by nature, so it always uses ALL trades in
-// time order (ignores the Period pill) — it respects Person,
-// Account, and Status. Baseline = sum of starting balances of
-// every account currently matching those filters.
 function computeEquity(){
   var accs = (_data.accounts||[])
     .filter(function(a){ return _status==="all" || a.status===_status; })
@@ -1723,8 +1755,6 @@ function computeEquity(){
     return true;
   }).slice().sort(function(a,b){ return new Date(a.date) - new Date(b.date); });
 
-  // Aggregate P&L by date so multiple accounts on the same day
-  // become one step in the curve rather than an arbitrary order.
   var byDate = {};
   var order  = [];
   trades.forEach(function(t){
@@ -1738,7 +1768,7 @@ function computeEquity(){
     running += byDate[dk];
     peak = Math.max(peak, running);
     maxDrawdown = Math.max(maxDrawdown, peak - running);
-    labels.push(dk);
+    labels.push(isoToDMY(dk));
     values.push(parseFloat(running.toFixed(2)));
   });
 
@@ -1978,11 +2008,7 @@ function renderWeekly(){
   document.getElementById("weeklyTable").innerHTML = h;
 }
 
-/* ── ACCOUNT CARDS ──
-   Every account matching the current Person/Status/Account
-   filters — not just Active anymore — recomputed live from the
-   currently filtered trade set so it always matches what the
-   rest of the page shows. */
+/* ── ACCOUNT CARDS ── */
 function renderAccounts(){
   var trades = getFiltered();
   var byAcc = {};
@@ -2083,7 +2109,7 @@ function renderRawLog(){
     var rulesCol = t.rules==="TRUE" ? "var(--green)" : "var(--red)";
     var pctTxt = (t.pnlPercent===null||t.pnlPercent===undefined) ? "—" : ((t.pnlPercent>0?"+":"")+t.pnlPercent.toFixed(2)+"%");
     h += '<tr>'+
-      '<td>'+esc(t.dateKey)+'</td>'+
+      '<td>'+esc(isoToDMY(t.dateKey))+'</td>'+
       '<td>'+esc(t.person)+'</td>'+
       '<td>'+esc(t.accountName)+' '+phaseBadge(t.accountPhase)+' '+statusBadge(t.accountStatus)+'</td>'+
       '<td>'+esc(t.pair)+'</td>'+
@@ -2109,7 +2135,7 @@ function initPayoutsTab(){
   if(!_config){ return; }
   var personSel = document.getElementById("poPerson");
   personSel.innerHTML = optHTML(_config.people);
-  if(!document.getElementById("poDate").value) document.getElementById("poDate").value = todayISO();
+  if(!getDateISO("poDate")) setDateISO("poDate", todayISO());
   refreshAccountsList(function(){
     onPayoutPersonChange();
     renderPayoutsKPI();
@@ -2120,9 +2146,6 @@ function initPayoutsTab(){
 
 function onPayoutPersonChange(){
   var p = document.getElementById("poPerson").value;
-  // Every Master account regardless of status — a Master account
-  // can be Active, Passed, or already Blown and still take a
-  // payout entry (or show its existing ones).
   var masters = (_accountsByPerson[p]||[]).filter(function(a){ return a.phase==="MASTER"; });
   var sel = document.getElementById("poAccount");
   if(!masters.length){
@@ -2158,7 +2181,7 @@ function renderPayoutTable(){
     var acc = _accountsById[p.accountId];
     var statusTag = acc ? statusBadge(acc.status) : "";
     h += '<tr>'+
-      '<td>'+esc(p.date)+'</td>'+
+      '<td>'+esc(isoToDMY(p.date))+'</td>'+
       '<td>'+esc(p.person)+'</td>'+
       '<td>'+esc(p.accountName)+' '+statusTag+'</td>'+
       '<td style="color:var(--green);font-weight:700;">'+fmtMoney(p.amount)+'</td>'+
@@ -2183,7 +2206,7 @@ function submitPayout(){
   var person    = document.getElementById("poPerson").value;
   var accountId = document.getElementById("poAccount").value;
   var amount    = document.getElementById("poAmount").value;
-  var date      = document.getElementById("poDate").value;
+  var date      = getDateISO("poDate");
   var notes     = document.getElementById("poNotes").value;
 
   document.getElementById("poErr").textContent = "";
@@ -2298,8 +2321,6 @@ function maccCardHTML(a){
   }).join("");
 
   var quickBtns = "";
-  // These work identically regardless of phase — a Master account
-  // can be Marked Passed / Blown exactly like a Phase 1/2 account.
   if(a.status==="ACTIVE"){
     quickBtns += '<button class="jbtn-sm gold" onclick="quickAccountStatus(\''+a.accountId+'\',\'PASSED\')">Mark Passed</button>';
     quickBtns += '<button class="jbtn-sm remove" onclick="quickAccountStatus(\''+a.accountId+'\',\'BLOWN\')">Mark Blown</button>';
@@ -2396,6 +2417,112 @@ function gotoPayout(accountId){
 }
 
 /* ══════════════════════════════════════
+   DATE PICKER — dd/mm/yyyy display, ISO storage
+   Every date input in the app (Journal Trade, Payouts) is a
+   readonly text field that opens this popup calendar instead of
+   letting the user type. The field's visible text is dd/mm/yyyy;
+   the real yyyy-mm-dd value used for backend calls lives in the
+   input's `data-iso` attribute, accessed via getDateISO/setDateISO.
+══════════════════════════════════════ */
+var _dpActiveInput = null, _dpViewDate = null;
+
+function isoToDMY(iso){
+  if(!iso) return "";
+  var p = String(iso).split("-");
+  if(p.length!==3) return "";
+  return p[2]+"/"+p[1]+"/"+p[0];
+}
+function getDateISO(id){
+  var el = document.getElementById(id);
+  return el ? (el.dataset.iso || "") : "";
+}
+function setDateISO(id, iso){
+  var el = document.getElementById(id);
+  if(!el) return;
+  el.dataset.iso = iso || "";
+  el.value = iso ? isoToDMY(iso) : "";
+}
+
+function openDatePicker(inputId){
+  closeDatePicker();
+  var input = document.getElementById(inputId);
+  if(!input || input.disabled) return;
+  _dpActiveInput = inputId;
+  var iso = input.dataset.iso || todayISO();
+  var d = new Date(iso + "T00:00:00");
+  if(isNaN(d.getTime())) d = new Date();
+  _dpViewDate = new Date(d.getFullYear(), d.getMonth(), 1);
+
+  var pop = document.createElement("div");
+  pop.className = "dp-pop";
+  pop.id = "dpPop";
+  document.body.appendChild(pop);
+  renderDatePicker();
+
+  var rect = input.getBoundingClientRect();
+  pop.style.top = (window.scrollY + rect.bottom + 6) + "px";
+  pop.style.left = (window.scrollX + rect.left) + "px";
+
+  setTimeout(function(){ document.addEventListener("click", onDpOutsideClick); }, 0);
+}
+function closeDatePicker(){
+  var pop = document.getElementById("dpPop");
+  if(pop) pop.remove();
+  document.removeEventListener("click", onDpOutsideClick);
+  _dpActiveInput = null;
+}
+function onDpOutsideClick(e){
+  var pop = document.getElementById("dpPop");
+  var input = _dpActiveInput ? document.getElementById(_dpActiveInput) : null;
+  if(pop && !pop.contains(e.target) && e.target!==input){ closeDatePicker(); }
+}
+function dpChangeMonth(delta){
+  _dpViewDate = new Date(_dpViewDate.getFullYear(), _dpViewDate.getMonth()+delta, 1);
+  renderDatePicker();
+}
+function renderDatePicker(){
+  var pop = document.getElementById("dpPop");
+  if(!pop) return;
+  var y = _dpViewDate.getFullYear(), m = _dpViewDate.getMonth();
+  var mn = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  var first = new Date(y,m,1);
+  var startDow = (first.getDay()+6)%7; // Monday = 0
+  var daysInMonth = new Date(y,m+1,0).getDate();
+  var input = document.getElementById(_dpActiveInput);
+  var selIso = input ? input.dataset.iso : "";
+  var todayIso = todayISO();
+
+  var h = '<div class="dp-head">'+
+    '<button type="button" class="dp-nav" onclick="dpChangeMonth(-1)">‹</button>'+
+    '<div class="dp-title">'+mn[m]+' '+y+'</div>'+
+    '<button type="button" class="dp-nav" onclick="dpChangeMonth(1)">›</button>'+
+  '</div>';
+  h += '<div class="dp-dow">'+["Mo","Tu","We","Th","Fr","Sa","Su"].map(function(d){return '<div>'+d+'</div>';}).join("")+'</div>';
+  h += '<div class="dp-grid">';
+  for(var i=0;i<startDow;i++) h += '<div class="dp-cell empty"></div>';
+  for(var day=1; day<=daysInMonth; day++){
+    var iso = y+"-"+String(m+1).padStart(2,"0")+"-"+String(day).padStart(2,"0");
+    var dow = new Date(y,m,day).getDay();
+    var isWeekend = (dow===0||dow===6);
+    var cls = "dp-cell";
+    if(iso===selIso) cls += " sel";
+    if(iso===todayIso) cls += " today";
+    if(isWeekend) cls += " weekend";
+    h += '<div class="'+cls+'" onclick="dpSelectDate(\''+iso+'\')">'+day+'</div>';
+  }
+  h += '</div>';
+  h += '<div class="dp-foot"><button type="button" class="dp-today" onclick="dpSelectDate(\''+todayIso+'\')">Today</button></div>';
+  pop.innerHTML = h;
+}
+function dpSelectDate(iso){
+  if(!_dpActiveInput) return;
+  var id = _dpActiveInput;
+  setDateISO(id, iso);
+  closeDatePicker();
+  if(id === "jDate") onKeyFieldChange();
+}
+
+/* ══════════════════════════════════════
    LOG TRADE (JOURNAL)
 ══════════════════════════════════════ */
 function todayISO(){
@@ -2424,13 +2551,10 @@ function initJournal(){
   document.getElementById("jResult").innerHTML     = optHTML(_config.results);
   document.getElementById("jBias").innerHTML       = optHTML(_config.biases);
   document.getElementById("jMistake").innerHTML    = '<option value="">— none —</option>' + optHTML(_config.mistakes);
-  if(!document.getElementById("jDate").value) document.getElementById("jDate").value = todayISO();
+  if(!getDateISO("jDate")) setDateISO("jDate", todayISO());
   refreshAccountsList();
 }
 
-/* Pulls the latest account list from the backend (fresh every time,
-   since accounts can be added/changed at any point). Used by Journal
-   Trade's account dropdown and the Payouts tab's Master picker. */
 function refreshAccountsList(afterCb){
   jsonp(APPS_SCRIPT_URL + "?action=getAccounts&token=" + encodeURIComponent(_tok), function(d){
     if(d && d.success){ _accountsByPerson = d.accountsByPerson || {}; }
@@ -2441,9 +2565,6 @@ function refreshAccountsList(afterCb){
 
 function onPersonChange(){
   var p = document.getElementById("jPerson").value;
-  // New trades can still only be logged against an ACTIVE account —
-  // this is unrelated to analytics scope, it's just "what's still
-  // being traded right now".
   var accounts = (_accountsByPerson[p]||[]).filter(function(a){ return a.status==="ACTIVE"; });
   var sel = document.getElementById("jAccount");
 
@@ -2467,7 +2588,7 @@ function onKeyFieldChange(){
 function checkExistingTrade(){
   var person    = document.getElementById("jPerson").value;
   var accountId = document.getElementById("jAccount").value;
-  var date      = document.getElementById("jDate").value;
+  var date      = getDateISO("jDate");
   document.getElementById("jOk").textContent = "";
   document.getElementById("jErr").textContent = "";
 
@@ -2500,13 +2621,13 @@ function checkExistingTrade(){
     if(d.exists){
       _journalState = { editing:true };
       fillJournalForm(d.trade);
-      document.getElementById("jStatusBanner").innerHTML = '✏️ Editing existing entry for <b>'+esc(date)+'</b>';
+      document.getElementById("jStatusBanner").innerHTML = '✏️ Editing existing entry for <b>'+esc(isoToDMY(date))+'</b>';
       document.getElementById("jSubmitBtn").textContent = "Update Entry";
       document.getElementById("jDeleteBtn").style.display = "inline-block";
     } else {
       _journalState = { editing:false };
       resetJournalForm();
-      document.getElementById("jStatusBanner").innerHTML = '🆕 New entry for <b>'+esc(date)+'</b>';
+      document.getElementById("jStatusBanner").innerHTML = '🆕 New entry for <b>'+esc(isoToDMY(date))+'</b>';
       document.getElementById("jSubmitBtn").textContent = "Save Entry";
       document.getElementById("jDeleteBtn").style.display = "none";
     }
@@ -2514,11 +2635,13 @@ function checkExistingTrade(){
   });
 }
 
+// Fills the form from an existing row. Legacy safety net: rows
+// created before v10 (via the old "No Trade" checkbox) may still
+// have pair === "NO TRADE" if the sheet hasn't been cleaned up —
+// in that case leave the fields blank rather than trying to map
+// nonexistent trade data into them.
 function fillJournalForm(t){
-  var isNoTrade = t.pair === "NO TRADE";
-  document.getElementById("jNoTrade").checked = isNoTrade;
-  toggleNoTrade();
-  if(!isNoTrade){
+  if(t.pair && t.pair !== "NO TRADE"){
     setSelectValue("jPair", t.pair);
     setSelectValue("jTimeframe", t.timeframe);
     setSelectValue("jTradeType", t.tradeType);
@@ -2529,6 +2652,8 @@ function fillJournalForm(t){
     setSelectValue("jMistake", t.mistakes || "");
     document.getElementById("jRisk").value = t.riskAmount || "";
     document.getElementById("jPnl").value = t.pnl || "";
+  } else {
+    resetJournalForm();
   }
 }
 function setSelectValue(id, val){
@@ -2536,8 +2661,6 @@ function setSelectValue(id, val){
   if(val) el.value = val;
 }
 function resetJournalForm(){
-  document.getElementById("jNoTrade").checked = false;
-  toggleNoTrade();
   document.getElementById("jPair").selectedIndex = 0;
   document.getElementById("jTimeframe").selectedIndex = 0;
   document.getElementById("jTradeType").selectedIndex = 0;
@@ -2548,10 +2671,6 @@ function resetJournalForm(){
   document.getElementById("jMistake").value = "";
   document.getElementById("jRisk").value = "";
   document.getElementById("jPnl").value = "";
-}
-function toggleNoTrade(){
-  var on = document.getElementById("jNoTrade").checked;
-  document.getElementById("jDetailFields").style.display = on ? "none" : "block";
 }
 
 function updateRulesPreview(){
@@ -2574,9 +2693,6 @@ function updateRulesPreview(){
   }
 }
 
-// Suggests a P&L from Risk × RR based on the selected result. Always
-// editable afterwards — this is just a convenience starting point for
-// partial closes / manual closes, which rarely match the exact ratio.
 function suggestPnl(force){
   var pnlInput = document.getElementById("jPnl");
   if(!force && pnlInput.dataset.touched === "1") return;
@@ -2598,8 +2714,7 @@ function suggestPnl(force){
 function submitTrade(){
   var person    = document.getElementById("jPerson").value;
   var accountId = document.getElementById("jAccount").value;
-  var date      = document.getElementById("jDate").value;
-  var noTrade   = document.getElementById("jNoTrade").checked;
+  var date      = getDateISO("jDate");
 
   if(!accountId){ document.getElementById("jErr").textContent = "Pick an active account first."; return; }
 
@@ -2607,20 +2722,16 @@ function submitTrade(){
     "&person=" + encodeURIComponent(person) +
     "&accountId=" + encodeURIComponent(accountId) +
     "&date=" + encodeURIComponent(date) +
-    "&noTrade=" + (noTrade ? "true" : "false");
-
-  if(!noTrade){
-    params += "&pair="      + encodeURIComponent(document.getElementById("jPair").value)
-            + "&timeframe=" + encodeURIComponent(document.getElementById("jTimeframe").value)
-            + "&tradeType=" + encodeURIComponent(document.getElementById("jTradeType").value)
-            + "&rr="        + encodeURIComponent(document.getElementById("jRR").value)
-            + "&result="    + encodeURIComponent(document.getElementById("jResult").value)
-            + "&bias="      + encodeURIComponent(document.getElementById("jBias").value)
-            + "&strategy="  + encodeURIComponent(document.getElementById("jStrategy").value)
-            + "&mistakes="  + encodeURIComponent(document.getElementById("jMistake").value)
-            + "&riskAmount="+ encodeURIComponent(document.getElementById("jRisk").value || "0")
-            + "&pnl="       + encodeURIComponent(document.getElementById("jPnl").value || "0");
-  }
+    "&pair="      + encodeURIComponent(document.getElementById("jPair").value) +
+    "&timeframe=" + encodeURIComponent(document.getElementById("jTimeframe").value) +
+    "&tradeType=" + encodeURIComponent(document.getElementById("jTradeType").value) +
+    "&rr="        + encodeURIComponent(document.getElementById("jRR").value) +
+    "&result="    + encodeURIComponent(document.getElementById("jResult").value) +
+    "&bias="      + encodeURIComponent(document.getElementById("jBias").value) +
+    "&strategy="  + encodeURIComponent(document.getElementById("jStrategy").value) +
+    "&mistakes="  + encodeURIComponent(document.getElementById("jMistake").value) +
+    "&riskAmount="+ encodeURIComponent(document.getElementById("jRisk").value || "0") +
+    "&pnl="       + encodeURIComponent(document.getElementById("jPnl").value || "0");
 
   var action = _journalState.editing ? "updateTrade" : "logTrade";
   document.getElementById("jSubmitBtn").disabled = true;
@@ -2643,7 +2754,7 @@ function deleteTradeEntry(){
   if(!confirm("Delete this entry? This can't be undone.")) return;
   var person    = document.getElementById("jPerson").value;
   var accountId = document.getElementById("jAccount").value;
-  var date      = document.getElementById("jDate").value;
+  var date      = getDateISO("jDate");
   jsonp(APPS_SCRIPT_URL + "?action=deleteTrade&token=" + encodeURIComponent(_tok) +
         "&person=" + encodeURIComponent(person) +
         "&accountId=" + encodeURIComponent(accountId) +
