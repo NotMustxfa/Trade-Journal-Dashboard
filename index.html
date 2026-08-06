@@ -1895,7 +1895,15 @@ function initJournal(){
   document.getElementById("jResult").innerHTML     = optHTML(_config.results);
   document.getElementById("jBias").innerHTML       = optHTML(_config.biases);
   document.getElementById("jMistake").innerHTML    = '<option value="">— none —</option>' + optHTML(_config.mistakes);
-  if(!document.getElementById("jDate").value) document.getElementById("jDate").value = todayISO();
+function lastWeekdayISO(){
+  var d = new Date();
+  var tz = d.getTimezoneOffset()*60000;
+  d = new Date(d - tz);
+  while(d.getDay() === 0 || d.getDay() === 6){
+    d.setDate(d.getDate() - 1);
+  }
+  return d.toISOString().slice(0,10);
+}
   onPersonChange();
 }
 
@@ -1916,11 +1924,20 @@ function checkExistingTrade(){
   var date    = document.getElementById("jDate").value;
   document.getElementById("jOk").textContent = "";
   document.getElementById("jErr").textContent = "";
+ 
   if(!person || !account || !date){
     document.getElementById("jTradeFields").style.display = "none";
     document.getElementById("jStatusBanner").textContent = "Pick a person, account, and date to begin";
     return;
   }
+ 
+  if(isWeekendISO(date)){
+    document.getElementById("jTradeFields").style.display = "none";
+    document.getElementById("jStatusBanner").innerHTML =
+      '🚫 Markets are closed on weekends — pick a weekday.';
+    return;
+  }
+ 
   document.getElementById("jStatusBanner").textContent = "Checking…";
   jsonp(APPS_SCRIPT_URL + "?action=getTrade&token=" + encodeURIComponent(_tok) +
         "&person=" + encodeURIComponent(person) +
@@ -2074,6 +2091,13 @@ function esc(s){
 }
 function showLogin(){ document.getElementById("login").style.display = "flex"; }
 function showErr(m){ var e=document.getElementById("loginErr"); e.textContent=m; e.classList.add("show"); }
+
+function isWeekendISO(dateStr){
+  // dateStr is "YYYY-MM-DD" from <input type="date">
+  var d = new Date(dateStr + "T00:00:00");
+  var day = d.getDay(); // 0 = Sunday, 6 = Saturday
+  return day === 0 || day === 6;
+}  
 
 /* ── JSONP ── */
 function jsonp(url, cb){
