@@ -1305,7 +1305,13 @@ body::after {
                 <input class="jinput" type="number" id="jPnl" step="0.01" placeholder="0.00">
               </div>
             </div>
-            <div class="jfield"><label class="jlabel">Strategy</label><input class="jinput" type="text" id="jStrategy" placeholder="e.g. Liquidity sweep + FVG entry"></div>
+            <div class="jfield"><label class="jlabel">Was this trade executed according to the predefined strategy?</label>
+              <select class="jselect" id="jStrategy">
+                <option value="">— select —</option>
+                <option value="YES">YES</option>
+                <option value="NO">NO</option>
+              </select>
+            </div>
             <div class="jfield"><label class="jlabel">Mistake (if any)</label><select class="jselect" id="jMistake"><option value="">— none —</option></select></div>
 
             <div class="jrules" id="jRulesPreview"></div>
@@ -2850,7 +2856,7 @@ function fillJournalForm(t){
     setSelectValue("jRR", t.rr);
     setSelectValue("jResult", t.result);
     setSelectValue("jBias", t.bias);
-    document.getElementById("jStrategy").value = t.strategy || "";
+    setSelectValue("jStrategy", t.strategy || "");
     setSelectValue("jMistake", t.mistakes || "");
     document.getElementById("jRisk").value = t.riskAmount || "";
     document.getElementById("jPnl").value = t.pnl || "";
@@ -2869,7 +2875,7 @@ function resetJournalForm(){
   document.getElementById("jRR").selectedIndex = 0;
   document.getElementById("jResult").selectedIndex = 0;
   document.getElementById("jBias").selectedIndex = 0;
-  document.getElementById("jStrategy").value = "";
+  document.getElementById("jStrategy").selectedIndex = 0;
   document.getElementById("jMistake").value = "";
   document.getElementById("jRisk").value = "";
   document.getElementById("jPnl").value = "";
