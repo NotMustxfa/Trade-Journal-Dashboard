@@ -804,25 +804,83 @@ body::after {
 .badge-status.removed { color: var(--txt4);  border-color: var(--border2);  background: var(--bg4); }
 
 /* ── Manage Accounts cards ── */
+.macc-summary {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 10px;
+  margin-bottom: 26px;
+}
+.macc-summary-item {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r2);
+  padding: 16px 18px;
+}
+.macc-summary-val { font-family: var(--font-display); font-size: 24px; font-weight: 800; color: var(--txt); letter-spacing: -0.02em; }
+.macc-summary-lbl { font-family: var(--font-display); font-size: 8.5px; font-weight: 600; color: var(--txt4); letter-spacing: 0.22em; text-transform: uppercase; margin-top: 6px; }
+
 .macc-person-header {
-  font-family: var(--font-display); font-size: 10px; font-weight: 700; letter-spacing: 0.28em;
-  text-transform: uppercase; color: var(--txt4); margin: 26px 0 12px;
+  display: flex; align-items: baseline; gap: 10px;
+  font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 0.28em;
+  text-transform: uppercase; color: var(--gold); margin: 26px 0 12px;
+  padding-bottom: 10px; border-bottom: 1px solid var(--border2);
 }
 .macc-person-header:first-child { margin-top: 0; }
+.macc-person-count { font-family: var(--font-mono); font-size: 9px; font-weight: 500; color: var(--txt4); letter-spacing: 0.05em; text-transform: none; }
+
 .macc-card {
-  background: var(--bg3); border: 1px solid var(--border); border-radius: var(--r2);
-  padding: 18px 20px; margin-bottom: 10px; transition: border-color 0.18s;
+  background: var(--bg3); border: 1px solid var(--border); border-radius: var(--r3);
+  padding: 20px 22px; margin-bottom: 12px; transition: border-color 0.18s, box-shadow 0.18s;
+  position: relative; overflow: hidden;
 }
-.macc-card:hover { border-color: var(--border2); }
-.macc-top { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
-.macc-name { font-family: var(--font-display); font-size: 13px; font-weight: 700; color: var(--txt); display:flex; align-items:center; gap:8px; flex-wrap: wrap; }
-.macc-bal { display: flex; gap: 20px; font-family: var(--font-mono); font-size: 11px; color: var(--txt3); flex-wrap: wrap; }
-.macc-bal b { color: var(--txt2); font-weight: 700; }
-.macc-bal b.pos { color: var(--green); }
-.macc-bal b.neg { color: var(--red); }
-.macc-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-.macc-edit { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); display: none; }
-.macc-edit.show { display: block; }
+.macc-card::before {
+  content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 3px;
+  background: var(--border2); transition: background 0.2s;
+}
+.macc-card.st-active::before  { background: var(--green); }
+.macc-card.st-passed::before  { background: var(--gold); }
+.macc-card.st-blown::before   { background: var(--red); }
+.macc-card.st-removed::before { background: var(--txt4); }
+.macc-card:hover { border-color: var(--border2); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+
+.macc-top { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 14px; margin-bottom: 16px; }
+
+.macc-identity { min-width: 0; }
+.macc-eyebrow {
+  font-family: var(--font-display); font-size: 8px; font-weight: 700;
+  letter-spacing: 0.26em; text-transform: uppercase; color: var(--txt4);
+  margin-bottom: 6px;
+}
+.macc-name-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.macc-name {
+  font-family: var(--font-display); font-size: 20px; font-weight: 800;
+  color: var(--txt); letter-spacing: -0.01em; line-height: 1.15;
+}
+.macc-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.macc-id {
+  font-family: var(--font-mono); font-size: 9px; color: var(--txt4);
+  margin-top: 6px; letter-spacing: 0.02em;
+}
+.macc-actions { display: flex; gap: 8px; flex-wrap: wrap; flex-shrink: 0; }
+
+.macc-detail-grid {
+  display: grid; grid-template-columns: repeat(5,1fr); gap: 10px;
+  padding-top: 14px; border-top: 1px solid var(--border);
+}
+.macc-detail {
+  background: var(--bg4); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 10px 12px;
+}
+.macc-detail-lbl {
+  font-family: var(--font-display); font-size: 7.5px; font-weight: 700;
+  color: var(--txt4); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 6px;
+}
+.macc-detail-val {
+  font-family: var(--font-display); font-size: 15px; font-weight: 700;
+  color: var(--txt2); letter-spacing: -0.01em; line-height: 1.2;
+}
+.macc-detail-val.pos { color: var(--green); }
+.macc-detail-val.neg { color: var(--red); }
+.macc-detail-val.gold { color: var(--gold); }
+
+.macc-edit { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); display: none; }
+.macc-edit.show { display: block; animation: fadeUp 0.2s ease; }
 
 /* ── DATE PICKER ──
    The popup width is intentionally responsive on BOTH the CSS side
@@ -906,6 +964,12 @@ body::after {
 }
 .dp-today:hover { border-color: var(--gold-rim); color: var(--gold); }
 
+/* ── Rule-reason note under a failing Rules cell ── */
+.rule-reason {
+  display: block; font-size: 8.5px; color: var(--txt4);
+  white-space: normal; max-width: 160px; line-height: 1.35; margin-top: 2px;
+}
+
 /* ══════════════════════════════════════
    STAGGER DELAYS
 ══════════════════════════════════════ */
@@ -926,6 +990,8 @@ body::after {
   .kpi-strip.k3 { grid-template-columns: repeat(2,1fr); }
   .kpi-strip.k5 { grid-template-columns: repeat(3,1fr); }
   .g3 { grid-template-columns: 1fr 1fr; }
+  .macc-detail-grid { grid-template-columns: repeat(3,1fr); }
+  .macc-summary { grid-template-columns: repeat(2,1fr); }
 }
 @media(max-width:780px) {
   .g21,.g2 { grid-template-columns: 1fr; }
@@ -934,12 +1000,16 @@ body::after {
   .navbar { padding: 10px 18px 0; }
   .kpi-val { font-size: 44px; }
   .jgrid { grid-template-columns: 1fr; }
+  .macc-detail-grid { grid-template-columns: repeat(2,1fr); }
 }
 @media(max-width:520px) {
   .kpi-strip, .kpi-strip.k3, .kpi-strip.k5 { grid-template-columns: 1fr 1fr; }
   .g3 { grid-template-columns: 1fr; }
   .brand-text { font-size: 14px; }
   .topbar-tag,.gen-time { display: none; }
+  .macc-summary { grid-template-columns: 1fr 1fr; }
+  .macc-detail-grid { grid-template-columns: 1fr 1fr; }
+  .macc-name { font-size: 17px; }
 }
 </style>
 </head>
@@ -1165,7 +1235,7 @@ body::after {
       </div>
       <div class="panel d1">
         <div class="ptitle">Every Trade</div>
-        <div class="psub">All accounts, all statuses — unfiltered history</div>
+        <div class="psub">All accounts, all statuses — unfiltered history. Hover a ✗ for the exact rule it broke.</div>
         <div class="jgrid" style="grid-template-columns:1fr 1fr;margin-bottom:20px;">
           <div class="jfield">
             <label class="jlabel">Person</label>
@@ -1256,6 +1326,7 @@ body::after {
     <div class="page-header">
       <div class="page-title">Manage Accounts</div>
     </div>
+    <div class="macc-summary" id="maccSummary"></div>
     <div id="maccList"></div>
   </div>
 
@@ -2198,6 +2269,9 @@ function renderRawLog(){
     var pnlCol = t.pnl>0?"var(--green)":t.pnl<0?"var(--red)":"var(--txt3)";
     var rulesCol = t.rules==="TRUE" ? "var(--green)" : "var(--red)";
     var pctTxt = (t.pnlPercent===null||t.pnlPercent===undefined) ? "—" : ((t.pnlPercent>0?"+":"")+t.pnlPercent.toFixed(2)+"%");
+    var rulesCellHtml = t.rules==="TRUE"
+      ? '✓'
+      : '✗' + (t.ruleReason ? '<span class="rule-reason" title="'+esc(t.ruleReason)+'">'+esc(t.ruleReason)+'</span>' : '');
     h += '<tr>'+
       '<td>'+esc(isoToDMY(t.dateKey))+'</td>'+
       '<td>'+esc(t.person)+'</td>'+
@@ -2210,7 +2284,7 @@ function renderRawLog(){
       '<td>'+fmtMoney(t.riskAmount)+'</td>'+
       '<td style="color:'+pnlCol+'">'+fmtMoney(t.pnl)+'</td>'+
       '<td style="color:'+pnlCol+'">'+pctTxt+'</td>'+
-      '<td style="color:'+rulesCol+'">'+(t.rules==="TRUE"?"✓":"✗")+'</td>'+
+      '<td style="color:'+rulesCol+';white-space:normal;">'+rulesCellHtml+'</td>'+
       '<td>'+esc(t.mistake||"—")+'</td>'+
     '</tr>';
   });
@@ -2390,21 +2464,36 @@ function submitAddAccount(btn){
 function renderManageAccounts(){
   if(!_data || !_data.accounts){
     document.getElementById("maccList").innerHTML = '<div class="empty">Loading…</div>';
+    document.getElementById("maccSummary").innerHTML = "";
     return;
   }
+  renderMaccSummary();
   var people = _data.people || [];
   var html = "";
   people.forEach(function(person){
     var accs = _data.accounts.filter(function(a){ return a.person===person; })
       .sort(function(a,b){ return new Date(a.createdAt) - new Date(b.createdAt); });
-    html += '<div class="macc-person-header">'+esc(person)+'</div>';
+    html += '<div class="macc-person-header">'+esc(person)+'<span class="macc-person-count">'+accs.length+' account'+(accs.length===1?'':'s')+'</span></div>';
     if(!accs.length){
-      html += '<div class="empty">No accounts yet</div>';
+      html += '<div class="empty">No accounts yet — add one from the Add Account tab</div>';
       return;
     }
     accs.forEach(function(a){ html += maccCardHTML(a); });
   });
   document.getElementById("maccList").innerHTML = html;
+}
+
+function renderMaccSummary(){
+  var accs = _data.accounts || [];
+  var active = accs.filter(function(a){ return a.status==="ACTIVE"; });
+  var totalCurrent = accs.reduce(function(s,a){ return s + (a.currentBalance||0); }, 0);
+  var totalStart   = accs.reduce(function(s,a){ return s + (a.startingBalance||0); }, 0);
+  var netCls = totalCurrent >= totalStart ? "pos" : "neg";
+  document.getElementById("maccSummary").innerHTML =
+    '<div class="macc-summary-item"><div class="macc-summary-val">'+accs.length+'</div><div class="macc-summary-lbl">Total Accounts</div></div>'+
+    '<div class="macc-summary-item"><div class="macc-summary-val" style="color:var(--green)">'+active.length+'</div><div class="macc-summary-lbl">Active</div></div>'+
+    '<div class="macc-summary-item"><div class="macc-summary-val">'+fmtMoney(totalStart)+'</div><div class="macc-summary-lbl">Starting Balance (All)</div></div>'+
+    '<div class="macc-summary-item"><div class="macc-summary-val '+netCls+'">'+fmtMoney(totalCurrent)+'</div><div class="macc-summary-lbl">Current Balance (All)</div></div>';
 }
 
 function maccCardHTML(a){
@@ -2429,16 +2518,32 @@ function maccCardHTML(a){
   }
   quickBtns += '<button class="jbtn-sm" onclick="toggleAccountEdit(\''+a.accountId+'\')">'+(editing?"Close":"Edit")+'</button>';
 
-  return '<div class="macc-card">'+
+  var st = (_data.accountStats && _data.accountStats[a.accountId]) || null;
+  var pnlDollar = a.currentBalance - a.startingBalance;
+  var pnlCls = pnlDollar > 0 ? "pos" : pnlDollar < 0 ? "neg" : "";
+  var pnlPct = a.startingBalance ? ((pnlDollar / a.startingBalance) * 100) : 0;
+  var createdTxt = a.createdAt ? isoToDMY(_dateKeyFromAny(a.createdAt)) : "—";
+  var shortId = a.accountId ? a.accountId.slice(0,8) : "—";
+  var statusClass = STATUS_BADGE_CLASS[a.status] || "active";
+
+  return '<div class="macc-card st-'+statusClass+'">'+
     '<div class="macc-top">'+
-      '<div>'+
-        '<div class="macc-name">'+esc(a.name)+phaseBadge(a.phase)+statusBadge(a.status)+'</div>'+
-        '<div class="macc-bal">'+
-          '<div>Start: <b>'+fmtMoney(a.startingBalance)+'</b></div>'+
-          '<div>Current: <b class="'+balCls+'">'+fmtMoney(a.currentBalance)+'</b></div>'+
+      '<div class="macc-identity">'+
+        '<div class="macc-eyebrow">'+esc(a.person)+' · Account</div>'+
+        '<div class="macc-name-row">'+
+          '<div class="macc-name">'+esc(a.name)+'</div>'+
+          '<div class="macc-badges">'+phaseBadge(a.phase)+statusBadge(a.status)+'</div>'+
         '</div>'+
+        '<div class="macc-id">ID '+esc(shortId)+'… · created '+esc(createdTxt)+'</div>'+
       '</div>'+
       '<div class="macc-actions">'+quickBtns+'</div>'+
+    '</div>'+
+    '<div class="macc-detail-grid">'+
+      '<div class="macc-detail"><div class="macc-detail-lbl">Starting Balance</div><div class="macc-detail-val">'+fmtMoney(a.startingBalance)+'</div></div>'+
+      '<div class="macc-detail"><div class="macc-detail-lbl">Current Balance</div><div class="macc-detail-val '+balCls+'">'+fmtMoney(a.currentBalance)+'</div></div>'+
+      '<div class="macc-detail"><div class="macc-detail-lbl">P&amp;L</div><div class="macc-detail-val '+pnlCls+'">'+(pnlDollar>=0?"+":"")+fmtMoney(pnlDollar).replace("-","")+' <span style="font-size:10px;">('+(pnlPct>=0?"+":"")+pnlPct.toFixed(1)+'%)</span></div></div>'+
+      '<div class="macc-detail"><div class="macc-detail-lbl">Trades</div><div class="macc-detail-val">'+(st?st.total:0)+'</div></div>'+
+      '<div class="macc-detail"><div class="macc-detail-lbl">Win Rate</div><div class="macc-detail-val gold">'+(st && st.total ? st.winRate+"%" : "—")+'</div></div>'+
     '</div>'+
     '<div class="macc-edit'+(editing?" show":"")+'" id="maccEdit_'+a.accountId+'">'+
       '<div class="jgrid">'+
@@ -2452,6 +2557,18 @@ function maccCardHTML(a){
       '<div class="jok" id="edtOk_'+a.accountId+'"></div>'+
     '</div>'+
   '</div>';
+}
+
+// Accepts either a Date, an ISO string, or a serialized date string
+// coming back from Apps Script's JSON encoding, and normalizes it
+// to a yyyy-mm-dd key for isoToDMY() to format.
+function _dateKeyFromAny(v){
+  if(!v) return "";
+  var d = new Date(v);
+  if(isNaN(d.getTime())) return "";
+  var mm = String(d.getMonth()+1).padStart(2,"0");
+  var dd = String(d.getDate()).padStart(2,"0");
+  return d.getFullYear()+"-"+mm+"-"+dd;
 }
 
 function toggleAccountEdit(accountId){
@@ -2881,6 +2998,13 @@ function resetJournalForm(){
   document.getElementById("jPnl").value = "";
 }
 
+// Client-side mirror of the backend's _computeRulesDetailed(). The
+// journal form never collects a Session field — every submitted
+// trade is always sent with the shared session (see submitTrade,
+// no "session" param — the backend defaults it to
+// CONFIG.sharedRules.session) — so this preview only needs to
+// check pair/timeframe/rr, but it explicitly SAYS what the locked
+// session is so it's never a silent assumption.
 function updateRulesPreview(){
   if(!_config) return;
   var pair = document.getElementById("jPair").value;
@@ -2893,10 +3017,16 @@ function updateRulesPreview(){
   var ok      = pairOk && validTf && rrOk;
   var el = document.getElementById("jRulesPreview");
   if(ok){
-    el.innerHTML = '<span style="color:var(--green)">✓ Rules followed</span>';
+    el.innerHTML = '<span style="color:var(--green)">✓ Rules followed</span> <span style="color:var(--txt4);font-weight:400;font-size:10px;">(session is always locked to '+esc(_config.sharedRules.session)+')</span>';
   } else {
-    var hint = validTf ? ("needs RR "+allowed.join(" or ")+" on "+tf) : (tf+" is not a valid rule timeframe");
-    if(!pairOk) hint = "pair must be " + _config.sharedRules.pair + (validTf ? " · " + hint : "");
+    var hint;
+    if(!pairOk){
+      hint = "pair must be " + _config.sharedRules.pair;
+    } else if(!validTf){
+      hint = tf + " has no fixed RR rule — only " + Object.keys(_config.timeframeRR).join(" / ") + " are rule-eligible";
+    } else {
+      hint = "needs RR " + allowed.join(" or ") + " on " + tf;
+    }
     el.innerHTML = '<span style="color:var(--red)">✗ Rules broken — '+esc(hint)+'</span>';
   }
 }
