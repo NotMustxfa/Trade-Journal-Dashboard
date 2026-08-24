@@ -813,6 +813,8 @@ body::after {
   padding: 16px 18px;
 }
 .macc-summary-val { font-family: var(--font-display); font-size: 24px; font-weight: 800; color: var(--txt); letter-spacing: -0.02em; }
+.macc-summary-val.pos { color: var(--green); }
+.macc-summary-val.neg { color: var(--red); }
 .macc-summary-lbl { font-family: var(--font-display); font-size: 8.5px; font-weight: 600; color: var(--txt4); letter-spacing: 0.22em; text-transform: uppercase; margin-top: 6px; }
 
 .macc-person-header {
@@ -881,6 +883,201 @@ body::after {
 
 .macc-edit { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); display: none; }
 .macc-edit.show { display: block; animation: fadeUp 0.2s ease; }
+
+/* ── Meters: profit target progress + drawdown room ──
+   Both are a labelled track with a fill. The drawdown meter is
+   coloured by how much room is LEFT, not by how much is used, so
+   green always means "safe" in both meters. ── */
+.meter { margin-top: 14px; }
+.meter + .meter { margin-top: 10px; }
+.meter-head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  margin-bottom: 6px;
+}
+.meter-lbl {
+  font-family: var(--font-display); font-size: 7.5px; font-weight: 700;
+  color: var(--txt4); letter-spacing: 0.2em; text-transform: uppercase;
+}
+.meter-val { font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; color: var(--txt2); }
+.meter-val.pos { color: var(--green); }
+.meter-val.neg { color: var(--red); }
+.meter-val.warn { color: var(--orange); }
+.meter-val.gold { color: var(--gold); }
+.meter-track {
+  height: 6px; border-radius: 20px; background: var(--bg5);
+  border: 1px solid var(--border); overflow: hidden;
+}
+.meter-fill { height: 100%; border-radius: 20px; transition: width 0.4s ease, background 0.3s; }
+.meter-fill.good { background: linear-gradient(90deg, var(--green-dk, var(--green)), var(--green)); }
+.meter-fill.warn { background: linear-gradient(90deg, var(--orange), var(--gold)); }
+.meter-fill.bad  { background: linear-gradient(90deg, var(--red), var(--orange)); }
+.meter-fill.gold { background: linear-gradient(90deg, var(--gold-dk, var(--gold)), var(--gold)); }
+.meter-note { font-family: var(--font-mono); font-size: 8.5px; color: var(--txt4); margin-top: 5px; }
+
+/* A breached account gets an unmissable rail + tag. */
+.macc-card.breached { border-color: var(--red-rim); }
+.macc-card.breached::before { background: var(--red); }
+.macc-breach-tag {
+  display: inline-block; padding: 2px 9px; border-radius: 20px;
+  font-family: var(--font-mono); font-size: 8.5px; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--red); border: 1px solid var(--red-rim); background: var(--red-bg);
+}
+
+/* ── Manage Accounts: phase group headers + view toggle ── */
+.macc-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 14px; flex-wrap: wrap; margin-bottom: 18px;
+}
+.macc-count { font-family: var(--font-mono); font-size: 10px; color: var(--txt3); letter-spacing: 0.04em; }
+.viewtoggle { display: flex; gap: 4px; background: var(--bg2); border: 1px solid var(--border); border-radius: 20px; padding: 3px; }
+.viewtoggle button {
+  font-family: var(--font-display); font-size: 9px; font-weight: 600;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  padding: 5px 14px; border-radius: 20px; border: none;
+  background: none; color: var(--txt3); cursor: pointer; transition: all 0.16s;
+}
+.viewtoggle button:hover { color: var(--txt2); }
+.viewtoggle button.active { background: var(--gold); color: #08070A; font-weight: 700; }
+
+.macc-group-header {
+  display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+  margin: 28px 0 12px; padding-bottom: 10px;
+  border-bottom: 1px solid var(--border2);
+}
+.macc-group-header:first-child { margin-top: 0; }
+.macc-group-title {
+  font-family: var(--font-display); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.28em; text-transform: uppercase; color: var(--gold);
+}
+.macc-group-title.p1 { color: var(--blue); }
+.macc-group-title.p2 { color: var(--orange); }
+.macc-group-sub {
+  font-family: var(--font-mono); font-size: 9px; font-weight: 500;
+  color: var(--txt4); letter-spacing: 0.04em; margin-left: auto;
+}
+
+/* ── Manage Accounts: table view ── */
+.macc-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--r3); background: var(--bg2); }
+.macc-table { width: 100%; border-collapse: collapse; min-width: 1100px; }
+.macc-table th {
+  font-family: var(--font-display); font-size: 7.5px; font-weight: 700;
+  color: var(--txt4); letter-spacing: 0.18em; text-transform: uppercase;
+  text-align: right; padding: 12px 12px; border-bottom: 1px solid var(--border2);
+  white-space: nowrap; cursor: pointer; user-select: none; transition: color 0.15s;
+}
+.macc-table th:first-child, .macc-table td:first-child { text-align: left; }
+.macc-table th.tl { text-align: left; }
+.macc-table th:hover { color: var(--txt2); }
+.macc-table th.sorted { color: var(--gold); }
+.macc-table th .sort-caret { font-size: 8px; margin-left: 3px; }
+.macc-table td {
+  font-family: var(--font-mono); font-size: 11px; color: var(--txt2);
+  padding: 11px 12px; border-bottom: 1px solid var(--border);
+  text-align: right; white-space: nowrap;
+}
+.macc-table tbody tr { cursor: pointer; transition: background 0.14s; }
+.macc-table tbody tr:hover { background: var(--bg3); }
+.macc-table tbody tr.st-blown td:first-child { border-left: 2px solid var(--red); }
+.macc-table tbody tr.st-passed td:first-child { border-left: 2px solid var(--gold); }
+.macc-table tbody tr.st-active td:first-child { border-left: 2px solid var(--green); }
+.macc-table tbody tr.st-removed td:first-child { border-left: 2px solid var(--txt4); }
+.macc-table td.name { font-family: var(--font-display); font-size: 12.5px; font-weight: 700; color: var(--txt); }
+.macc-table td.pos { color: var(--green); }
+.macc-table td.neg { color: var(--red); }
+.macc-table td.gold { color: var(--gold); }
+.macc-table td.muted { color: var(--txt4); }
+.macc-table tr.editrow td { padding: 0; border-bottom: 1px solid var(--border2); background: var(--bg1); }
+.macc-table tr.editrow .macc-edit { margin: 0; padding: 18px 20px; border-top: none; }
+
+/* ── Shared filter bar ──
+   One component, mounted on both Analytics and Manage Accounts, so
+   the two pages can never disagree about what "Active" means. ── */
+.filter-bar {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--r3); margin-bottom: 24px;
+  position: sticky; top: 0; z-index: 40;
+  backdrop-filter: blur(12px);
+}
+.filter-bar::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(200,168,75,0.12), transparent);
+}
+.fb-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 10px 16px; }
+.fb-row + .fb-row { border-top: 1px solid var(--border); }
+.fb-label {
+  font-family: var(--font-display); font-size: 8.5px; font-weight: 700;
+  color: var(--txt4); letter-spacing: 0.26em; text-transform: uppercase;
+  margin-right: 2px;
+}
+.fb-preset {
+  font-family: var(--font-display); font-size: 9.5px; font-weight: 600;
+  padding: 5px 14px; border: 1px solid var(--border2); border-radius: 20px;
+  background: var(--bg3); color: var(--txt3); cursor: pointer;
+  letter-spacing: 0.1em; text-transform: uppercase; transition: all 0.16s;
+}
+.fb-preset:hover { color: var(--txt); border-color: var(--border4); background: var(--bg4); }
+.fb-preset.on { background: var(--gold-bg); color: var(--gold); border-color: var(--gold-rim); font-weight: 700; }
+.fb-preset.reset { color: var(--txt4); border-color: transparent; background: none; }
+.fb-preset.reset:hover { color: var(--red); }
+
+.fb-field { display: flex; flex-direction: column; gap: 3px; }
+.fb-field-lbl {
+  font-family: var(--font-display); font-size: 7px; font-weight: 700;
+  color: var(--txt4); letter-spacing: 0.2em; text-transform: uppercase;
+}
+.fb-select, .fb-search {
+  font-family: var(--font-display); font-size: 11px; font-weight: 500;
+  background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--r);
+  color: var(--txt); padding: 6px 10px; min-width: 116px; cursor: pointer;
+  transition: border-color 0.16s;
+}
+.fb-select:focus, .fb-search:focus { outline: none; border-color: var(--gold-rim); }
+.fb-select.set { border-color: var(--gold-rim); color: var(--gold); }
+.fb-search { cursor: text; min-width: 160px; }
+.fb-spacer { flex: 1; }
+
+.fb-chips { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.fb-chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--font-mono); font-size: 9.5px; font-weight: 500;
+  padding: 4px 6px 4px 11px; border-radius: 20px;
+  background: var(--gold-bg); color: var(--gold); border: 1px solid var(--gold-rim);
+}
+.fb-chip b { font-weight: 700; }
+.fb-chip button {
+  border: none; background: none; color: var(--gold); cursor: pointer;
+  font-size: 12px; line-height: 1; padding: 0 3px; opacity: 0.65; transition: opacity 0.15s;
+}
+.fb-chip button:hover { opacity: 1; }
+.fb-empty { font-family: var(--font-mono); font-size: 9.5px; color: var(--txt4); }
+
+/* ── Section scope tags: says WHICH accounts a block counts ── */
+.scope-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font-mono); font-size: 8.5px; font-weight: 600;
+  padding: 3px 10px; border-radius: 20px; letter-spacing: 0.04em;
+  text-transform: uppercase; white-space: nowrap;
+}
+.scope-tag.live { color: var(--green); border: 1px solid var(--green-rim); background: var(--green-bg); }
+.scope-tag.real { color: var(--gold);  border: 1px solid var(--gold-rim);  background: var(--gold-bg); }
+.scope-tag.all  { color: var(--blue);  border: 1px solid var(--blue-rim);  background: var(--blue-bg); }
+
+/* Small inline segmented control, used by the equity $ / % switch. */
+.seg { display: inline-flex; gap: 3px; background: var(--bg3); border: 1px solid var(--border2); border-radius: 20px; padding: 2px; }
+.seg button {
+  font-family: var(--font-display); font-size: 8.5px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 4px 12px; border-radius: 20px; border: none;
+  background: none; color: var(--txt3); cursor: pointer; transition: all 0.15s;
+}
+.seg button:hover { color: var(--txt2); }
+.seg button.active { background: var(--gold); color: #08070A; font-weight: 700; }
+
+.panel-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 14px; flex-wrap: wrap; margin-bottom: 4px;
+}
 
 /* ── DATE PICKER ──
    The popup width is intentionally responsive on BOTH the CSS side
@@ -1001,6 +1198,11 @@ body::after {
   .kpi-val { font-size: 44px; }
   .jgrid { grid-template-columns: 1fr; }
   .macc-detail-grid { grid-template-columns: repeat(2,1fr); }
+  /* Sticky costs too much vertical room on a phone. */
+  .filter-bar { position: static; }
+  .fb-select, .fb-search { min-width: 0; width: 100%; }
+  .fb-field { flex: 1 1 128px; }
+  .fb-row { padding: 9px 12px; }
 }
 @media(max-width:520px) {
   .kpi-strip, .kpi-strip.k3, .kpi-strip.k5 { grid-template-columns: 1fr 1fr; }
@@ -1010,6 +1212,8 @@ body::after {
   .macc-summary { grid-template-columns: 1fr 1fr; }
   .macc-detail-grid { grid-template-columns: 1fr 1fr; }
   .macc-name { font-size: 17px; }
+  .macc-toolbar { gap: 10px; }
+  .macc-group-sub { margin-left: 0; width: 100%; }
 }
 </style>
 </head>
@@ -1096,20 +1300,38 @@ body::after {
   <!-- ══════════════════ ANALYTICS ══════════════════ -->
   <div class="page" id="analyticsPage">
 
-    <div class="filter-row">
-      <span class="filter-label">Period</span>
-      <div id="monthPills"></div>
-      <div class="f-sep"></div>
-      <span class="filter-label">Person</span>
-      <div id="personPills"></div>
-      <div class="f-sep"></div>
-      <span class="filter-label">Account</span>
-      <div id="accountPills"></div>
-      <div class="f-sep"></div>
-      <span class="filter-label">Status</span>
-      <div id="statusPills"></div>
+    <div class="filter-bar" id="filterBarAnalytics"></div>
+
+    <div class="sec">
+      <div class="sh">
+        <div class="sh-num">00</div>
+        <div class="sh-title">Live Capital</div>
+        <div class="sh-line"></div>
+        <div class="sh-tag"><span class="scope-tag live">Active accounts only</span></div>
+      </div>
+      <div class="kpi-strip k5" id="liveKpiStrip"></div>
     </div>
-    <div class="psub" style="margin:-20px 0 24px;">Status defaults to All — every account's full history counts. Narrow to Active / Passed / Blown to isolate a lifecycle stage.</div>
+
+    <div class="sec">
+      <div class="sh">
+        <div class="sh-num">00</div>
+        <div class="sh-title">Real Money</div>
+        <div class="sh-line"></div>
+        <div class="sh-tag"><span class="scope-tag real">Actual currency</span></div>
+      </div>
+      <div class="kpi-strip" id="realKpiStrip"></div>
+      <div class="psub" style="margin:-20px 0 0;">Payouts received minus what the challenges cost. Every other figure on this page is prop-firm currency, which you cannot spend.</div>
+    </div>
+
+    <div class="sec">
+      <div class="sh">
+        <div class="sh-num">00</div>
+        <div class="sh-title">Track Record</div>
+        <div class="sh-line"></div>
+        <div class="sh-tag"><span class="scope-tag all">All accounts ever</span></div>
+      </div>
+      <div class="kpi-strip k5" id="trackKpiStrip"></div>
+    </div>
 
     <div class="kpi-strip k5" id="kpiStrip"></div>
 
@@ -1175,8 +1397,19 @@ body::after {
       </div>
       <div class="kpi-strip" id="equityKpiStrip"></div>
       <div class="panel d1">
-        <div class="ptitle">Equity Curve</div>
-        <div class="psub">Cumulative balance over time</div>
+        <div class="panel-head">
+          <div>
+            <div class="ptitle">Equity Curve</div>
+            <div class="psub" id="equitySub">Cumulative trading P&amp;L over time</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <div class="seg" id="equityUnitSeg">
+              <button class="active" data-v="abs" onclick="setEquityUnit('abs')">$</button>
+              <button data-v="pct" onclick="setEquityUnit('pct')">%</button>
+            </div>
+            <button class="fb-preset" id="equityClosedBtn" onclick="toggleEquityClosed()">Include closed</button>
+          </div>
+        </div>
         <div class="chart-wrap"><canvas id="equityChart"></canvas></div>
       </div>
     </div>
@@ -1245,6 +1478,10 @@ body::after {
             <label class="jlabel">Account</label>
             <select class="jselect" id="rawAccountSel" onchange="onRawFilterChange()"></select>
           </div>
+          <div class="jfield">
+            <label class="jlabel">Scope</label>
+            <button class="fb-preset on" id="rawInheritBtn" onclick="toggleRawInherit()" style="margin-top:4px;">Follow page filters</button>
+          </div>
         </div>
         <div class="wtable-wrap" id="rawLogTable"></div>
         <div style="text-align:center;margin-top:16px;">
@@ -1310,9 +1547,33 @@ body::after {
         <div class="jgrid">
           <div class="jfield"><label class="jlabel">Person</label><select class="jselect" id="aaPerson"></select></div>
           <div class="jfield"><label class="jlabel">Phase</label><select class="jselect" id="aaPhase"></select></div>
-          <div class="jfield"><label class="jlabel">Starting Balance ($)</label><input class="jinput" type="number" id="aaBalance" min="0" step="0.01" placeholder="0.00"></div>
+          <div class="jfield"><label class="jlabel">Starting Balance ($)</label><input class="jinput" type="number" id="aaBalance" min="0" step="0.01" placeholder="0.00" oninput="updateAaDerived()"></div>
         </div>
         <div class="jfield"><label class="jlabel">Account Name</label><input class="jinput" type="text" id="aaName" placeholder="e.g. 5k, 100k" maxlength="40"></div>
+
+        <div class="psub" style="margin:22px 0 12px;">Prop-firm rules — optional, but they drive the target and drawdown meters on Manage Accounts. Leave at 0 to skip.</div>
+        <div class="jgrid">
+          <div class="jfield">
+            <label class="jlabel">Cost ($)</label>
+            <input class="jinput" type="number" id="aaCost" min="0" step="0.01" placeholder="0.00">
+            <div class="meter-note">What you paid for this challenge</div>
+          </div>
+          <div class="jfield">
+            <label class="jlabel">Profit Target (%)</label>
+            <input class="jinput" type="number" id="aaTarget" min="0" max="1000" step="0.1" placeholder="e.g. 8" oninput="updateAaDerived()">
+            <div class="meter-note" id="aaTargetDerived">—</div>
+          </div>
+          <div class="jfield">
+            <label class="jlabel">Max Drawdown (%)</label>
+            <input class="jinput" type="number" id="aaMaxDD" min="0" max="100" step="0.1" placeholder="e.g. 10" oninput="updateAaDerived()">
+            <div class="meter-note" id="aaMaxDDDerived">—</div>
+          </div>
+        </div>
+        <div class="jfield" style="max-width:240px;margin-top:12px;">
+          <label class="jlabel">Drawdown Type</label>
+          <select class="jselect" id="aaDDType"></select>
+          <div class="meter-note">Static = floor fixed at account size. Trailing = floor follows your peak.</div>
+        </div>
 
         <div class="jactions"><button class="jsubmit-btn" onclick="submitAddAccount(this)">+ Add Account</button></div>
         <div class="jerr" id="aaErr"></div>
@@ -1326,7 +1587,16 @@ body::after {
     <div class="page-header">
       <div class="page-title">Manage Accounts</div>
     </div>
+    <div class="filter-bar" id="filterBarMacc"></div>
     <div class="macc-summary" id="maccSummary"></div>
+    <div class="macc-summary-note psub" id="maccSummaryNote" style="margin:-14px 0 20px;"></div>
+    <div class="macc-toolbar">
+      <div class="macc-count" id="maccCount"></div>
+      <div class="viewtoggle" id="maccViewToggle">
+        <button data-v="cards" onclick="setMaccView('cards')">Cards</button>
+        <button data-v="table" onclick="setMaccView('table')">Table</button>
+      </div>
+    </div>
     <div id="maccList"></div>
   </div>
 
@@ -1463,13 +1733,30 @@ function btnLoading(btn, label){
 var APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw8Tke7oCam2wRF4rKx8Nqn4cMnHNpi4E5LIU7AYijC9MAIqLFQGr0TL0xNKy-OnU5j/exec";
 
 var _tok=null, _data=null, _config=null, _chart=null, _equityChart=null;
-var _month="all", _person="all", _accountId="all", _status="all";
+
+/* ── Filter state ──
+   One object, shared by Analytics and Manage Accounts, persisted to
+   localStorage so a reload (or any save, which re-fetches the whole
+   dashboard) doesn't silently drop you back to "everything". Before
+   v12 these were four loose globals that buildFilters() reset on
+   every refresh. ── */
+var FILTER_DEFAULTS = {
+  person:"all", accountId:"all", phase:"all", status:"all",
+  month:"all", from:null, to:null, q:"",
+};
+var _filters = Object.assign({}, FILTER_DEFAULTS);
+var FILTER_STORE_KEY = "tj_filters";
+
 var _journalState = { editing:false };
 var _accountsByPerson = {};   // from getAccounts — every status, per person
 var _accountsById = {};       // from getDashboardData accounts list
 
-var _rawPerson="all", _rawAccount="all", _rawLimit=50;
+var _rawPerson="all", _rawAccount="all", _rawLimit=50, _rawInherit=true;
 var _maccOpen = {}; // accountId -> bool, tracks which edit forms are open
+var _maccView = "cards";               // "cards" | "table"
+var _maccSort = { key:"name", dir:1 }; // table view sort
+var _equityUnit = "abs";               // "abs" ($) | "pct" (% of account size)
+var _equityIncludeClosed = false;      // active accounts only by default
 
 var PHASE_BADGE_CLASS  = { PHASE_1:"p1", PHASE_2:"p2", MASTER:"master" };
 var STATUS_BADGE_CLASS = { ACTIVE:"active", PASSED:"passed", BLOWN:"blown", REMOVED:"removed" };
@@ -1558,6 +1845,9 @@ function refreshDashboardQuietly(cb){
   jsonp(APPS_SCRIPT_URL + "?action=getDashboardData&token=" + encodeURIComponent(_tok), function(d){
     if(d && d.success){
       _data = d; _rebuildAccountsById();
+      // buildFilters() rebuilds the option lists only — it reads
+      // _filters and never writes to it, so the selections you had
+      // before saving are still there afterwards.
       buildTicker(); buildFilters(); renderDashboard();
     }
     if(typeof cb === "function") cb();
@@ -1574,7 +1864,20 @@ function renderAll(){
   document.getElementById("genTime").textContent = _data.generatedAt;
   document.getElementById("app").style.display = "block";
   _rebuildAccountsById();
+  loadFilters();      // restore the last session's selections
+  loadViewPrefs();
   buildTicker(); buildFilters(); renderDashboard();
+}
+
+/* View preferences that aren't filters, kept per browser. */
+function loadViewPrefs(){
+  try {
+    var v = localStorage.getItem("tj_maccView");
+    if(v === "cards" || v === "table") _maccView = v;
+    var u = localStorage.getItem("tj_equityUnit");
+    if(u === "abs" || u === "pct") _equityUnit = u;
+    _equityIncludeClosed = localStorage.getItem("tj_equityClosed") === "1";
+  } catch(e){}
 }
 
 /* ── TAB SWITCHING ── */
@@ -1605,6 +1908,18 @@ function buildTicker(){
     {k:"Losses",       v:losses,  cls:"dn"},
     {k:"Payouts",      v:fmtMoney((_data.payouts&&_data.payouts.totalAll)||0), cls:"up"},
   ];
+  // Real money and live capital, not the old blended
+  // "every account ever" balance.
+  var cap = _data.capital;
+  if(cap){
+    items.push({k:"Real Net Profit", v:(cap.realNetProfit>=0?"+":"−")+fmtMoney(Math.abs(cap.realNetProfit)),
+                cls:cap.realNetProfit>=0?"up":"dn"});
+    items.push({k:"Live Equity", v:fmtMoney(cap.liveEquity), cls:""});
+    items.push({k:"Undrawn", v:fmtMoney(cap.liveUndrawnProfit), cls:cap.liveUndrawnProfit>0?"up":""});
+    if(cap.passRate !== null && cap.passRate !== undefined){
+      items.push({k:"Pass Rate", v:cap.passRate+"%", cls:cap.passRate>=50?"up":"dn"});
+    }
+  }
   // Every account now, regardless of status — accountStats is
   // built server-side across all-time, all-status trades.
   (_data.accounts||[]).forEach(function(a){
@@ -1618,78 +1933,307 @@ function buildTicker(){
   document.getElementById("tickerInner").innerHTML = html + html;
 }
 
-/* ── FILTERS (Analytics) ── */
+/* ══════════════════════════════════════
+   SHARED FILTER BAR
+
+   One component, one state object, two mount points (Analytics and
+   Manage Accounts). Everything that narrows the view goes through
+   filterTrades() / filterAccounts(), so the two pages can never
+   disagree about what a filter means.
+
+   Selections survive a refresh: they're written to localStorage on
+   every change and restored on boot. buildFilters() only rebuilds
+   the option LISTS — it never resets what you picked.
+══════════════════════════════════════ */
+
+function saveFilters(){
+  try { localStorage.setItem(FILTER_STORE_KEY, JSON.stringify(_filters)); } catch(e){}
+}
+function loadFilters(){
+  try {
+    var raw = localStorage.getItem(FILTER_STORE_KEY);
+    if(!raw) return;
+    var saved = JSON.parse(raw);
+    Object.keys(FILTER_DEFAULTS).forEach(function(k){
+      if(saved[k] !== undefined && saved[k] !== null) _filters[k] = saved[k];
+    });
+  } catch(e){ _filters = Object.assign({}, FILTER_DEFAULTS); }
+}
+
+// An account that has since been deleted (or is hidden by the other
+// filters) must not keep silently filtering everything to nothing.
+function reconcileFilters(){
+  if(_filters.accountId !== "all"){
+    var still = (_data && _data.accounts || []).some(function(a){
+      return a.accountId === _filters.accountId;
+    });
+    if(!still) _filters.accountId = "all";
+  }
+}
+
+function filtersActive(){
+  return Object.keys(FILTER_DEFAULTS).some(function(k){ return _filters[k] !== FILTER_DEFAULTS[k]; });
+}
+
+/* ── Predicates ── */
+
+// Accounts visible under the current filters. Period/date range is
+// deliberately NOT applied here: an account exists regardless of
+// which month you're looking at.
+function filterAccounts(accounts){
+  var q = (_filters.q || "").trim().toLowerCase();
+  return (accounts || []).filter(function(a){
+    if(_filters.person   !== "all" && a.person    !== _filters.person)   return false;
+    if(_filters.status   !== "all" && a.status    !== _filters.status)   return false;
+    if(_filters.phase    !== "all" && a.phase     !== _filters.phase)    return false;
+    if(_filters.accountId!== "all" && a.accountId !== _filters.accountId) return false;
+    if(q && String(a.accountName||"").toLowerCase().indexOf(q) === -1)   return false;
+    return true;
+  });
+}
+
+function filterTrades(trades){
+  // Resolve the account-level filters once into an id set, so a
+  // trade only has to answer "is my account in scope?".
+  var ids = null;
+  if(_filters.phase !== "all" || (_filters.q || "").trim()){
+    ids = {};
+    filterAccounts(_data ? _data.accounts : []).forEach(function(a){ ids[a.accountId] = 1; });
+  }
+  return (trades || []).filter(function(t){
+    if(_filters.person    !== "all" && t.person        !== _filters.person)    return false;
+    if(_filters.accountId !== "all" && t.accountId     !== _filters.accountId) return false;
+    if(_filters.status    !== "all" && t.accountStatus !== _filters.status)    return false;
+    if(_filters.month     !== "all" && t.month         !== _filters.month)     return false;
+    if(ids && !ids[t.accountId]) return false;
+    if(_filters.from && t.dateKey < _filters.from) return false;
+    if(_filters.to   && t.dateKey > _filters.to)   return false;
+    return true;
+  });
+}
+
+// Kept as the old name so existing callers read unchanged.
+function getFiltered(){ return filterTrades(_data ? _data.trades : []); }
+
+/* ── Presets ── */
+var FILTER_PRESETS = {
+  active:  { label:"Active only",  patch:{ status:"ACTIVE", phase:"all" } },
+  masters: { label:"Masters",      patch:{ phase:"MASTER" } },
+  evals:   { label:"Evaluations",  patch:{ phase:"PHASE_1" } },
+  month:   { label:"This month",   patch:{ month:"__CURRENT__" } },
+};
+
+function currentMonthKey(){
+  var d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0");
+}
+
+function presetOn(key){
+  var p = FILTER_PRESETS[key]; if(!p) return false;
+  return Object.keys(p.patch).every(function(k){
+    var want = p.patch[k] === "__CURRENT__" ? currentMonthKey() : p.patch[k];
+    return _filters[k] === want;
+  });
+}
+
+function applyPreset(key){
+  var p = FILTER_PRESETS[key]; if(!p) return;
+  var on = presetOn(key);
+  Object.keys(p.patch).forEach(function(k){
+    if(on){
+      _filters[k] = FILTER_DEFAULTS[k];              // toggling off
+    } else {
+      _filters[k] = p.patch[k] === "__CURRENT__" ? currentMonthKey() : p.patch[k];
+    }
+  });
+  if(!on && (key==="masters" || key==="evals")) _filters.accountId = "all";
+  onFiltersChanged();
+}
+
+function resetFilters(){
+  _filters = Object.assign({}, FILTER_DEFAULTS);
+  onFiltersChanged();
+}
+function clearFilter(key){
+  _filters[key] = FILTER_DEFAULTS[key];
+  if(key === "period"){ _filters.month = "all"; _filters.from = null; _filters.to = null; }
+  onFiltersChanged();
+}
+
+/* ── Change plumbing ── */
+function setFilter(key, val){
+  _filters[key] = val;
+  // Narrowing person/status/phase can hide the selected account.
+  if(key !== "accountId" && _filters.accountId !== "all"){
+    var visible = filterAccountsIgnoringAccountId().some(function(a){
+      return a.accountId === _filters.accountId;
+    });
+    if(!visible) _filters.accountId = "all";
+  }
+  onFiltersChanged();
+}
+function filterAccountsIgnoringAccountId(){
+  var keep = _filters.accountId;
+  _filters.accountId = "all";
+  var out = filterAccounts(_data ? _data.accounts : []);
+  _filters.accountId = keep;
+  return out;
+}
+function setPeriod(v){
+  if(v === "all"){ _filters.month="all"; _filters.from=null; _filters.to=null; }
+  else if(v === "custom"){ _filters.month="all"; }
+  else { _filters.month = v; _filters.from=null; _filters.to=null; }
+  onFiltersChanged();
+}
+function setSearch(v){
+  _filters.q = v;
+  onFiltersChanged({ keepFocus:"fbSearch" });
+}
+function setCustomDate(which, iso){
+  _filters[which] = iso || null;
+  if(iso) _filters.month = "all";
+  onFiltersChanged();
+}
+
+function onFiltersChanged(opts){
+  saveFilters();
+  buildFilters();
+  if(document.getElementById("analyticsPage").style.display !== "none") renderDashboard();
+  if(document.getElementById("manageAccountsPage").style.display !== "none") renderManageAccounts();
+  if(opts && opts.keepFocus){
+    var el = document.getElementById(opts.keepFocus);
+    if(el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+  }
+}
+
+/* ── Rendering ──
+   buildFilters() rebuilds the bar on BOTH mount points from the
+   current state. It is safe to call after any data refresh because
+   it reads _filters rather than writing to it. */
 function buildFilters(){
-  var months = (_data.monthly||[]).map(function(m){ return m.label; }).sort();
-  document.getElementById("monthPills").innerHTML =
-    mkPill("all","All Time","pill active","selMonth") +
-    months.map(function(m){ return mkPill(m, niceMonth(m), "pill", "selMonth"); }).join("");
-
-  var people = _data.people || [];
-  document.getElementById("personPills").innerHTML =
-    mkPill("all","All","pill acc active","selPerson") +
-    people.map(function(p){ return mkPill(p, p, "pill acc", "selPerson"); }).join("");
-
-  buildStatusPills();
-  buildAccountPills();
-}
-
-function buildStatusPills(){
-  var statuses = (_config && _config.accountStatuses) || ["ACTIVE","PASSED","BLOWN","REMOVED"];
-  // REMOVED accounts are a soft-delete bucket, not a trading
-  // lifecycle stage — leave them out of the filter choices.
-  var shown = statuses.filter(function(s){ return s !== "REMOVED"; });
-  var html = mkPill("all","All","pill acc active","selStatus");
-  shown.forEach(function(s){
-    var lbl = (_config && _config.statusLabels && _config.statusLabels[s]) || s;
-    html += mkPill(s, lbl, "pill acc", "selStatus");
-  });
-  document.getElementById("statusPills").innerHTML = html;
-}
-
-function buildAccountPills(){
-  var accs = (_data.accounts||[]).filter(function(a){
-    if(_status!=="all" && a.status!==_status) return false;
-    if(_person!=="all" && a.person!==_person) return false;
-    return true;
-  });
-  document.getElementById("accountPills").innerHTML =
-    mkPill("all","All","pill acc active","selAccount") +
-    accs.map(function(a){
-      var txt = _person==="all" ? a.displayLabel : a.displayLabel.replace(a.person+" · ", "");
-      return mkPill(a.accountId, txt, "pill acc", "selAccount");
-    }).join("");
-  _accountId = "all";
-}
-
-function mkPill(val,label,cls,fn){
-  return '<button class="'+cls+'" data-v="'+val+'" onclick="'+fn+'(\''+String(val).replace(/'/g,"\\'")+'\')">'+esc(label)+'</button>';
-}
-function setActive(containerId, val){
-  document.querySelectorAll('#'+containerId+' .pill').forEach(function(el){
-    el.classList.toggle('active', el.dataset.v===val);
+  reconcileFilters();
+  ["filterBarAnalytics","filterBarMacc"].forEach(function(id){
+    var host = document.getElementById(id);
+    if(host) host.innerHTML = filterBarHTML();
   });
 }
-function selMonth(m){ _month=m; setActive('monthPills', m); renderDashboard(); }
-function selPerson(p){ _person=p; setActive('personPills', p); buildAccountPills(); renderDashboard(); }
-function selAccount(a){ _accountId=a; setActive('accountPills', a); renderDashboard(); }
-function selStatus(s){ _status=s; setActive('statusPills', s); buildAccountPills(); renderDashboard(); }
 
-function getFiltered(){
-  return (_data?_data.trades:[]).filter(function(t){
-    if(_person!=="all" && t.person!==_person) return false;
-    if(_accountId!=="all" && t.accountId!==_accountId) return false;
-    if(_month!=="all" && t.month!==_month) return false;
-    if(_status!=="all" && t.accountStatus!==_status) return false;
-    return true;
+function filterBarHTML(){
+  var months = (_data && _data.monthly || []).map(function(m){ return m.label; }).sort();
+  var people = (_data && _data.people) || [];
+  var statuses = ((_config && _config.accountStatuses) || ["ACTIVE","PASSED","BLOWN","REMOVED"])
+    // REMOVED is a soft-delete bucket, not a lifecycle stage.
+    .filter(function(s){ return s !== "REMOVED"; });
+  var phases = (_config && _config.phases) || ["PHASE_1","PHASE_2","MASTER"];
+
+  // Account options follow the other filters, minus the account
+  // filter itself, so the list never hides your own selection.
+  var accs = filterAccountsIgnoringAccountId();
+
+  function opt(v, label, sel){
+    return '<option value="'+esc(v)+'"'+(sel===v?" selected":"")+'>'+esc(label)+'</option>';
+  }
+  function sel(id, label, fn, options, isSet){
+    return '<div class="fb-field"><span class="fb-field-lbl">'+esc(label)+'</span>'+
+      '<select class="fb-select'+(isSet?" set":"")+'" id="'+id+'" onchange="'+fn+'(this.value)">'+options+'</select></div>';
+  }
+
+  var periodVal = _filters.from || _filters.to ? "custom" : _filters.month;
+  var periodOpts = opt("all","All time", periodVal) +
+    months.map(function(m){ return opt(m, niceMonth(m), periodVal); }).join("") +
+    opt("custom","Custom range…", periodVal);
+
+  var html = "";
+
+  /* Row 1 — presets */
+  html += '<div class="fb-row">';
+  html += '<span class="fb-label">Quick</span>';
+  Object.keys(FILTER_PRESETS).forEach(function(k){
+    html += '<button class="fb-preset'+(presetOn(k)?" on":"")+'" onclick="applyPreset(\''+k+'\')">'+esc(FILTER_PRESETS[k].label)+'</button>';
   });
+  html += '<div class="fb-spacer"></div>';
+  if(filtersActive()) html += '<button class="fb-preset reset" onclick="resetFilters()">✕ Reset all</button>';
+  html += '</div>';
+
+  /* Row 2 — dropdowns */
+  html += '<div class="fb-row">';
+  html += sel("fbPerson","Person","setFilterPerson",
+    opt("all","All people",_filters.person) + people.map(function(p){ return opt(p,p,_filters.person); }).join(""),
+    _filters.person!=="all");
+  html += sel("fbAccount","Account","setFilterAccount",
+    opt("all","All accounts",_filters.accountId) + accs.map(function(a){
+      var txt = _filters.person==="all" ? a.displayLabel : a.displayLabel.replace(a.person+" · ","");
+      return opt(a.accountId, txt, _filters.accountId);
+    }).join(""),
+    _filters.accountId!=="all");
+  html += sel("fbPhase","Phase","setFilterPhase",
+    opt("all","All phases",_filters.phase) + phases.map(function(p){
+      return opt(p, (_config&&_config.phaseLabels&&_config.phaseLabels[p])||p, _filters.phase);
+    }).join(""),
+    _filters.phase!=="all");
+  html += sel("fbStatus","Status","setFilterStatus",
+    opt("all","All statuses",_filters.status) + statuses.map(function(s){
+      return opt(s, (_config&&_config.statusLabels&&_config.statusLabels[s])||s, _filters.status);
+    }).join(""),
+    _filters.status!=="all");
+  html += sel("fbPeriod","Period","setPeriod", periodOpts, periodVal!=="all");
+
+  if(periodVal === "custom"){
+    html += '<div class="fb-field"><span class="fb-field-lbl">From</span>'+
+      '<input class="fb-search dateinput" id="fbFrom" readonly placeholder="dd/mm/yyyy" value="'+esc(_filters.from?isoToDMY(_filters.from):"")+'" data-iso="'+esc(_filters.from||"")+'" onclick="openDatePicker(\'fbFrom\')" data-onpick="fbFromPicked"></div>';
+    html += '<div class="fb-field"><span class="fb-field-lbl">To</span>'+
+      '<input class="fb-search dateinput" id="fbTo" readonly placeholder="dd/mm/yyyy" value="'+esc(_filters.to?isoToDMY(_filters.to):"")+'" data-iso="'+esc(_filters.to||"")+'" onclick="openDatePicker(\'fbTo\')" data-onpick="fbToPicked"></div>';
+  }
+
+  html += '<div class="fb-field"><span class="fb-field-lbl">Search</span>'+
+    '<input class="fb-search" id="fbSearch" type="text" placeholder="Account name…" value="'+esc(_filters.q||"")+'" oninput="setSearch(this.value)"></div>';
+  html += '</div>';
+
+  /* Row 3 — active chips */
+  var chips = activeChipsHTML();
+  html += '<div class="fb-row"><span class="fb-label">Showing</span><div class="fb-chips">'+chips+'</div></div>';
+
+  return html;
 }
+
+function activeChipsHTML(){
+  var out = [];
+  function chip(label, val, key){
+    out.push('<span class="fb-chip">'+esc(label)+' <b>'+esc(val)+'</b>'+
+      '<button title="Clear" onclick="clearFilter(\''+key+'\')">✕</button></span>');
+  }
+  if(_filters.person !== "all") chip("Person", _filters.person, "person");
+  if(_filters.accountId !== "all"){
+    var a = _accountsById[_filters.accountId];
+    chip("Account", a ? a.accountName : _filters.accountId.slice(0,8), "accountId");
+  }
+  if(_filters.phase !== "all")
+    chip("Phase", (_config&&_config.phaseLabels&&_config.phaseLabels[_filters.phase])||_filters.phase, "phase");
+  if(_filters.status !== "all")
+    chip("Status", (_config&&_config.statusLabels&&_config.statusLabels[_filters.status])||_filters.status, "status");
+  if(_filters.month !== "all") chip("Period", niceMonth(_filters.month), "month");
+  if(_filters.from) chip("From", isoToDMY(_filters.from), "from");
+  if(_filters.to)   chip("To",   isoToDMY(_filters.to),   "to");
+  if((_filters.q||"").trim()) chip("Search", _filters.q, "q");
+
+  if(!out.length) return '<span class="fb-empty">Everything — all people, all accounts, all time.</span>';
+  return out.join("");
+}
+
+/* Thin named wrappers, so the inline onchange= handlers stay readable. */
+function setFilterPerson(v){ setFilter("person", v); }
+function setFilterAccount(v){ setFilter("accountId", v); }
+function setFilterPhase(v){ setFilter("phase", v); }
+function setFilterStatus(v){ setFilter("status", v); }
+function fbFromPicked(iso){ setCustomDate("from", iso); }
+function fbToPicked(iso){ setCustomDate("to", iso); }
 
 /* ── RENDER DASHBOARD ── */
 function renderDashboard(){
   var trades = getFiltered();
   var s = stats(trades);
   document.getElementById("tradeMeta").textContent = s.total + " trades";
+  renderCapital();
   renderKPI(s); renderResults(s); renderMistakes(s);
   renderPctKpi(s); renderPctPerformance();
   renderDays(s); renderRR(s); renderCompliance(s);
@@ -1766,6 +2310,117 @@ function kp(label,val,cls,sub,d){
     '<div class="kpi-divider"></div>'+
     '<div class="kpi-sub">'+sub+'</div>'+
   '</div>';
+}
+
+/* ══════════════════════════════════════
+   CAPITAL — the three scopes kept apart
+
+   Live Capital  : ACTIVE accounts only. A blown account's balance is
+                   not capital, it's history, so it has no business in
+                   an equity total.
+   Real Money    : payouts received minus what the challenges cost.
+                   The only figures here denominated in money you can
+                   actually spend.
+   Track Record  : counts of ACCOUNTS (not trades) across all time.
+                   The behavioural stats below still span every
+                   account ever — a win rate doesn't stop being true
+                   when the account it was earned on dies.
+
+   All three respect the Person filter but deliberately ignore
+   Period: capital is a right-now figure, not a monthly one.
+══════════════════════════════════════ */
+function renderCapital(){
+  var cap = (_data && _data.capital) || null;
+  if(!cap){
+    // Backend not yet redeployed — say so rather than rendering zeros.
+    ["liveKpiStrip","realKpiStrip","trackKpiStrip"].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.innerHTML = '<div class="empty">Capital figures need the updated backend — redeploy the Apps Script web app.</div>';
+    });
+    return;
+  }
+
+  // Recompute per-person rather than using the server totals when a
+  // Person filter is on, so these tiles agree with the rest of the page.
+  var accs = (_data.accounts || []).filter(function(a){
+    return _filters.person === "all" || a.person === _filters.person;
+  });
+  var scoped = _filters.person !== "all";
+
+  var live = accs.filter(function(a){ return a.status === "ACTIVE"; });
+  var liveStart = 0, liveEq = 0, undrawn = 0, worstRoom = null, nearestTarget = null;
+  live.forEach(function(a){
+    liveStart += a.startingBalance || 0;
+    liveEq    += a.currentBalance  || 0;
+    if(a.phase === "MASTER") undrawn += a.undrawnProfit || 0;
+    if(a.ddUsedPct !== null && a.ddUsedPct !== undefined){
+      var room = 1 - a.ddUsedPct;
+      if(worstRoom === null || room < worstRoom) worstRoom = room;
+    }
+    if(a.phase !== "MASTER" && a.targetProgress !== null && a.targetProgress !== undefined){
+      if(nearestTarget === null || a.targetProgress > nearestTarget) nearestTarget = a.targetProgress;
+    }
+  });
+  var openProfit = liveEq - liveStart;
+
+  var payouts = 0, fees = 0, sunk = 0;
+  var nPassed = 0, nBlown = 0;
+  accs.forEach(function(a){
+    payouts += a.paidOut || 0;
+    fees    += a.cost    || 0;
+    if(a.status === "PASSED") nPassed++;
+    if(a.status === "BLOWN"){ nBlown++; sunk += a.cost || 0; }
+  });
+  var net = payouts - fees;
+  var attempts = nPassed + nBlown;
+  var passRate = attempts ? ((nPassed/attempts)*100).toFixed(1) : null;
+
+  /* ── 00 Live Capital ── */
+  var opCls = openProfit > 0 ? "g" : openProfit < 0 ? "r" : "a";
+  document.getElementById("liveKpiStrip").innerHTML =
+    kp("Live Equity", fmtMoney(liveEq), "b",
+       live.length + " active · " + fmtMoney(liveStart) + " allocated", "d1") +
+    kp("Open Profit", (openProfit>=0?"+":"−")+fmtMoney(Math.abs(openProfit)), opCls,
+       "unrealised, prop currency", "d2") +
+    kp("Undrawn Profit", fmtMoney(undrawn), undrawn>0?"g":"a",
+       "withdrawable from Masters", "d3") +
+    kp("Drawdown Room", worstRoom===null ? "—" : (worstRoom*100).toFixed(0)+"%",
+       worstRoom===null ? "a" : worstRoom<0.25 ? "r" : worstRoom<0.5 ? "a" : "g",
+       worstRoom===null ? "no limits set" : "tightest active account", "d4") +
+    kp("Nearest Target", nearestTarget===null ? "—" : (nearestTarget*100).toFixed(0)+"%",
+       nearestTarget===null ? "a" : "g",
+       nearestTarget===null ? "no targets set" : "best evaluation progress", "d5");
+
+  /* ── 00 Real Money ── */
+  var netCls = net > 0 ? "g" : net < 0 ? "r" : "a";
+  document.getElementById("realKpiStrip").innerHTML =
+    kp("Total Payouts", fmtMoney(payouts), "g", "cash withdrawn, all time", "d1") +
+    kp("Fees Paid", fmtMoney(fees), "r",
+       accs.length + " account" + (accs.length===1?"":"s") + " bought", "d2") +
+    kp("Real Net Profit", (net>=0?"+":"−")+fmtMoney(Math.abs(net)), netCls,
+       "payouts − fees", "d3") +
+    kp("This Month", fmtMoney(scoped ? payoutsThisMonth() : ((_data.payouts&&_data.payouts.totalMonth)||0)), "b",
+       "payouts received", "d4");
+
+  /* ── 00 Track Record ── */
+  document.getElementById("trackKpiStrip").innerHTML =
+    kp("Accounts Traded", accs.length, "b", "all time", "d1") +
+    kp("Passed", nPassed, "g", "evaluations cleared", "d2") +
+    kp("Blown", nBlown, "r", "accounts lost", "d3") +
+    kp("Pass Rate", passRate===null ? "—" : passRate+"%",
+       passRate===null ? "a" : parseFloat(passRate)>=50 ? "g" : "r",
+       attempts ? nPassed+" of "+attempts+" settled" : "none settled yet", "d4") +
+    kp("Sunk Fees", fmtMoney(sunk), "r", "spent on blown accounts", "d5");
+}
+
+// Payouts in the current calendar month, respecting the Person filter.
+function payoutsThisMonth(){
+  var mk = currentMonthKey();
+  return ((_data.payouts && _data.payouts.list) || []).reduce(function(sum, p){
+    if(String(p.date).slice(0,7) !== mk) return sum;
+    if(_filters.person !== "all" && p.person !== _filters.person) return sum;
+    return sum + (p.amount || 0);
+  }, 0);
 }
 
 /* ── RESULT BREAKDOWN ── */
@@ -1902,35 +2557,75 @@ function renderRR(s){
 }
 
 /* ── EQUITY ── */
-function computeEquity(){
-  var accs = (_data.accounts||[])
-    .filter(function(a){ return _status==="all" || a.status===_status; })
-    .filter(function(a){ return _person==="all" || a.person===_person; })
-    .filter(function(a){ return _accountId==="all" || a.accountId===_accountId; });
-  var baseline = accs.reduce(function(sum,a){ return sum + (a.startingBalance||0); }, 0);
+/* ══════════════════════════════════════
+   EQUITY CURVE
 
+   Three deliberate departures from the old version:
+
+   1. Baseline is ACTIVE accounts only by default. Summing the
+      starting balances of every account you have ever owned —
+      blown ones included — produced a baseline that only ever grew
+      and a curve that meant nothing. "Include closed" restores the
+      blended view when you actually want it.
+
+   2. A $ / % switch. In % mode each account's P&L is divided by its
+      OWN starting balance before aggregation, so a 5k evaluation
+      and a 100k funded account contribute comparably instead of the
+      big account drowning out the small one. Same normalization the
+      server already does per trade via pnlPercent.
+
+   3. The line is trading P&L only — payouts do not drag it down.
+      Withdrawing profit is not a losing day. Payout dates are
+      marked on the curve instead.
+══════════════════════════════════════ */
+function computeEquity(){
+  var pct = _equityUnit === "pct";
+
+  var accs = filterAccountsIgnoringPeriod().filter(function(a){
+    return _equityIncludeClosed || a.status === "ACTIVE";
+  });
+  var inScope = {};
+  accs.forEach(function(a){ inScope[a.accountId] = a; });
+
+  var baseline = pct ? 0 : accs.reduce(function(sum,a){ return sum + (a.startingBalance||0); }, 0);
+
+  // Equity deliberately ignores the Period filter — a curve that
+  // starts mid-history isn't an equity curve. Account-level filters
+  // still apply.
   var trades = (_data.trades||[]).filter(function(t){
-    if(_person!=="all" && t.person!==_person) return false;
-    if(_accountId!=="all" && t.accountId!==_accountId) return false;
-    if(_status!=="all" && t.accountStatus!==_status) return false;
-    return true;
+    return !!inScope[t.accountId];
   }).slice().sort(function(a,b){ return new Date(a.date) - new Date(b.date); });
 
-  var byDate = {};
-  var order  = [];
+  var byDate = {}, order = [];
   trades.forEach(function(t){
     if(!byDate[t.dateKey]){ byDate[t.dateKey]=0; order.push(t.dateKey); }
-    byDate[t.dateKey] += (t.pnl||0);
+    if(pct){
+      // Percent of the trade's OWN account, so sizes are comparable.
+      var acc = inScope[t.accountId];
+      var sb = acc && acc.startingBalance;
+      if(sb) byDate[t.dateKey] += ((t.pnl||0) / sb) * 100;
+    } else {
+      byDate[t.dateKey] += (t.pnl||0);
+    }
+  });
+
+  // Payout dates, for markers on the curve.
+  var payoutByDate = {};
+  ((_data.payouts && _data.payouts.list) || []).forEach(function(p){
+    if(!inScope[p.accountId]) return;
+    var dk = String(p.date).slice(0,10);
+    payoutByDate[dk] = (payoutByDate[dk]||0) + (p.amount||0);
   });
 
   var running = baseline, peak = baseline, maxDrawdown = 0;
-  var labels = ["Start"], values = [baseline];
+  var labels = ["Start"], values = [parseFloat(baseline.toFixed(2))], markers = [0];
   order.forEach(function(dk){
     running += byDate[dk];
     peak = Math.max(peak, running);
     maxDrawdown = Math.max(maxDrawdown, peak - running);
     labels.push(isoToDMY(dk));
     values.push(parseFloat(running.toFixed(2)));
+    markers.push(payoutByDate[dk] ? payoutByDate[dk] : 0);
   });
 
   var totalPnL = trades.reduce(function(a,t){ return a+(t.pnl||0); }, 0);
@@ -1938,15 +2633,41 @@ function computeEquity(){
   var grossLoss   = trades.filter(function(t){return (t.pnl||0)<0;}).reduce(function(a,t){return a+Math.abs(t.pnl);},0);
   var profitFactor = grossLoss>0 ? (grossProfit/grossLoss) : (grossProfit>0 ? null : 0);
 
+  // Drawdown as a share of the capital actually at risk.
+  var ddBase = accs.reduce(function(sum,a){ return sum + (a.startingBalance||0); }, 0);
+  var maxDrawdownPct = pct ? maxDrawdown : (ddBase ? (maxDrawdown / ddBase) * 100 : 0);
+
   return {
-    baseline: baseline,
+    pct: pct,
+    accountCount: accs.length,
+    baseline: parseFloat(baseline.toFixed(2)),
     currentBalance: parseFloat(running.toFixed(2)),
     totalPnL: parseFloat(totalPnL.toFixed(2)),
     maxDrawdown: parseFloat(maxDrawdown.toFixed(2)),
+    maxDrawdownPct: parseFloat(maxDrawdownPct.toFixed(2)),
     profitFactor: profitFactor,
-    labels: labels, values: values,
+    labels: labels, values: values, markers: markers,
     hasAny: trades.length>0,
   };
+}
+
+// Account filters minus Period, which equity ignores by design.
+function filterAccountsIgnoringPeriod(){
+  return filterAccounts(_data ? _data.accounts : []);
+}
+
+function setEquityUnit(u){
+  _equityUnit = u;
+  try { localStorage.setItem("tj_equityUnit", u); } catch(e){}
+  document.querySelectorAll("#equityUnitSeg button").forEach(function(b){
+    b.classList.toggle("active", b.dataset.v === u);
+  });
+  renderEquity();
+}
+function toggleEquityClosed(){
+  _equityIncludeClosed = !_equityIncludeClosed;
+  try { localStorage.setItem("tj_equityClosed", _equityIncludeClosed ? "1" : "0"); } catch(e){}
+  renderEquity();
 }
 
 function fmtMoney(v){
@@ -1956,19 +2677,44 @@ function fmtMoney(v){
 
 function renderEquity(){
   var eq = computeEquity();
+  var pct = eq.pct;
+  var fmtV = function(v){ return pct ? (v>=0?"+":"")+v.toFixed(2)+"%" : fmtMoney(v); };
+
   var pnlCls = eq.totalPnL>0 ? "g" : eq.totalPnL<0 ? "r" : "a";
   var pfLabel = eq.profitFactor===null ? "∞" : eq.profitFactor.toFixed(2);
+
+  // Keep the toggles in sync with restored preferences.
+  document.querySelectorAll("#equityUnitSeg button").forEach(function(b){
+    b.classList.toggle("active", b.dataset.v === _equityUnit);
+  });
+  var closedBtn = document.getElementById("equityClosedBtn");
+  if(closedBtn) closedBtn.classList.toggle("on", _equityIncludeClosed);
+  var subEl = document.getElementById("equitySub");
+  if(subEl){
+    subEl.textContent = "Cumulative trading P&L · " +
+      (_equityIncludeClosed ? "all accounts" : "active accounts only") +
+      " · " + eq.accountCount + " account" + (eq.accountCount===1?"":"s") +
+      " · payouts marked, not deducted";
+  }
+
   document.getElementById("equityKpiStrip").innerHTML =
-    kp("Total P&amp;L", fmtMoney(eq.totalPnL), pnlCls, "since starting balance", "d1") +
-    kp("Current Balance", fmtMoney(eq.currentBalance), "b", "baseline "+fmtMoney(eq.baseline), "d2") +
-    kp("Max Drawdown", fmtMoney(-eq.maxDrawdown), "r", "peak to trough", "d3") +
+    kp("Total P&amp;L", pct ? (eq.totalPnL>=0?"+":"")+eq.totalPnL.toFixed(2) : fmtMoney(eq.totalPnL), pnlCls,
+       pct ? "dollars traded (curve is %)" : "trading result, payouts excluded", "d1") +
+    kp(pct ? "Cumulative %" : "Current Balance",
+       pct ? (eq.currentBalance>=0?"+":"")+eq.currentBalance.toFixed(2)+"%" : fmtMoney(eq.currentBalance), "b",
+       pct ? "of each account's own size" : "baseline "+fmtMoney(eq.baseline), "d2") +
+    kp("Max Drawdown",
+       pct ? "−"+eq.maxDrawdown.toFixed(2)+"%" : fmtMoney(-eq.maxDrawdown), "r",
+       pct ? "peak to trough" : "peak to trough · "+eq.maxDrawdownPct.toFixed(1)+"% of capital", "d3") +
     kp("Profit Factor", pfLabel, "a", "gross profit / gross loss", "d4");
 
   var canvas = document.getElementById("equityChart");
   if(!canvas) return;
   if(!eq.hasAny){
     if(_equityChart){ try{_equityChart.destroy();}catch(e){} _equityChart=null; }
-    canvas.parentNode.innerHTML = '<div class="empty" style="height:210px;display:flex;align-items:center;justify-content:center;">No trades with P&amp;L logged yet</div>';
+    canvas.parentNode.innerHTML = '<div class="empty" style="height:210px;display:flex;align-items:center;justify-content:center;">'+
+      (eq.accountCount ? 'No trades with P&amp;L logged on these accounts yet'
+                       : 'No accounts in scope — widen the filters or enable “Include closed”')+'</div>';
     return;
   }
   if(_equityChart){ try{_equityChart.destroy();}catch(e){} _equityChart=null; }
@@ -1976,7 +2722,8 @@ function renderEquity(){
   _equityChart = new Chart(canvas, {
     type: "line",
     data: { labels: eq.labels, datasets:[{
-      label:"Balance", data: eq.values,
+      label: pct ? "Cumulative %" : "Balance",
+      data: eq.values,
       borderColor: lineColor,
       backgroundColor: function(ctx){
         var g = ctx.chart.ctx.createLinearGradient(0,0,0,210);
@@ -1985,8 +2732,12 @@ function renderEquity(){
         return g;
       },
       borderWidth:2, fill:true, tension:0.25,
-      pointRadius:0, pointHoverRadius:5,
-      pointBackgroundColor:lineColor, pointBorderColor:"#0A0A0C",
+      // Payout days get a visible gold dot on the curve: money left
+      // the account that day, even though the line doesn't dip.
+      pointRadius: function(ctx){ return eq.markers[ctx.dataIndex] ? 4 : 0; },
+      pointHoverRadius:5,
+      pointBackgroundColor: function(ctx){ return eq.markers[ctx.dataIndex] ? "#C8A84B" : lineColor; },
+      pointBorderColor:"#0A0A0C",
     }]},
     options:{
       responsive:true, maintainAspectRatio:false,
@@ -1997,14 +2748,21 @@ function renderEquity(){
           titleColor:"#F2F0EC", titleFont:{family:"'Sora',sans-serif",size:12,weight:"700"},
           bodyColor:"#AEAAA4", bodyFont:{family:"'JetBrains Mono',monospace",size:10},
           padding:16, cornerRadius:10,
-          callbacks:{ label:function(c){ return fmtMoney(c.parsed.y); } }
+          callbacks:{
+            label:function(c){ return fmtV(c.parsed.y); },
+            afterLabel:function(c){
+              var p = eq.markers[c.dataIndex];
+              return p ? "Payout: " + fmtMoney(p) : "";
+            }
+          }
         }
       },
       scales:{
         y:{
           grid:{color:"rgba(255,255,255,0.03)", drawBorder:false},
           border:{color:"transparent"},
-          ticks:{color:"#3E3C38", font:{family:"'JetBrains Mono',monospace",size:9}, callback:function(v){return "$"+v;}}
+          ticks:{color:"#3E3C38", font:{family:"'JetBrains Mono',monospace",size:9},
+                 callback:function(v){ return pct ? v+"%" : "$"+v; }}
         },
         x:{
           grid:{display:false}, border:{color:"rgba(255,255,255,0.05)"},
@@ -2045,12 +2803,13 @@ function renderCompliance(s){
 
 /* ── MONTHLY TREND ── */
 function renderTrend(){
-  var trades = (_data.trades||[]).filter(function(t){
-    if(_person!=="all" && t.person!==_person) return false;
-    if(_accountId!=="all" && t.accountId!==_accountId) return false;
-    if(_status!=="all" && t.accountStatus!==_status) return false;
-    return true;
-  });
+  // Every month is plotted regardless of the Period filter — a
+  // month-over-month trend chart narrowed to one month is a dot.
+  var keepMonth = _filters.month, keepFrom = _filters.from, keepTo = _filters.to;
+  _filters.month = "all"; _filters.from = null; _filters.to = null;
+  var trades = filterTrades(_data.trades || []);
+  _filters.month = keepMonth; _filters.from = keepFrom; _filters.to = keepTo;
+
   var mMap   = {};
   trades.forEach(function(t){
     if(!t.month) return;
@@ -2135,10 +2894,7 @@ function renderTrend(){
 function matchesAccountId(accountId){
   var acc = _accountsById[accountId];
   if(!acc) return false;
-  if(_status!=="all" && acc.status!==_status) return false;
-  if(_person!=="all" && acc.person!==_person) return false;
-  if(_accountId!=="all" && accountId!==_accountId) return false;
-  return true;
+  return filterAccounts([acc]).length > 0;
 }
 function renderWeekly(){
   var weekly = (_data.weekly||[]).filter(function(w){
@@ -2175,12 +2931,7 @@ function renderAccounts(){
   var byAcc = {};
   trades.forEach(function(t){ (byAcc[t.accountId]=byAcc[t.accountId]||[]).push(t); });
 
-  var accs = (_data.accounts||[]).filter(function(a){
-    if(_status!=="all" && a.status!==_status) return false;
-    if(_person!=="all" && a.person!==_person) return false;
-    if(_accountId!=="all" && a.accountId!==_accountId) return false;
-    return true;
-  });
+  var accs = filterAccounts(_data.accounts || []);
 
   var h = "";
   accs.forEach(function(a){
@@ -2243,8 +2994,19 @@ function onRawFilterChange(){
 
 function loadMoreRaw(btn){ _rawLimit += 50; renderRawLog(); }
 
+function toggleRawInherit(){
+  _rawInherit = !_rawInherit;
+  var btn = document.getElementById("rawInheritBtn");
+  if(btn) btn.classList.toggle("on", _rawInherit);
+  onRawFilterChange();
+}
+
 function renderRawLog(){
-  var all = (_data.rawTrades||[]).filter(function(t){
+  // By default the log shows the same slice as the rest of the page,
+  // so the numbers above and the rows below can't disagree. Its own
+  // two dropdowns then narrow further within that.
+  var base = _rawInherit ? filterTrades(_data.rawTrades||[]) : (_data.rawTrades||[]);
+  var all = base.filter(function(t){
     if(_rawPerson!=="all" && t.person!==_rawPerson) return false;
     if(_rawAccount!=="all" && t.accountId!==_rawAccount) return false;
     return true;
@@ -2424,6 +3186,26 @@ function initAddAccountTab(){
   document.getElementById("aaPhase").innerHTML = _config.phases.map(function(ph){
     return '<option value="'+esc(ph)+'">'+esc(_config.phaseLabels[ph]||ph)+'</option>';
   }).join("");
+  document.getElementById("aaDDType").innerHTML = ((_config.ddTypes)||["STATIC","TRAILING"]).map(function(dt){
+    var lbl = (_config.ddTypeLabels && _config.ddTypeLabels[dt]) || dt;
+    return '<option value="'+esc(dt)+'">'+esc(lbl)+'</option>';
+  }).join("");
+  updateAaDerived();
+}
+
+// Percentages are easy to type but hard to picture. Show the dollar
+// figure each one works out to against the balance being entered.
+function updateAaDerived(){
+  var bal = parseFloat(document.getElementById("aaBalance").value) || 0;
+  function show(inputId, outId, noun){
+    var pct = parseFloat(document.getElementById(inputId).value) || 0;
+    var el  = document.getElementById(outId);
+    if(!el) return;
+    if(!pct || !bal){ el.textContent = bal ? "0 = not tracked" : "Enter a starting balance first"; return; }
+    el.textContent = pct + "% of " + fmtMoney(bal) + " = " + fmtMoney(bal * pct / 100) + " " + noun;
+  }
+  show("aaTarget", "aaTargetDerived", "to pass");
+  show("aaMaxDD",  "aaMaxDDDerived",  "of room");
 }
 
 function submitAddAccount(btn){
@@ -2431,6 +3213,10 @@ function submitAddAccount(btn){
   var phase  = document.getElementById("aaPhase").value;
   var name   = document.getElementById("aaName").value.trim();
   var balance = document.getElementById("aaBalance").value;
+  var cost    = document.getElementById("aaCost").value;
+  var target  = document.getElementById("aaTarget").value;
+  var maxDD   = document.getElementById("aaMaxDD").value;
+  var ddType  = document.getElementById("aaDDType").value;
 
   document.getElementById("aaErr").textContent = "";
   document.getElementById("aaOk").textContent = "";
@@ -2441,7 +3227,11 @@ function submitAddAccount(btn){
     "&person=" + encodeURIComponent(person) +
     "&name=" + encodeURIComponent(name) +
     "&phase=" + encodeURIComponent(phase) +
-    "&startingBalance=" + encodeURIComponent(balance || "0");
+    "&startingBalance=" + encodeURIComponent(balance || "0") +
+    "&cost=" + encodeURIComponent(cost || "0") +
+    "&targetPct=" + encodeURIComponent(target || "0") +
+    "&maxDDPct=" + encodeURIComponent(maxDD || "0") +
+    "&ddType=" + encodeURIComponent(ddType || "STATIC");
 
   var done = btnLoading(btn, "Adding");
   jsonp(APPS_SCRIPT_URL + "?action=addAccount&" + params, function(d){
@@ -2453,6 +3243,10 @@ function submitAddAccount(btn){
     document.getElementById("aaOk").textContent = "Account added ✓ — go to Journal Trade or Manage Accounts.";
     document.getElementById("aaName").value = "";
     document.getElementById("aaBalance").value = "";
+    document.getElementById("aaCost").value = "";
+    // Target / max DD / DD type are deliberately kept: the next
+    // account you add is usually from the same firm with the same rules.
+    updateAaDerived();
     refreshAccountsList();
     refreshDashboardQuietly();
   });
@@ -2462,101 +3256,387 @@ function submitAddAccount(btn){
    MANAGE ACCOUNTS TAB
 ══════════════════════════════════════ */
 function renderManageAccounts(){
-  if(!_data || !_data.accounts){
+  if(!_data || !_data.accounts || !_config || !_config.phases){
     document.getElementById("maccList").innerHTML = '<div class="empty">Loading…</div>';
     document.getElementById("maccSummary").innerHTML = "";
+    document.getElementById("maccSummaryNote").textContent = "";
+    document.getElementById("maccCount").textContent = "";
     return;
   }
+  buildFilters();
   renderMaccSummary();
-  var people = _data.people || [];
-  var html = "";
-  people.forEach(function(person){
-    var accs = _data.accounts.filter(function(a){ return a.person===person; })
-      .sort(function(a,b){ return new Date(a.createdAt) - new Date(b.createdAt); });
-    html += '<div class="macc-person-header">'+esc(person)+'<span class="macc-person-count">'+accs.length+' account'+(accs.length===1?'':'s')+'</span></div>';
-    if(!accs.length){
-      html += '<div class="empty">No accounts yet — add one from the Add Account tab</div>';
-      return;
-    }
-    accs.forEach(function(a){ html += maccCardHTML(a); });
+  syncMaccViewToggle();
+
+  var accs = filterAccounts(_data.accounts);
+  var total = (_data.accounts||[]).length;
+  document.getElementById("maccCount").textContent =
+    accs.length === total
+      ? total + " account" + (total===1?"":"s")
+      : "Showing " + accs.length + " of " + total + " accounts";
+
+  if(!accs.length){
+    document.getElementById("maccList").innerHTML =
+      '<div class="empty">' +
+      (total ? 'No accounts match these filters — clear them from the bar above.'
+             : 'No accounts yet — add one from the Add Account tab.') +
+      '</div>';
+    return;
+  }
+
+  document.getElementById("maccList").innerHTML =
+    _maccView === "table" ? maccTableHTML(accs) : maccCardsHTML(accs);
+}
+
+function setMaccView(v){
+  _maccView = v;
+  try { localStorage.setItem("tj_maccView", v); } catch(e){}
+  renderManageAccounts();
+}
+function syncMaccViewToggle(){
+  document.querySelectorAll("#maccViewToggle button").forEach(function(b){
+    b.classList.toggle("active", b.dataset.v === _maccView);
   });
-  document.getElementById("maccList").innerHTML = html;
+}
+
+/* ── Grouped card view ──
+   Grouped by PHASE, not by person: as a prop trader you care about
+   "what's funded / what's still an evaluation" far more than whose
+   name is on it, and person is now a filter. Masters come first
+   because that's where the real money is. ── */
+var MACC_GROUPS = [
+  { phase:"MASTER",  title:"Master · Funded", cls:"" },
+  { phase:"PHASE_2", title:"Phase 2",         cls:"p2" },
+  { phase:"PHASE_1", title:"Phase 1",         cls:"p1" },
+];
+
+function maccCardsHTML(accs){
+  var html = "";
+  MACC_GROUPS.forEach(function(g){
+    var group = accs.filter(function(a){ return a.phase === g.phase; })
+      .sort(function(a,b){ return new Date(a.createdAt) - new Date(b.createdAt); });
+    if(!group.length) return;
+
+    var bal = group.reduce(function(s,a){ return s + (a.currentBalance||0); }, 0);
+    var sub = group.length + " account" + (group.length===1?"":"s") + " · " + fmtMoney(bal) + " balance";
+    if(g.phase === "MASTER"){
+      var und = group.reduce(function(s,a){ return s + (a.undrawnProfit||0); }, 0);
+      sub += " · " + fmtMoney(und) + " undrawn";
+    }
+    html += '<div class="macc-group-header">'+
+      '<div class="macc-group-title '+g.cls+'">'+esc(g.title)+'</div>'+
+      '<div class="macc-group-sub">'+esc(sub)+'</div>'+
+    '</div>';
+    group.forEach(function(a){ html += maccCardHTML(a); });
+  });
+
+  // Any phase the config knows about but MACC_GROUPS doesn't.
+  var known = MACC_GROUPS.map(function(g){ return g.phase; });
+  var rest = accs.filter(function(a){ return known.indexOf(a.phase) === -1; });
+  if(rest.length){
+    html += '<div class="macc-group-header"><div class="macc-group-title">Other</div>'+
+      '<div class="macc-group-sub">'+rest.length+' account'+(rest.length===1?"":"s")+'</div></div>';
+    rest.forEach(function(a){ html += maccCardHTML(a); });
+  }
+  return html;
 }
 
 function renderMaccSummary(){
-  var accs = _data.accounts || [];
-  var active = accs.filter(function(a){ return a.status==="ACTIVE"; });
-  var totalCurrent = accs.reduce(function(s,a){ return s + (a.currentBalance||0); }, 0);
-  var totalStart   = accs.reduce(function(s,a){ return s + (a.startingBalance||0); }, 0);
-  var netCls = totalCurrent >= totalStart ? "pos" : "neg";
+  var accs = filterAccounts(_data.accounts || []);
+  var live = accs.filter(function(a){ return a.status==="ACTIVE"; });
+
+  var liveEq = live.reduce(function(s,a){ return s + (a.currentBalance||0); }, 0);
+  var undrawn = live.reduce(function(s,a){ return s + (a.phase==="MASTER" ? (a.undrawnProfit||0) : 0); }, 0);
+  var paid = accs.reduce(function(s,a){ return s + (a.paidOut||0); }, 0);
+  var fees = accs.reduce(function(s,a){ return s + (a.cost||0); }, 0);
+  var net  = paid - fees;
+
+  var nActive = live.length;
+  var nPassed = accs.filter(function(a){ return a.status==="PASSED"; }).length;
+  var nBlown  = accs.filter(function(a){ return a.status==="BLOWN"; }).length;
+  var attempts = nPassed + nBlown;
+  var passRate = attempts ? ((nPassed/attempts)*100).toFixed(0)+"%" : "—";
+
+  function tile(val, lbl, cls){
+    return '<div class="macc-summary-item"><div class="macc-summary-val '+(cls||"")+'">'+val+'</div>'+
+      '<div class="macc-summary-lbl">'+lbl+'</div></div>';
+  }
   document.getElementById("maccSummary").innerHTML =
-    '<div class="macc-summary-item"><div class="macc-summary-val">'+accs.length+'</div><div class="macc-summary-lbl">Total Accounts</div></div>'+
-    '<div class="macc-summary-item"><div class="macc-summary-val" style="color:var(--green)">'+active.length+'</div><div class="macc-summary-lbl">Active</div></div>'+
-    '<div class="macc-summary-item"><div class="macc-summary-val">'+fmtMoney(totalStart)+'</div><div class="macc-summary-lbl">Starting Balance (All)</div></div>'+
-    '<div class="macc-summary-item"><div class="macc-summary-val '+netCls+'">'+fmtMoney(totalCurrent)+'</div><div class="macc-summary-lbl">Current Balance (All)</div></div>';
+    tile(fmtMoney(liveEq),  "Live Equity · Active",  "") +
+    tile(fmtMoney(undrawn), "Undrawn Profit", undrawn>0 ? "pos" : "") +
+    tile(fmtMoney(paid),    "Paid Out · All Time", paid>0 ? "pos" : "") +
+    tile((net>=0?"+":"−")+fmtMoney(Math.abs(net)), "Real Net Profit", net>0?"pos":net<0?"neg":"");
+
+  document.getElementById("maccSummaryNote").innerHTML =
+    nActive+' active · '+nPassed+' passed · '+nBlown+' blown · pass rate '+passRate+
+    ' &nbsp;·&nbsp; Live Equity counts Active accounts only — passed and blown accounts are gone, and their balances with them. Their trades still count toward every statistic.';
 }
 
 function maccCardHTML(a){
-  var balCls = a.currentBalance >= a.startingBalance ? "pos" : "neg";
   var editing = !!_maccOpen[a.accountId];
+  var isMaster = a.phase === "MASTER";
+  var statusClass = STATUS_BADGE_CLASS[a.status] || "active";
+
+  var quickBtns = "";
+  if(a.status==="ACTIVE"){
+    quickBtns += '<button class="jbtn-sm gold" onclick="quickAccountStatus(\'' + a.accountId + '\',\'PASSED\', this)">Mark Passed</button>';
+    quickBtns += '<button class="jbtn-sm remove" onclick="quickAccountStatus(\'' + a.accountId + '\',\'BLOWN\', this)">Mark Blown</button>';
+  } else {
+    quickBtns += '<button class="jbtn-sm add" onclick="quickAccountStatus(\'' + a.accountId + '\',\'ACTIVE\', this)">Reactivate</button>';
+  }
+  if(isMaster){
+    quickBtns += '<button class="jbtn-sm gold" onclick="gotoPayout(\'' + a.accountId + '\')">+ Log Payout</button>';
+  }
+  quickBtns += '<button class="jbtn-sm" id="maccEditBtn_'+a.accountId+'" onclick="toggleAccountEdit(\'' + a.accountId + '\')">'+(editing?"Close":"Edit")+'</button>';
+
+  var st = (_data.accountStats && _data.accountStats[a.accountId]) || null;
+  var pnl = a.grossPnL || 0;
+  var pnlCls = pnl > 0 ? "pos" : pnl < 0 ? "neg" : "";
+  var pnlPct = a.startingBalance ? ((pnl / a.startingBalance) * 100) : 0;
+  var balCls = (a.currentBalance||0) >= (a.startingBalance||0) ? "pos" : "neg";
+  var createdTxt = a.createdAt ? isoToDMY(_dateKeyFromAny(a.createdAt)) : "—";
+  var shortId = a.accountId ? a.accountId.slice(0,8) : "—";
+
+  // The (#1)/(#2) disambiguator the server computes for duplicate
+  // names, shown as a muted suffix so two "5k" accounts are still
+  // tellable apart without polluting the stored name.
+  var dupSuffix = "";
+  var m = /\s(\(#\d+\))$/.exec(a.displayLabel || "");
+  if(m) dupSuffix = ' <span style="font-size:12px;color:var(--txt4);font-weight:600;">'+esc(m[1])+'</span>';
+
+  function cell(lbl, val, cls){
+    return '<div class="macc-detail"><div class="macc-detail-lbl">'+lbl+'</div>'+
+      '<div class="macc-detail-val '+(cls||"")+'">'+val+'</div></div>';
+  }
+
+  var cells = "";
+  if(isMaster){
+    // A Master account is real funded capital: what matters is how
+    // much has been taken out and how much is still withdrawable.
+    var und = a.undrawnProfit || 0;
+    cells += cell("Funded Size",    fmtMoney(a.startingBalance));
+    cells += cell("Balance",        fmtMoney(a.currentBalance), balCls);
+    cells += cell("Gross P&amp;L",  (pnl>=0?"+":"−")+fmtMoney(Math.abs(pnl)), pnlCls);
+    cells += cell("Paid Out",       fmtMoney(a.paidOut||0), (a.paidOut||0)>0 ? "gold" : "");
+    cells += cell("Undrawn Profit", (und>=0?"":"−")+fmtMoney(Math.abs(und)), und>0?"pos":und<0?"neg":"");
+    cells += cell("Trades",         (st?st.total:0));
+    cells += cell("Win Rate",       (st && st.total ? st.winRate+"%" : "—"), "gold");
+  } else {
+    cells += cell("Account Size",   fmtMoney(a.startingBalance));
+    cells += cell("Balance",        fmtMoney(a.currentBalance), balCls);
+    cells += cell("P&amp;L",        (pnl>=0?"+":"−")+fmtMoney(Math.abs(pnl))+
+                                    ' <span style="font-size:10px;">('+(pnlPct>=0?"+":"")+pnlPct.toFixed(1)+'%)</span>', pnlCls);
+    cells += cell("Trades",         (st?st.total:0));
+    cells += cell("Win Rate",       (st && st.total ? st.winRate+"%" : "—"), "gold");
+  }
+
+  var meters = "";
+  if(!isMaster) meters += targetMeterHTML(a);
+  meters += ddMeterHTML(a);
+
+  return '<div class="macc-card st-'+statusClass+(a.breached?" breached":"")+'">'+
+    '<div class="macc-top">'+
+      '<div class="macc-identity">'+
+        '<div class="macc-eyebrow">'+esc(a.person)+' · Account</div>'+
+        '<div class="macc-name-row">'+
+          '<div class="macc-name">'+esc(a.accountName || "(unnamed)")+dupSuffix+'</div>'+
+          '<div class="macc-badges">'+phaseBadge(a.phase)+statusBadge(a.status)+
+            (a.breached ? '<span class="macc-breach-tag">Drawdown breached</span>' : '')+'</div>'+
+        '</div>'+
+        '<div class="macc-id">ID '+esc(shortId)+'… · created '+esc(createdTxt)+
+          (a.cost ? ' · cost '+esc(fmtMoney(a.cost)) : '')+'</div>'+
+      '</div>'+
+      '<div class="macc-actions">'+quickBtns+'</div>'+
+    '</div>'+
+    '<div class="macc-detail-grid">'+cells+'</div>'+
+    meters+
+    maccEditHTML(a, editing)+
+  '</div>';
+}
+
+/* ── Meters ── */
+function targetMeterHTML(a){
+  if(a.targetProgress === null || a.targetProgress === undefined){
+    return '<div class="meter"><div class="meter-head">'+
+      '<span class="meter-lbl">Profit Target</span>'+
+      '<span class="meter-val" style="color:var(--txt4)">not set</span></div>'+
+      '<div class="meter-note">Set a target % on this account to track progress toward passing.</div></div>';
+  }
+  var pct = a.targetProgress * 100;
+  var made = a.grossPnL || 0;
+  var cls = pct >= 100 ? "good" : pct >= 50 ? "gold" : "warn";
+  return '<div class="meter">'+
+    '<div class="meter-head">'+
+      '<span class="meter-lbl">Profit Target · '+esc(String(a.targetPct))+'%</span>'+
+      '<span class="meter-val '+(pct>=100?"pos":"gold")+'">'+pct.toFixed(0)+'%</span>'+
+    '</div>'+
+    '<div class="meter-track"><div class="meter-fill '+cls+'" style="width:'+Math.max(pct,0).toFixed(1)+'%"></div></div>'+
+    '<div class="meter-note">'+esc(fmtMoney(made))+' of '+esc(fmtMoney(a.targetAmount))+
+      (pct>=100 ? ' — target met' : ' — '+esc(fmtMoney(Math.max(a.targetAmount-made,0)))+' to go')+'</div>'+
+  '</div>';
+}
+
+function ddMeterHTML(a){
+  if(a.ddRoom === null || a.ddRoom === undefined){
+    return '<div class="meter"><div class="meter-head">'+
+      '<span class="meter-lbl">Drawdown Room</span>'+
+      '<span class="meter-val" style="color:var(--txt4)">not set</span></div>'+
+      '<div class="meter-note">Set a max drawdown % to see how close this account is to a breach.</div></div>';
+  }
+  // Filled portion = room LEFT, so green always reads "safe".
+  var roomPct = (1 - a.ddUsedPct) * 100;
+  var cls = roomPct <= 0 ? "bad" : roomPct < 25 ? "bad" : roomPct < 50 ? "warn" : "good";
+  var valCls = roomPct <= 0 ? "neg" : roomPct < 25 ? "neg" : roomPct < 50 ? "warn" : "pos";
+  var typeLbl = (_config && _config.ddTypeLabels && _config.ddTypeLabels[a.ddType]) || a.ddType || "Static";
+  return '<div class="meter">'+
+    '<div class="meter-head">'+
+      '<span class="meter-lbl">Drawdown Room · '+esc(String(a.maxDDPct))+'% '+esc(typeLbl)+'</span>'+
+      '<span class="meter-val '+valCls+'">'+esc(fmtMoney(a.ddRoom))+' left</span>'+
+    '</div>'+
+    '<div class="meter-track"><div class="meter-fill '+cls+'" style="width:'+Math.max(roomPct,0).toFixed(1)+'%"></div></div>'+
+    '<div class="meter-note">Floor '+esc(fmtMoney(a.ddFloor))+
+      (a.ddType==="TRAILING" ? ' (trails peak '+esc(fmtMoney(a.peakBalance))+')' : ' (fixed)')+
+      ' · worst drawdown hit '+esc(fmtMoney(a.maxDrawdownHit||0))+'</div>'+
+  '</div>';
+}
+
+/* ── Inline edit panel — shared by both views ── */
+function maccEditHTML(a, editing){
   var phaseOpts = (_config.phases||[]).map(function(ph){
     return '<option value="'+ph+'"'+(ph===a.phase?" selected":"")+'>'+esc(_config.phaseLabels[ph]||ph)+'</option>';
   }).join("");
   var statusOpts = (_config.accountStatuses||[]).map(function(st){
     return '<option value="'+st+'"'+(st===a.status?" selected":"")+'>'+esc(_config.statusLabels[st]||st)+'</option>';
   }).join("");
+  var ddOpts = ((_config.ddTypes)||["STATIC","TRAILING"]).map(function(dt){
+    var lbl = (_config.ddTypeLabels && _config.ddTypeLabels[dt]) || dt;
+    return '<option value="'+dt+'"'+(dt===(a.ddType||"STATIC")?" selected":"")+'>'+esc(lbl)+'</option>';
+  }).join("");
+  var id = a.accountId;
 
-  var quickBtns = "";
-  if(a.status==="ACTIVE"){
-    quickBtns += '<button class="jbtn-sm gold" onclick="quickAccountStatus(\''+a.accountId+'\',\'PASSED\', this)">Mark Passed</button>';
-    quickBtns += '<button class="jbtn-sm remove" onclick="quickAccountStatus(\''+a.accountId+'\',\'BLOWN\', this)">Mark Blown</button>';
-  } else {
-    quickBtns += '<button class="jbtn-sm add" onclick="quickAccountStatus(\''+a.accountId+'\',\'ACTIVE\', this)">Reactivate</button>';
-  }
-  if(a.phase==="MASTER"){
-    quickBtns += '<button class="jbtn-sm gold" onclick="gotoPayout(\''+a.accountId+'\')">+ Log Payout</button>';
-  }
-  quickBtns += '<button class="jbtn-sm" onclick="toggleAccountEdit(\''+a.accountId+'\')">'+(editing?"Close":"Edit")+'</button>';
-
-  var st = (_data.accountStats && _data.accountStats[a.accountId]) || null;
-  var pnlDollar = a.currentBalance - a.startingBalance;
-  var pnlCls = pnlDollar > 0 ? "pos" : pnlDollar < 0 ? "neg" : "";
-  var pnlPct = a.startingBalance ? ((pnlDollar / a.startingBalance) * 100) : 0;
-  var createdTxt = a.createdAt ? isoToDMY(_dateKeyFromAny(a.createdAt)) : "—";
-  var shortId = a.accountId ? a.accountId.slice(0,8) : "—";
-  var statusClass = STATUS_BADGE_CLASS[a.status] || "active";
-
-  return '<div class="macc-card st-'+statusClass+'">'+
-    '<div class="macc-top">'+
-      '<div class="macc-identity">'+
-        '<div class="macc-eyebrow">'+esc(a.person)+' · Account</div>'+
-        '<div class="macc-name-row">'+
-          '<div class="macc-name">'+esc(a.name)+'</div>'+
-          '<div class="macc-badges">'+phaseBadge(a.phase)+statusBadge(a.status)+'</div>'+
-        '</div>'+
-        '<div class="macc-id">ID '+esc(shortId)+'… · created '+esc(createdTxt)+'</div>'+
-      '</div>'+
-      '<div class="macc-actions">'+quickBtns+'</div>'+
+  return '<div class="macc-edit'+(editing?" show":"")+'" id="maccEdit_'+id+'">'+
+    '<div class="jgrid">'+
+      '<div class="jfield"><label class="jlabel">Name</label>'+
+        '<input class="jinput" type="text" id="edtName_'+id+'" value="'+esc(a.accountName||"")+'" maxlength="40"></div>'+
+      '<div class="jfield"><label class="jlabel">Phase</label>'+
+        '<select class="jselect" id="edtPhase_'+id+'">'+phaseOpts+'</select></div>'+
+      '<div class="jfield"><label class="jlabel">Status</label>'+
+        '<select class="jselect" id="edtStatus_'+id+'">'+statusOpts+'</select></div>'+
     '</div>'+
-    '<div class="macc-detail-grid">'+
-      '<div class="macc-detail"><div class="macc-detail-lbl">Starting Balance</div><div class="macc-detail-val">'+fmtMoney(a.startingBalance)+'</div></div>'+
-      '<div class="macc-detail"><div class="macc-detail-lbl">Current Balance</div><div class="macc-detail-val '+balCls+'">'+fmtMoney(a.currentBalance)+'</div></div>'+
-      '<div class="macc-detail"><div class="macc-detail-lbl">P&amp;L</div><div class="macc-detail-val '+pnlCls+'">'+(pnlDollar>=0?"+":"")+fmtMoney(pnlDollar).replace("-","")+' <span style="font-size:10px;">('+(pnlPct>=0?"+":"")+pnlPct.toFixed(1)+'%)</span></div></div>'+
-      '<div class="macc-detail"><div class="macc-detail-lbl">Trades</div><div class="macc-detail-val">'+(st?st.total:0)+'</div></div>'+
-      '<div class="macc-detail"><div class="macc-detail-lbl">Win Rate</div><div class="macc-detail-val gold">'+(st && st.total ? st.winRate+"%" : "—")+'</div></div>'+
+    '<div class="jgrid" style="margin-top:12px;">'+
+      '<div class="jfield"><label class="jlabel">Starting Balance ($)</label>'+
+        '<input class="jinput" type="number" id="edtBalance_'+id+'" value="'+(a.startingBalance||0)+'" min="0" step="0.01"></div>'+
+      '<div class="jfield"><label class="jlabel">Cost ($)</label>'+
+        '<input class="jinput" type="number" id="edtCost_'+id+'" value="'+(a.cost||0)+'" min="0" step="0.01">'+
+        '<div class="meter-note">What you paid for this challenge</div></div>'+
+      '<div class="jfield"><label class="jlabel">Drawdown Type</label>'+
+        '<select class="jselect" id="edtDDType_'+id+'">'+ddOpts+'</select></div>'+
     '</div>'+
-    '<div class="macc-edit'+(editing?" show":"")+'" id="maccEdit_'+a.accountId+'">'+
-      '<div class="jgrid">'+
-        '<div class="jfield"><label class="jlabel">Name</label><input class="jinput" type="text" id="edtName_'+a.accountId+'" value="'+esc(a.name)+'" maxlength="40"></div>'+
-        '<div class="jfield"><label class="jlabel">Phase</label><select class="jselect" id="edtPhase_'+a.accountId+'">'+phaseOpts+'</select></div>'+
-        '<div class="jfield"><label class="jlabel">Status</label><select class="jselect" id="edtStatus_'+a.accountId+'">'+statusOpts+'</select></div>'+
-      '</div>'+
-      '<div class="jfield" style="max-width:220px;margin-top:12px;"><label class="jlabel">Starting Balance ($)</label><input class="jinput" type="number" id="edtBalance_'+a.accountId+'" value="'+a.startingBalance+'" min="0" step="0.01"></div>'+
-      '<div class="jactions" style="margin-top:14px;"><button class="jsubmit-btn" onclick="saveAccountEdit(\''+a.accountId+'\', this)">Save Changes</button></div>'+
-      '<div class="jerr" id="edtErr_'+a.accountId+'"></div>'+
-      '<div class="jok" id="edtOk_'+a.accountId+'"></div>'+
+    '<div class="jgrid" style="margin-top:12px;">'+
+      '<div class="jfield"><label class="jlabel">Profit Target (%)</label>'+
+        '<input class="jinput" type="number" id="edtTarget_'+id+'" value="'+(a.targetPct||0)+'" min="0" max="1000" step="0.1">'+
+        '<div class="meter-note">0 = not tracked</div></div>'+
+      '<div class="jfield"><label class="jlabel">Max Drawdown (%)</label>'+
+        '<input class="jinput" type="number" id="edtMaxDD_'+id+'" value="'+(a.maxDDPct||0)+'" min="0" max="100" step="0.1">'+
+        '<div class="meter-note">0 = not tracked</div></div>'+
+      '<div class="jfield"></div>'+
     '</div>'+
+    '<div class="jactions" style="margin-top:14px;"><button class="jsubmit-btn" onclick="saveAccountEdit(\'' + id + '\', this)">Save Changes</button></div>'+
+    '<div class="jerr" id="edtErr_'+id+'"></div>'+
+    '<div class="jok" id="edtOk_'+id+'"></div>'+
   '</div>';
+}
+
+/* ── Table view ── */
+var MACC_COLS = [
+  { key:"name",    lbl:"Account", tl:true },
+  { key:"person",  lbl:"Person",  tl:true },
+  { key:"phase",   lbl:"Phase",   tl:true },
+  { key:"status",  lbl:"Status",  tl:true },
+  { key:"size",    lbl:"Size" },
+  { key:"balance", lbl:"Balance" },
+  { key:"pnl",     lbl:"P&L" },
+  { key:"undrawn", lbl:"Undrawn" },
+  { key:"paid",    lbl:"Paid Out" },
+  { key:"cost",    lbl:"Cost" },
+  { key:"trades",  lbl:"Trades" },
+  { key:"wr",      lbl:"WR" },
+  { key:"ddroom",  lbl:"DD Room" },
+];
+
+function maccSortValue(a, key){
+  var st = (_data.accountStats && _data.accountStats[a.accountId]) || null;
+  switch(key){
+    case "name":    return String(a.accountName||"").toLowerCase();
+    case "person":  return String(a.person||"").toLowerCase();
+    case "phase":   return ["PHASE_1","PHASE_2","MASTER"].indexOf(a.phase);
+    case "status":  return String(a.status||"");
+    case "size":    return a.startingBalance || 0;
+    case "balance": return a.currentBalance  || 0;
+    case "pnl":     return a.grossPnL        || 0;
+    case "undrawn": return a.undrawnProfit   || 0;
+    case "paid":    return a.paidOut         || 0;
+    case "cost":    return a.cost            || 0;
+    case "trades":  return st ? st.total   : 0;
+    case "wr":      return st && st.total ? st.winRate : -1;
+    // Unset limits sort last rather than pretending to be zero room.
+    case "ddroom":  return (a.ddRoom === null || a.ddRoom === undefined) ? Infinity : a.ddRoom;
+  }
+  return 0;
+}
+
+function sortMacc(key){
+  if(_maccSort.key === key) _maccSort.dir = -_maccSort.dir;
+  else _maccSort = { key:key, dir:1 };
+  renderManageAccounts();
+}
+
+function maccTableHTML(accs){
+  var rows = accs.slice().sort(function(x,y){
+    var a = maccSortValue(x,_maccSort.key), b = maccSortValue(y,_maccSort.key);
+    if(a < b) return -_maccSort.dir;
+    if(a > b) return  _maccSort.dir;
+    return 0;
+  });
+
+  var head = MACC_COLS.map(function(c){
+    var on = _maccSort.key === c.key;
+    return '<th class="'+(c.tl?"tl ":"")+(on?"sorted":"")+'" onclick="sortMacc(\'' + c.key + '\')">'+
+      c.lbl+(on ? '<span class="sort-caret">'+(_maccSort.dir>0?"▲":"▼")+'</span>' : '')+'</th>';
+  }).join("");
+
+  var body = "";
+  rows.forEach(function(a){
+    var st = (_data.accountStats && _data.accountStats[a.accountId]) || null;
+    var pnl = a.grossPnL || 0;
+    var isMaster = a.phase === "MASTER";
+    var money = function(v, cls){ return '<td class="'+(cls||"")+'">'+esc(fmtMoney(v))+'</td>'; };
+    var dash  = '<td class="muted">—</td>';
+
+    body += '<tr class="st-'+(STATUS_BADGE_CLASS[a.status]||"active")+'" onclick="toggleAccountEdit(\'' + a.accountId + '\')">'+
+      '<td class="name">'+esc(a.accountName||"(unnamed)")+(a.breached?' <span class="macc-breach-tag">breach</span>':'')+'</td>'+
+      '<td style="text-align:left">'+esc(a.person)+'</td>'+
+      '<td style="text-align:left">'+phaseBadge(a.phase)+'</td>'+
+      '<td style="text-align:left">'+statusBadge(a.status)+'</td>'+
+      money(a.startingBalance)+
+      money(a.currentBalance, (a.currentBalance||0) >= (a.startingBalance||0) ? "pos" : "neg")+
+      '<td class="'+(pnl>0?"pos":pnl<0?"neg":"")+'">'+(pnl>=0?"+":"−")+esc(fmtMoney(Math.abs(pnl)))+'</td>'+
+      (isMaster ? money(a.undrawnProfit, (a.undrawnProfit||0)>0?"pos":"") : dash)+
+      (isMaster ? money(a.paidOut, (a.paidOut||0)>0?"gold":"muted")       : dash)+
+      money(a.cost, (a.cost||0)?"":"muted")+
+      '<td>'+(st?st.total:0)+'</td>'+
+      '<td class="gold">'+(st && st.total ? st.winRate+"%" : '—')+'</td>'+
+      (a.ddRoom === null || a.ddRoom === undefined
+        ? dash
+        : '<td class="'+(a.ddUsedPct>=0.75?"neg":a.ddUsedPct>=0.5?"":"pos")+'">'+esc(fmtMoney(a.ddRoom))+'</td>')+
+    '</tr>';
+
+    if(_maccOpen[a.accountId]){
+      body += '<tr class="editrow"><td colspan="'+MACC_COLS.length+'">'+maccEditHTML(a, true)+'</td></tr>';
+    }
+  });
+
+  return '<div class="macc-table-wrap"><table class="macc-table">'+
+    '<thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table></div>';
 }
 
 // Accepts either a Date, an ISO string, or a serialized date string
@@ -2572,27 +3652,57 @@ function _dateKeyFromAny(v){
 }
 
 function toggleAccountEdit(accountId){
-  _maccOpen[accountId] = !_maccOpen[accountId];
+  var open = !_maccOpen[accountId];
+  _maccOpen[accountId] = open;
+
+  // In card view, toggle in place rather than re-rendering the whole
+  // list — a full re-render wipes anything typed into another open
+  // card. The table view has to re-render because the edit form
+  // lives in its own <tr>.
+  var panel = document.getElementById("maccEdit_"+accountId);
+  if(_maccView === "cards" && panel){
+    panel.classList.toggle("show", open);
+    var btn = document.getElementById("maccEditBtn_"+accountId);
+    if(btn) btn.textContent = open ? "Close" : "Edit";
+    return;
+  }
   renderManageAccounts();
 }
-
 function saveAccountEdit(accountId, btn){
-  var name    = document.getElementById("edtName_"+accountId).value.trim();
-  var phase   = document.getElementById("edtPhase_"+accountId).value;
-  var status  = document.getElementById("edtStatus_"+accountId).value;
-  var balance = document.getElementById("edtBalance_"+accountId).value;
+  var v = function(prefix){
+    var el = document.getElementById(prefix+"_"+accountId);
+    return el ? el.value : null;
+  };
+  var name    = (v("edtName") || "").trim();
+  var phase   = v("edtPhase");
+  var status  = v("edtStatus");
+  var balance = v("edtBalance");
+  var cost    = v("edtCost");
+  var target  = v("edtTarget");
+  var maxDD   = v("edtMaxDD");
+  var ddType  = v("edtDDType");
   var errEl = document.getElementById("edtErr_"+accountId);
   var okEl  = document.getElementById("edtOk_"+accountId);
   errEl.textContent = ""; okEl.textContent = "";
 
   if(!name){ errEl.textContent = "Name cannot be empty."; return; }
+  if(target !== null && (parseFloat(target) < 0 || parseFloat(target) > 1000)){
+    errEl.textContent = "Profit target must be between 0 and 1000%."; return;
+  }
+  if(maxDD !== null && (parseFloat(maxDD) < 0 || parseFloat(maxDD) > 100)){
+    errEl.textContent = "Max drawdown must be between 0 and 100%."; return;
+  }
 
   var params = "token=" + encodeURIComponent(_tok) +
     "&accountId=" + encodeURIComponent(accountId) +
     "&name=" + encodeURIComponent(name) +
     "&phase=" + encodeURIComponent(phase) +
     "&status=" + encodeURIComponent(status) +
-    "&startingBalance=" + encodeURIComponent(balance || "0");
+    "&startingBalance=" + encodeURIComponent(balance || "0") +
+    "&cost=" + encodeURIComponent(cost || "0") +
+    "&targetPct=" + encodeURIComponent(target || "0") +
+    "&maxDDPct=" + encodeURIComponent(maxDD || "0") +
+    "&ddType=" + encodeURIComponent(ddType || "STATIC");
 
   var done = btnLoading(btn, "Saving");
   jsonp(APPS_SCRIPT_URL + "?action=updateAccount&" + params, function(d){
@@ -2842,9 +3952,16 @@ function renderDatePicker(){
 function dpSelectDate(iso){
   if(!_dpActiveInput) return;
   var id = _dpActiveInput;
+  var el = document.getElementById(id);
+  // Read the hook BEFORE closing — closeDatePicker clears state, and
+  // the handler may re-render the input out of existence.
+  var hook = el ? el.dataset.onpick : "";
   setDateISO(id, iso);
   closeDatePicker();
   if(id === "jDate") onKeyFieldChange();
+  // Generic hook: any date input can name a function to call with
+  // the picked ISO date (used by the filter bar's custom range).
+  if(hook && typeof window[hook] === "function") window[hook](iso);
 }
 
 /* ══════════════════════════════════════
