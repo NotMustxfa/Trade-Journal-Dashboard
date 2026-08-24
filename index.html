@@ -1044,6 +1044,92 @@ body::after {
 .meter-fill.gold { background: linear-gradient(90deg, var(--gold-dk, var(--gold)), var(--gold)); }
 .meter-note { font-family: var(--font-mono); font-size: var(--fs-0); color: var(--txt4); margin-top: 5px; }
 
+/* ── Stage timeline on the account card ── */
+.stage-timeline {
+  margin-top: var(--sp-4); padding-top: var(--sp-3);
+  border-top: 1px solid var(--border);
+}
+.stage-step {
+  display: grid;
+  grid-template-columns: 16px minmax(64px,1fr) 88px 96px 40px;
+  align-items: center; gap: var(--sp-2);
+  padding: var(--sp-2) 0;
+  font-family: var(--font-mono); font-size: var(--fs-0); color: var(--txt3);
+}
+.stage-step + .stage-step { border-top: 1px dashed var(--border); }
+.stage-mark { color: var(--txt4); text-align: center; }
+.stage-step.ok  .stage-mark { color: var(--green); }
+.stage-step.bad .stage-mark { color: var(--red); }
+.stage-step.cur .stage-mark { color: var(--gold); }
+.stage-name {
+  font-family: var(--font-display); font-size: var(--fs-1);
+  font-weight: 600; color: var(--txt2);
+}
+.stage-step.cur .stage-name { color: var(--txt); }
+.stage-when { color: var(--txt4); }
+.stage-pnl  { text-align: right; }
+.stage-pnl.pos { color: var(--green); }
+.stage-pnl.neg { color: var(--red); }
+.stage-n    { text-align: right; color: var(--txt4); }
+.stage-foot {
+  font-family: var(--font-mono); font-size: var(--fs-0); color: var(--txt4);
+  margin-top: var(--sp-2); padding-top: var(--sp-2);
+  border-top: 1px solid var(--border);
+}
+.stage-foot b.pos { color: var(--green); }
+.stage-foot b.neg { color: var(--red); }
+
+/* ── Merge tool ── */
+.merge-row {
+  display: grid;
+  grid-template-columns: 26px minmax(120px,1.6fr) auto 90px 80px;
+  align-items: center; gap: var(--sp-3);
+  padding: var(--sp-3); border-radius: var(--r);
+  background: var(--bg3); margin-top: var(--sp-2);
+  cursor: pointer; transition: all 0.16s var(--ease);
+  border: 1px solid transparent;
+}
+.merge-row:hover { background: var(--bg4); }
+.merge-row.on { border-color: var(--gold-rim); background: var(--gold-bg); }
+.merge-check {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 1px solid var(--border3); display: flex;
+  align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: var(--fs-0); font-weight: 700;
+  color: var(--on-accent);
+}
+.merge-row.on .merge-check { background: var(--gold); border-color: var(--gold); }
+.merge-name {
+  font-family: var(--font-display); font-size: var(--fs-2); font-weight: 600; color: var(--txt);
+  overflow: hidden; text-overflow: ellipsis;
+}
+.merge-sub {
+  display: block; font-family: var(--font-mono); font-size: var(--fs-0);
+  font-weight: 400; color: var(--txt4); margin-top: 2px;
+}
+.merge-badges { display: flex; gap: var(--sp-1); flex-wrap: wrap; }
+.merge-n, .merge-cost {
+  font-family: var(--font-mono); font-size: var(--fs-0);
+  color: var(--txt3); text-align: right;
+}
+
+/* ── Challenge funnel footer ── */
+.funnel-foot {
+  display: flex; flex-wrap: wrap; gap: var(--sp-5);
+  margin-top: var(--sp-4); padding-top: var(--sp-4);
+  border-top: 1px solid var(--border);
+}
+.funnel-foot-lbl {
+  display: block;
+  font-family: var(--font-display); font-size: var(--fs-0); font-weight: 700;
+  color: var(--txt4); letter-spacing: var(--tr-label);
+}
+.funnel-foot-val {
+  font-family: var(--font-display); font-size: var(--fs-4); font-weight: 700;
+  color: var(--txt); letter-spacing: var(--tr-tight);
+}
+.funnel-foot-val.pos { color: var(--green); }
+
 /* A breached account gets an unmissable rail + tag. */
 .macc-card.breached { border-color: var(--red-rim); }
 .macc-card.breached::before { background: var(--red); }
@@ -1347,6 +1433,10 @@ body::after {
   /* Five columns at 320px leaves ~55px per cell. Wrap to 3 + 2. */
   .daygrid { grid-template-columns: repeat(3,1fr); }
   .setup-head, .setup-row { grid-template-columns: 1fr 40px 48px 72px; }
+  .merge-row { grid-template-columns: 24px 1fr auto; }
+  .merge-n, .merge-cost { display: none; }
+  .stage-step { grid-template-columns: 14px 1fr 84px; }
+  .stage-when, .stage-n { display: none; }
   .setup-head .setup-bar, .setup-row .setup-bar { display: none; }
   .group-title { font-size: var(--fs-4); }
 }
@@ -1545,6 +1635,7 @@ body::after {
           <div class="sh-tag"><span class="scope-tag all">All accounts ever</span></div>
         </div>
         <div class="kpi-strip k5" id="trackKpiStrip"></div>
+        <div class="panel d2" id="funnelPanel" style="margin-top:var(--sp-3)"></div>
       </div>
 
       <div class="sec">
@@ -1601,6 +1692,18 @@ body::after {
           <div class="sh-tag"><span class="scope-tag all">All accounts ever</span></div>
         </div>
         <div class="panel d1" id="setupPanel"></div>
+      </div>
+
+      <div class="sec">
+        <div class="sh">
+          <div class="sh-title">Direction &amp; risk</div>
+          <div class="sh-line"></div>
+          <div class="sh-tag"><span class="scope-tag all">All accounts ever</span></div>
+        </div>
+        <div class="g2">
+          <div class="panel d1" id="trendAlignPanel"></div>
+          <div class="panel d2" id="rPanel"></div>
+        </div>
       </div>
 
       <div class="sec">
@@ -1755,7 +1858,7 @@ body::after {
 
         <div class="jgrid">
           <div class="jfield"><label class="jlabel">Person</label><select class="jselect" id="aaPerson"></select></div>
-          <div class="jfield"><label class="jlabel">Phase</label><select class="jselect" id="aaPhase"></select></div>
+          <div class="jfield"><label class="jlabel">Phase</label><select class="jselect" id="aaPhase" onchange="updateAaDerived()"></select></div>
           <div class="jfield"><label class="jlabel">Starting Balance ($)</label><input class="jinput" type="number" id="aaBalance" min="0" step="0.01" placeholder="0.00" oninput="updateAaDerived()"></div>
         </div>
         <div class="jfield"><label class="jlabel">Account Name</label><input class="jinput" type="text" id="aaName" placeholder="e.g. 5k, 100k" maxlength="40"></div>
@@ -1767,10 +1870,15 @@ body::after {
             <input class="jinput" type="number" id="aaCost" min="0" step="0.01" placeholder="0.00">
             <div class="meter-note">What you paid for this challenge</div>
           </div>
-          <div class="jfield">
+          <div class="jfield" id="aaTargetField">
             <label class="jlabel">Profit Target (%)</label>
             <input class="jinput" type="number" id="aaTarget" min="0" max="1000" step="0.1" placeholder="e.g. 8" oninput="updateAaDerived()">
             <div class="meter-note" id="aaTargetDerived">—</div>
+          </div>
+          <div class="jfield" id="aaTargetNote" style="display:none">
+            <label class="jlabel">Profit Target</label>
+            <div class="jstatus">Not applicable</div>
+            <div class="meter-note">A funded account has no target — you withdraw whatever you make.</div>
           </div>
           <div class="jfield">
             <label class="jlabel">Max Drawdown (%)</label>
@@ -1801,10 +1909,21 @@ body::after {
     <div class="macc-summary-note psub" id="maccSummaryNote" style="margin:-14px 0 20px;"></div>
     <div class="macc-toolbar">
       <div class="macc-count" id="maccCount"></div>
-      <div class="viewtoggle" id="maccViewToggle">
-        <button data-v="cards" onclick="setMaccView('cards')">Cards</button>
-        <button data-v="table" onclick="setMaccView('table')">Table</button>
+      <div style="display:flex;gap:var(--sp-2);align-items:center;flex-wrap:wrap;">
+        <button class="fb-preset" onclick="openMergeTool()">Merge accounts</button>
+        <div class="viewtoggle" id="maccViewToggle">
+          <button data-v="cards" onclick="setMaccView('cards')">Cards</button>
+          <button data-v="table" onclick="setMaccView('table')">Table</button>
+        </div>
       </div>
+    </div>
+
+    <div class="panel d1" id="mergePanel" style="display:none;margin-bottom:var(--sp-4)">
+      <div class="ptitle">Merge into one challenge</div>
+      <div class="psub">For accounts you had to add once per phase — joining them counts the fee once and reads as one history</div>
+      <div id="mergeList"></div>
+      <div id="mergeActions" style="margin-top:var(--sp-4)"></div>
+      <div id="mergeResult"></div>
     </div>
     <div id="maccList"></div>
   </div>
@@ -2449,6 +2568,7 @@ function renderDashboard(){
   renderKPI(s); renderResults(s); renderMistakes(s);
   renderPctKpi(s); renderPctPerformance();
   renderDays(trades); renderStreaks(trades); renderSetups();
+  renderTrendAlignment(trades); renderRMetrics(trades, s);
   renderRR(s); renderCompliance(s);
   renderTrend(); renderWeekly(); renderAccounts(); renderEquity();
   renderPayoutMiniKpi();
@@ -2642,6 +2762,173 @@ function renderStreaks(trades){
     (tiltNote ? '<div class="meter-note" style="margin-top:var(--sp-3)">Win rate '+esc(tiltNote)+' — the gap between these two is where tilt shows up.</div>' : '');
 }
 
+/* ── TREND ALIGNMENT ──
+   Whether you trade with your own bias or against it. Both halves are
+   already logged — tradeType is BUY/SELL and bias is
+   BULLISH/BEARISH/NO BIAS — and nothing has ever compared them.
+
+   NO BIAS is its own bucket, never folded into either side: a trade
+   taken with no directional view is not a counter-trend trade. ── */
+function computeTrendAlignment(trades){
+  var buckets = {
+    WITH:    { key:"WITH",    label:"With the trend",    n:0, wins:0, pnl:0, r:0, rN:0 },
+    AGAINST: { key:"AGAINST", label:"Against the trend", n:0, wins:0, pnl:0, r:0, rN:0 },
+    NONE:    { key:"NONE",    label:"No bias taken",     n:0, wins:0, pnl:0, r:0, rN:0 },
+  };
+
+  (trades||[]).forEach(function(t){
+    var dir  = String(t.tradeType || "").trim().toUpperCase();
+    var bias = String(t.bias || "").trim().toUpperCase();
+    if(dir !== "BUY" && dir !== "SELL") return;
+
+    var b;
+    if(bias === "BULLISH")      b = (dir === "BUY")  ? buckets.WITH : buckets.AGAINST;
+    else if(bias === "BEARISH") b = (dir === "SELL") ? buckets.WITH : buckets.AGAINST;
+    else                        b = buckets.NONE;
+
+    b.n++;
+    if(t.result === "TP" || t.result === "PARTIAL TP") b.wins++;
+    b.pnl += (t.pnl || 0);
+    // Realised R, only where a risk amount was actually recorded.
+    if((t.riskAmount || 0) > 0){ b.r += (t.pnl || 0) / t.riskAmount; b.rN++; }
+  });
+
+  return ["WITH","AGAINST","NONE"].map(function(k){
+    var b = buckets[k];
+    return {
+      key:     b.key,
+      label:   b.label,
+      total:   b.n,
+      winRate: b.n ? parseFloat(((b.wins/b.n)*100).toFixed(1)) : null,
+      pnl:     parseFloat(b.pnl.toFixed(2)),
+      avgR:    b.rN ? parseFloat((b.r/b.rN).toFixed(2)) : null,
+      ranked:  b.n >= SETUP_MIN_SAMPLE,
+    };
+  });
+}
+
+function renderTrendAlignment(trades){
+  var host = document.getElementById("trendAlignPanel");
+  if(!host) return;
+  var rows = computeTrendAlignment(trades);
+  var head = '<div class="ptitle">Trend alignment</div>'+
+    '<div class="psub">Trading with your own bias versus against it — a BUY in a bullish bias is with the trend</div>';
+
+  var any = rows.some(function(r){ return r.total > 0; });
+  if(!any){
+    host.innerHTML = head + '<div class="empty">No trades with a direction and bias recorded in this view</div>';
+    return;
+  }
+
+  var maxAbs = Math.max.apply(null, rows.map(function(r){ return Math.abs(r.pnl); })) || 1;
+  var body = '<div class="setup-head">'+
+    '<div class="setup-name">Alignment</div>'+
+    '<div class="setup-n">Trades</div>'+
+    '<div class="setup-wr">Win %</div>'+
+    '<div class="setup-bar"></div>'+
+    '<div class="setup-pnl">P&amp;L</div>'+
+  '</div>';
+
+  rows.forEach(function(r){
+    if(!r.total) return;
+    var pos = r.pnl >= 0;
+    var w = (Math.abs(r.pnl) / maxAbs) * 100;
+    var wrCls = r.winRate === null ? "" : r.winRate >= 60 ? "pos" : r.winRate >= 40 ? "" : "neg";
+    body += '<div class="setup-row'+(r.ranked?"":" thin")+'">'+
+      '<div class="setup-name">'+esc(r.label)+
+        (r.ranked ? "" : '<span class="setup-flag">low sample</span>')+
+        (r.avgR === null ? "" : '<span class="setup-flag">'+(r.avgR>=0?"+":"")+r.avgR+'R avg</span>')+'</div>'+
+      '<div class="setup-n">'+r.total+'</div>'+
+      '<div class="setup-wr '+wrCls+'">'+(r.winRate===null?"—":r.winRate+"%")+'</div>'+
+      '<div class="setup-bar"><div class="setup-fill '+(pos?"pos":"neg")+'" style="width:'+w.toFixed(1)+'%"></div></div>'+
+      '<div class="setup-pnl '+(pos?"pos":"neg")+'">'+(pos?"+":"−")+esc(fmtMoney(Math.abs(r.pnl)))+'</div>'+
+    '</div>';
+  });
+
+  // The comparison worth calling out, when both sides have enough data.
+  var w = rows[0], a = rows[1], note = "";
+  if(w.ranked && a.ranked && w.winRate !== null && a.winRate !== null){
+    var gap = (w.winRate - a.winRate).toFixed(1);
+    note = gap > 0
+      ? "With the trend wins " + gap + " points more often than against it."
+      : gap < 0
+        ? "Counter-trend is currently outperforming by " + Math.abs(gap) + " points — worth a look before trusting it."
+        : "Both sides win at the same rate.";
+  } else {
+    note = "Needs " + SETUP_MIN_SAMPLE + "+ trades on both sides before the comparison means anything.";
+  }
+
+  host.innerHTML = head + '<div class="setup-table">'+body+'</div>'+
+    '<div class="meter-note" style="margin-top:var(--sp-3)">'+esc(note)+'</div>';
+}
+
+/* ── REALISED R ──
+   riskAmount has been logged on every trade since v9 and used nowhere.
+   The dashboard's "Avg R:R" is the PLANNED ratio off the dropdown — it
+   says nothing about what came back. This is the realised side. ── */
+function computeRMetrics(trades){
+  var rs = [];
+  var total = 0, pnlSum = 0;
+  (trades||[]).forEach(function(t){
+    total++;
+    pnlSum += (t.pnl || 0);
+    // Trades with no risk amount are EXCLUDED, never counted as 0R —
+    // averaging them in would drag expectancy toward zero and lie.
+    if((t.riskAmount || 0) > 0) rs.push((t.pnl || 0) / t.riskAmount);
+  });
+
+  if(!rs.length){
+    return { total:total, covered:0, coverage:0, avgR:null, totalR:null,
+             bestR:null, worstR:null, expectancyMoney: total ? parseFloat((pnlSum/total).toFixed(2)) : null };
+  }
+  var sum = rs.reduce(function(a,b){ return a+b; }, 0);
+  return {
+    total:    total,
+    covered:  rs.length,
+    coverage: parseFloat(((rs.length/total)*100).toFixed(0)),
+    avgR:     parseFloat((sum/rs.length).toFixed(2)),
+    totalR:   parseFloat(sum.toFixed(2)),
+    bestR:    parseFloat(Math.max.apply(null, rs).toFixed(2)),
+    worstR:   parseFloat(Math.min.apply(null, rs).toFixed(2)),
+    expectancyMoney: total ? parseFloat((pnlSum/total).toFixed(2)) : null,
+  };
+}
+
+function renderRMetrics(trades, s){
+  var host = document.getElementById("rPanel");
+  if(!host) return;
+  var m = computeRMetrics(trades);
+  var head = '<div class="ptitle">Planned vs realised</div>'+
+    '<div class="psub">The R:R you picked, against the R you actually got</div>';
+
+  if(!m.covered){
+    host.innerHTML = head +
+      '<div class="empty">No risk amounts logged yet — fill in Risk Amount when journalling a trade and expectancy appears here.</div>';
+    return;
+  }
+
+  function row(label, value, cls, note){
+    return '<div class="brow">'+
+      '<div class="blabel">'+esc(label)+'</div>'+
+      '<div class="btrack"></div>'+
+      '<div class="bnum '+(cls||"")+'">'+esc(value)+'</div>'+
+      '<div class="bpct">'+esc(note||"")+'</div>'+
+    '</div>';
+  }
+
+  var rCls = m.avgR > 0 ? "pos" : m.avgR < 0 ? "neg" : "";
+  var eCls = m.expectancyMoney > 0 ? "pos" : m.expectancyMoney < 0 ? "neg" : "";
+
+  host.innerHTML = head +
+    row("Planned R:R", "1:"+s.avgRR, "", "from the dropdown") +
+    row("Realised avg R", (m.avgR>=0?"+":"")+m.avgR+"R", rCls, "P&L ÷ risk") +
+    row("Expectancy", (m.expectancyMoney>=0?"+":"−")+fmtMoney(Math.abs(m.expectancyMoney)), eCls, "per trade") +
+    row("Total R", (m.totalR>=0?"+":"")+m.totalR+"R", m.totalR>=0?"pos":"neg", "cumulative") +
+    row("Best / worst", "+"+m.bestR+"R / "+m.worstR+"R", "", "single trades") +
+    '<div class="meter-note" style="margin-top:var(--sp-3)">Based on '+m.covered+' of '+m.total+
+      ' trades ('+m.coverage+'%) that have a risk amount logged. The rest are excluded, not counted as zero.</div>';
+}
+
 /* ── SETUP PERFORMANCE ──
    pair / session / timeframe / tradeType / bias are logged on every
    trade and were analysed nowhere. Same shape as the percentage panels:
@@ -2770,50 +3057,98 @@ function renderCapital(){
   var scoped = _filters.person !== "all";
 
   var live = accs.filter(function(a){ return a.status === "ACTIVE"; });
-  var liveStart = 0, liveEq = 0, undrawn = 0, worstRoom = null, nearestTarget = null;
+
+  // Total vs Live. An evaluation balance is prop-firm scorekeeping — it
+  // can never turn into money. Only a funded (Master) account pays out,
+  // so the two are never summed into one "equity" figure.
+  var totalEq = 0, masterEq = 0, evalEq = 0;
+  var nMaster = 0, nEval = 0;
+  var undrawn = 0, worstRoom = null;
   live.forEach(function(a){
-    liveStart += a.startingBalance || 0;
-    liveEq    += a.currentBalance  || 0;
-    if(a.phase === "MASTER") undrawn += a.undrawnProfit || 0;
+    totalEq += a.currentBalance || 0;
+    if(a.phase === "MASTER"){
+      masterEq += a.currentBalance || 0;
+      nMaster++;
+      undrawn  += a.undrawnProfit || 0;
+    } else {
+      evalEq += a.currentBalance || 0;
+      nEval++;
+    }
     if(a.ddUsedPct !== null && a.ddUsedPct !== undefined){
       var room = 1 - a.ddUsedPct;
       if(worstRoom === null || room < worstRoom) worstRoom = room;
     }
-    if(a.phase !== "MASTER" && a.targetProgress !== null && a.targetProgress !== undefined){
-      if(nearestTarget === null || a.targetProgress > nearestTarget) nearestTarget = a.targetProgress;
-    }
   });
-  var openProfit = liveEq - liveStart;
 
   var payouts = 0, fees = 0, sunk = 0;
-  var nPassed = 0, nBlown = 0;
+  // Evaluations and funded accounts are counted apart: blowing a funded
+  // account is not the same event as failing an evaluation, and mixing
+  // them is what made the old pass rate wrong.
+  var evTaken = 0, evPassed = 0, evBlown = 0, evActive = 0;
+  var fdEver = 0, fdActive = 0, fdBlown = 0, fdPaid = 0;
+  var nearestTarget = null;
+
   accs.forEach(function(a){
     payouts += a.paidOut || 0;
     fees    += a.cost    || 0;
-    if(a.status === "PASSED") nPassed++;
-    if(a.status === "BLOWN"){ nBlown++; sunk += a.cost || 0; }
-  });
-  var net = payouts - fees;
-  var attempts = nPassed + nBlown;
-  var passRate = attempts ? ((nPassed/attempts)*100).toFixed(1) : null;
+    if(a.status === "BLOWN") sunk += a.cost || 0;
 
-  /* ── 00 Live Capital ── */
+    // With v15 stages an account carries its own journey, so a Master
+    // that started life as a Phase 1 counts as BOTH an evaluation taken
+    // and a funded account — which is what actually happened. Accounts
+    // with no stages fall back to counting by their current phase.
+    var hist = a.stageHistory || [];
+    var startedAsEval = hist.length
+      ? hist[0].phase !== "MASTER"
+      : a.phase !== "MASTER";
+    var reachedMaster = hist.length
+      ? hist.some(function(st){ return st.phase === "MASTER"; })
+      : a.phase === "MASTER";
+
+    if(reachedMaster){
+      fdEver++;
+      if(a.status === "ACTIVE") fdActive++;
+      if(a.status === "BLOWN")  fdBlown++;
+      if((a.paidOut||0) > 0)    fdPaid++;
+    }
+    if(startedAsEval && a.status !== "REMOVED"){
+      evTaken++;
+      // Reaching Master IS passing the evaluation. Without stages we
+      // fall back to the PASSED status.
+      if(reachedMaster)                          evPassed++;
+      else if(a.status === "PASSED")             evPassed++;
+      else if(a.status === "BLOWN")              evBlown++;
+      else if(a.status === "ACTIVE"){
+        evActive++;
+
+        if(a.targetProgress !== null && a.targetProgress !== undefined){
+          if(nearestTarget === null || a.targetProgress > nearestTarget) nearestTarget = a.targetProgress;
+        }
+      }
+    }
+  });
+
+  var net = payouts - fees;
+  var settled = evPassed + evBlown;
+  var passRate = settled ? ((evPassed/settled)*100).toFixed(0) : null;
+  var openProfit = totalEq - live.reduce(function(t,a){ return t + (a.startingBalance||0); }, 0);
+
+  /* ── Live capital ── */
   var opCls = openProfit > 0 ? "g" : openProfit < 0 ? "r" : "a";
   document.getElementById("liveKpiStrip").innerHTML =
-    kp("Live equity", fmtMoney(liveEq), "b",
-       live.length + " active · " + fmtMoney(liveStart) + " allocated", "d1") +
-    kp("Open profit", (openProfit>=0?"+":"−")+fmtMoney(Math.abs(openProfit)), opCls,
-       "unrealised, prop currency", "d2") +
+    kp("Total equity", fmtMoney(totalEq), "b",
+       nEval + " eval" + (nEval===1?"":"s") + " + " + nMaster + " funded", "d1") +
+    kp("Live equity", fmtMoney(masterEq), nMaster ? "g" : "a",
+       nMaster ? "payout-capable capital" : "no funded accounts yet", "d2") +
     kp("Undrawn profit", fmtMoney(undrawn), undrawn>0?"g":"a",
-       "withdrawable from Masters", "d3") +
+       "withdrawable right now", "d3") +
+    kp("Open profit", (openProfit>=0?"+":"−")+fmtMoney(Math.abs(openProfit)), opCls,
+       "unrealised, prop currency", "d4") +
     kp("Drawdown room", worstRoom===null ? "—" : (worstRoom*100).toFixed(0)+"%",
        worstRoom===null ? "a" : worstRoom<0.25 ? "r" : worstRoom<0.5 ? "a" : "g",
-       worstRoom===null ? "no limits set" : "tightest active account", "d4") +
-    kp("Nearest target", nearestTarget===null ? "—" : (nearestTarget*100).toFixed(0)+"%",
-       nearestTarget===null ? "a" : "g",
-       nearestTarget===null ? "no targets set" : "best evaluation progress", "d5");
+       worstRoom===null ? "no limits set" : "tightest active account", "d5");
 
-  /* ── 00 Real Money ── */
+  /* ── Real money ── */
   var netCls = net > 0 ? "g" : net < 0 ? "r" : "a";
   document.getElementById("realKpiStrip").innerHTML =
     kp("Total payouts", fmtMoney(payouts), "g", "cash withdrawn, all time", "d1") +
@@ -2821,18 +3156,78 @@ function renderCapital(){
        accs.length + " account" + (accs.length===1?"":"s") + " bought", "d2") +
     kp("Real net profit", (net>=0?"+":"−")+fmtMoney(Math.abs(net)), netCls,
        "payouts − fees", "d3") +
-    kp("This month", fmtMoney(scoped ? payoutsThisMonth() : ((_data.payouts&&_data.payouts.totalMonth)||0)), "b",
-       "payouts received", "d4");
+    kp("This month", fmtMoney(payoutsThisMonth()), "b", "payouts received", "d4");
 
-  /* ── 00 Track Record ── */
+  /* ── Track record ── */
+  renderTrackRecord({
+    evTaken:evTaken, evPassed:evPassed, evBlown:evBlown, evActive:evActive,
+    fdEver:fdEver, fdActive:fdActive, fdBlown:fdBlown, fdPaid:fdPaid,
+    passRate:passRate, settled:settled, payouts:payouts, fees:fees, sunk:sunk,
+    nearestTarget:nearestTarget,
+  });
+}
+
+/* ── TRACK RECORD ──
+   Two strips with a funnel between them. Previously this was one strip
+   reading "8 accounts, 2 passed, 3 blown" — which left three
+   unexplained and said nothing at all about funded accounts, while
+   scoring a blown funded account as a failed evaluation. ── */
+function renderTrackRecord(t){
   document.getElementById("trackKpiStrip").innerHTML =
-    kp("Accounts traded", accs.length, "b", "all time", "d1") +
-    kp("Passed", nPassed, "g", "evaluations cleared", "d2") +
-    kp("Blown", nBlown, "r", "accounts lost", "d3") +
-    kp("Pass rate", passRate===null ? "—" : passRate+"%",
-       passRate===null ? "a" : parseFloat(passRate)>=50 ? "g" : "r",
-       attempts ? nPassed+" of "+attempts+" settled" : "none settled yet", "d4") +
-    kp("Sunk fees", fmtMoney(sunk), "r", "spent on blown accounts", "d5");
+    kp("Evaluations taken", t.evTaken, "b",
+       t.evPassed+" passed · "+t.evBlown+" blown · "+t.evActive+" running", "d1") +
+    kp("Pass rate", t.passRate===null ? "—" : t.passRate+"%",
+       t.passRate===null ? "a" : parseFloat(t.passRate)>=50 ? "g" : "r",
+       t.settled ? t.evPassed+" of "+t.settled+" settled" : "none settled yet", "d2") +
+    kp("Funded accounts", t.fdEver, t.fdEver ? "g" : "a",
+       t.fdActive+" active · "+t.fdBlown+" blown", "d3") +
+    kp("Nearest target", t.nearestTarget===null ? "—" : (t.nearestTarget*100).toFixed(0)+"%",
+       t.nearestTarget===null ? "a" : "g",
+       t.nearestTarget===null ? "no targets set" : "best running evaluation", "d4") +
+    kp("Sunk fees", fmtMoney(t.sunk), t.sunk>0?"r":"a", "spent on blown accounts", "d5");
+
+  var host = document.getElementById("funnelPanel");
+  if(!host) return;
+
+  var head = '<div class="ptitle">Challenge funnel</div>'+
+    '<div class="psub">How far the accounts you buy actually get</div>';
+
+  if(!t.evTaken && !t.fdEver){
+    host.innerHTML = head + '<div class="empty">No accounts logged yet</div>';
+    return;
+  }
+
+  // Base is evaluations bought; funded accounts with no evaluation
+  // recorded (added straight as Master) still have to fit somewhere, so
+  // the base is the larger of the two.
+  var base = Math.max(t.evTaken, t.fdEver) || 1;
+  var steps = [
+    { lbl:"Evaluations bought", n:t.evTaken, cls:"gold" },
+    { lbl:"Passed",             n:t.evPassed, cls:"good" },
+    { lbl:"Funded",             n:t.fdEver,   cls:"good" },
+    { lbl:"Paid out",           n:t.fdPaid,   cls:"good" },
+  ];
+
+  var rows = steps.map(function(st){
+    var pct = (st.n / base) * 100;
+    return '<div class="meter">'+
+      '<div class="meter-head">'+
+        '<span class="meter-lbl">'+esc(st.lbl)+'</span>'+
+        '<span class="meter-val">'+st.n+' <span style="color:var(--txt4)">· '+pct.toFixed(0)+'%</span></span>'+
+      '</div>'+
+      '<div class="meter-track"><div class="meter-fill '+st.cls+'" style="width:'+Math.min(pct,100).toFixed(1)+'%"></div></div>'+
+    '</div>';
+  }).join("");
+
+  var costPer = t.fdEver ? fmtMoney(t.fees / t.fdEver) : "—";
+  host.innerHTML = head + rows +
+    '<div class="funnel-foot">'+
+      '<div><span class="funnel-foot-lbl">Cost per funded account</span>'+
+        '<span class="funnel-foot-val">'+esc(costPer)+'</span></div>'+
+      '<div><span class="funnel-foot-lbl">Withdrawn</span>'+
+        '<span class="funnel-foot-val pos">'+esc(fmtMoney(t.payouts))+'</span></div>'+
+    '</div>'+
+    '<div class="meter-note" style="margin-top:var(--sp-3)">Counts every challenge you have bought. An account that started as an evaluation and reached Master counts in both rows, because that is what happened to it. Accounts added straight in as Master count only as funded.</div>';
 }
 
 // Payouts in the current calendar month, respecting the Person filter.
@@ -3722,6 +4117,16 @@ function updateAaDerived(){
   }
   show("aaTarget", "aaTargetDerived", "to pass");
   show("aaMaxDD",  "aaMaxDDDerived",  "of room");
+
+  // A Master is funded capital: profit is withdrawn, not accumulated
+  // toward a number, so the target field is hidden rather than left to
+  // be filled in meaninglessly. Max drawdown stays — funded accounts
+  // very much have one.
+  var isMaster = document.getElementById("aaPhase").value === "MASTER";
+  var f = document.getElementById("aaTargetField");
+  var n = document.getElementById("aaTargetNote");
+  if(f) f.style.display = isMaster ? "none" : "";
+  if(n) n.style.display = isMaster ? "" : "none";
 }
 
 function submitAddAccount(btn){
@@ -3730,7 +4135,7 @@ function submitAddAccount(btn){
   var name   = document.getElementById("aaName").value.trim();
   var balance = document.getElementById("aaBalance").value;
   var cost    = document.getElementById("aaCost").value;
-  var target  = document.getElementById("aaTarget").value;
+  var target  = phase === "MASTER" ? "0" : document.getElementById("aaTarget").value;
   var maxDD   = document.getElementById("aaMaxDD").value;
   var ddType  = document.getElementById("aaDDType").value;
 
@@ -3892,9 +4297,21 @@ function maccCardHTML(a){
   var isMaster = a.phase === "MASTER";
   var statusClass = STATUS_BADGE_CLASS[a.status] || "active";
 
+  // Passing an evaluation MOVES IT FORWARD rather than retiring it — a
+  // challenge is one purchase that travels Phase 1 → Phase 2 → Master.
+  // "Mark Finished" only appears at the end of the road.
+  var phaseOrder = (_config.phases || ["PHASE_1","PHASE_2","MASTER"]);
+  var pi = phaseOrder.indexOf(a.phase);
+  var nextPhase = (pi !== -1 && pi < phaseOrder.length - 1) ? phaseOrder[pi + 1] : null;
+
   var quickBtns = "";
   if(a.status==="ACTIVE"){
-    quickBtns += '<button class="jbtn-sm gold" onclick="quickAccountStatus(\'' + a.accountId + '\',\'PASSED\', this)">Mark Passed</button>';
+    if(nextPhase){
+      var nextLbl = (_config.phaseLabels && _config.phaseLabels[nextPhase]) || nextPhase;
+      quickBtns += '<button class="jbtn-sm add" onclick="promoteAccount(\'' + a.accountId + '\', this)">Passed → '+esc(nextLbl)+'</button>';
+    } else {
+      quickBtns += '<button class="jbtn-sm gold" onclick="quickAccountStatus(\'' + a.accountId + '\',\'PASSED\', this)">Mark Finished</button>';
+    }
     quickBtns += '<button class="jbtn-sm remove" onclick="quickAccountStatus(\'' + a.accountId + '\',\'BLOWN\', this)">Mark Blown</button>';
   } else {
     quickBtns += '<button class="jbtn-sm add" onclick="quickAccountStatus(\'' + a.accountId + '\',\'ACTIVE\', this)">Reactivate</button>';
@@ -3937,7 +4354,7 @@ function maccCardHTML(a){
     cells += cell("Trades",         (st?st.total:0));
     cells += cell("Win Rate",       (st && st.total ? st.winRate+"%" : "—"), "gold");
   } else {
-    cells += cell("Account Size",   fmtMoney(a.startingBalance));
+    cells += cell((a.stageCount > 1 ? "Stage size" : "Account Size"), fmtMoney(a.stageSize || a.startingBalance));
     cells += cell("Balance",        fmtMoney(a.currentBalance), balCls);
     cells += cell("P&amp;L",        (pnl>=0?"+":"−")+fmtMoney(Math.abs(pnl))+
                                     ' <span style="font-size:10px;">('+(pnlPct>=0?"+":"")+pnlPct.toFixed(1)+'%)</span>', pnlCls);
@@ -3945,7 +4362,7 @@ function maccCardHTML(a){
     cells += cell("Win Rate",       (st && st.total ? st.winRate+"%" : "—"), "gold");
   }
 
-  var meters = "";
+  var meters = stageTimelineHTML(a);
   if(!isMaster) meters += targetMeterHTML(a);
   meters += ddMeterHTML(a);
 
@@ -3967,6 +4384,68 @@ function maccCardHTML(a){
     meters+
     maccEditHTML(a, editing)+
   '</div>';
+}
+
+/* ── STAGE TIMELINE ──
+   One challenge, one purchase, several stages. Shows where the account
+   has been, because the current-stage balance deliberately forgets the
+   earlier phases and the reader still needs to see them. ── */
+function stageTimelineHTML(a){
+  var hist = a.stageHistory || [];
+  if(hist.length < 2) return "";   // nothing to show for a single stage
+
+  var rows = hist.map(function(st){
+    var lbl = (_config.phaseLabels && _config.phaseLabels[st.phase]) || st.phase;
+    var mark = st.current ? "▸" : st.outcome === "PASSED" ? "✓" : st.outcome === "BLOWN" ? "✕" : "·";
+    var cls  = st.current ? "cur" : st.outcome === "PASSED" ? "ok" : st.outcome === "BLOWN" ? "bad" : "";
+    var pnl  = st.pnl || 0;
+    var when = st.current
+      ? "since " + isoToDMY(st.startedAt)
+      : (st.endedAt ? isoToDMY(st.endedAt) : isoToDMY(st.startedAt));
+    return '<div class="stage-step '+cls+'">'+
+      '<span class="stage-mark">'+mark+'</span>'+
+      '<span class="stage-name">'+esc(lbl)+'</span>'+
+      '<span class="stage-when">'+esc(when)+'</span>'+
+      '<span class="stage-pnl '+(pnl>0?"pos":pnl<0?"neg":"")+'">'+(pnl>=0?"+":"−")+esc(fmtMoney(Math.abs(pnl)))+'</span>'+
+      '<span class="stage-n">'+st.trades+'t</span>'+
+    '</div>';
+  }).join("");
+
+  var life = a.lifetimePnL || 0;
+  return '<div class="stage-timeline">'+rows+
+    '<div class="stage-foot">Lifetime across all stages: '+
+      '<b class="'+(life>0?"pos":life<0?"neg":"")+'">'+(life>=0?"+":"−")+esc(fmtMoney(Math.abs(life)))+'</b>'+
+      ' over '+(a.lifetimeTrades||0)+' trades. Balance above is the current stage only.</div>'+
+  '</div>';
+}
+
+/* Moves an account to its next phase. The balance resets to the account
+   size for the new stage — that is what the firm gives you — while every
+   statistic keeps counting the earlier phases. */
+function promoteAccount(accountId, btn){
+  var a = _accountsById[accountId];
+  if(!a) return;
+  var order = (_config.phases || ["PHASE_1","PHASE_2","MASTER"]);
+  var next  = order[order.indexOf(a.phase) + 1];
+  if(!next) return;
+  var nextLbl = (_config.phaseLabels && _config.phaseLabels[next]) || next;
+
+  var msg = "Move \"" + (a.accountName||"this account") + "\" forward to " + nextLbl + "?\n\n" +
+    "• The balance resets to " + fmtMoney(a.startingBalance) + " for the new stage — that's what the firm gives you.\n" +
+    "• Every trade you've already logged still counts toward win rate, R:R and compliance.\n" +
+    "• No new account is created, so the fee is still counted once.\n\n" +
+    "Trades dated on or after today will belong to " + nextLbl + ".";
+  if(!confirm(msg)) return;
+
+  var done = btnLoading(btn, "Moving");
+  jsonp(APPS_SCRIPT_URL + "?action=promoteAccount&token=" + encodeURIComponent(_tok) +
+        "&accountId=" + encodeURIComponent(accountId) +
+        "&date=" + encodeURIComponent(todayISO()) +
+        "&size=" + encodeURIComponent(a.startingBalance || 0), function(d){
+    if(!d || !d.success){ done(); alert((d&&d.error)||"Could not move the account forward."); return; }
+    refreshAccountsList();
+    refreshDashboardQuietly(function(){ renderManageAccounts(); });
+  });
 }
 
 /* ── Meters ── */
@@ -4034,7 +4513,7 @@ function maccEditHTML(a, editing){
       '<div class="jfield"><label class="jlabel">Name</label>'+
         '<input class="jinput" type="text" id="edtName_'+id+'" value="'+esc(a.accountName||"")+'" maxlength="40"></div>'+
       '<div class="jfield"><label class="jlabel">Phase</label>'+
-        '<select class="jselect" id="edtPhase_'+id+'">'+phaseOpts+'</select></div>'+
+        '<select class="jselect" id="edtPhase_'+id+'" onchange="onEditPhaseChange(\'' + id + '\')">'+phaseOpts+'</select></div>'+
       '<div class="jfield"><label class="jlabel">Status</label>'+
         '<select class="jselect" id="edtStatus_'+id+'">'+statusOpts+'</select></div>'+
     '</div>'+
@@ -4048,9 +4527,14 @@ function maccEditHTML(a, editing){
         '<select class="jselect" id="edtDDType_'+id+'">'+ddOpts+'</select></div>'+
     '</div>'+
     '<div class="jgrid" style="margin-top:12px;">'+
-      '<div class="jfield"><label class="jlabel">Profit Target (%)</label>'+
+      '<div class="jfield" id="edtTargetField_'+id+'"'+(a.phase==="MASTER"?' style="display:none"':'')+'>'+
+        '<label class="jlabel">Profit Target (%)</label>'+
         '<input class="jinput" type="number" id="edtTarget_'+id+'" value="'+(a.targetPct||0)+'" min="0" max="1000" step="0.1">'+
         '<div class="meter-note">0 = not tracked</div></div>'+
+      '<div class="jfield" id="edtTargetNote_'+id+'"'+(a.phase==="MASTER"?'':' style="display:none"')+'>'+
+        '<label class="jlabel">Profit Target</label>'+
+        '<div class="jstatus">Not applicable</div>'+
+        '<div class="meter-note">Funded accounts have no target — profit is withdrawn.</div></div>'+
       '<div class="jfield"><label class="jlabel">Max Drawdown (%)</label>'+
         '<input class="jinput" type="number" id="edtMaxDD_'+id+'" value="'+(a.maxDDPct||0)+'" min="0" max="100" step="0.1">'+
         '<div class="meter-note">0 = not tracked</div></div>'+
@@ -4184,6 +4668,18 @@ function toggleAccountEdit(accountId){
   }
   renderManageAccounts();
 }
+// A Master has no profit target, so the field disappears the moment
+// the phase is switched rather than only when the panel is reopened.
+function onEditPhaseChange(accountId){
+  var sel = document.getElementById("edtPhase_"+accountId);
+  if(!sel) return;
+  var isMaster = sel.value === "MASTER";
+  var f = document.getElementById("edtTargetField_"+accountId);
+  var n = document.getElementById("edtTargetNote_"+accountId);
+  if(f) f.style.display = isMaster ? "none" : "";
+  if(n) n.style.display = isMaster ? "" : "none";
+}
+
 function saveAccountEdit(accountId, btn){
   var v = function(prefix){
     var el = document.getElementById(prefix+"_"+accountId);
@@ -4194,7 +4690,8 @@ function saveAccountEdit(accountId, btn){
   var status  = v("edtStatus");
   var balance = v("edtBalance");
   var cost    = v("edtCost");
-  var target  = v("edtTarget");
+  // Switching an account to Master clears any target it used to carry.
+  var target  = phase === "MASTER" ? "0" : v("edtTarget");
   var maxDD   = v("edtMaxDD");
   var ddType  = v("edtDDType");
   var errEl = document.getElementById("edtErr_"+accountId);
@@ -4258,6 +4755,169 @@ function gotoPayout(accountId){
     onPayoutPersonChange();
     if(acc) document.getElementById("poAccount").value = accountId;
   }, 50);
+}
+
+/* ══════════════════════════════════════
+   MERGE ACCOUNTS
+
+   For accounts that were added once per phase before v15. Joining them
+   makes the fee count once and the history read as one challenge.
+
+   This is the only destructive action in the app — it rewrites
+   Trades.accountId — so it is always dry-run first, and the backend
+   refuses outright if two accounts hold a trade on the same date
+   (trade identity is person + accountId + date).
+══════════════════════════════════════ */
+var _mergePick = [];   // accountIds selected, in click order
+
+function openMergeTool(){
+  _mergePick = [];
+  document.getElementById("mergePanel").style.display = "block";
+  renderMergeTool();
+  document.getElementById("mergePanel").scrollIntoView({ behavior:"smooth", block:"start" });
+}
+function closeMergeTool(){
+  _mergePick = [];
+  document.getElementById("mergePanel").style.display = "none";
+  document.getElementById("mergeResult").innerHTML = "";
+}
+
+function toggleMergePick(id){
+  var i = _mergePick.indexOf(id);
+  if(i === -1) _mergePick.push(id); else _mergePick.splice(i, 1);
+  renderMergeTool();
+  document.getElementById("mergeResult").innerHTML = "";
+}
+
+function renderMergeTool(){
+  var host = document.getElementById("mergeList");
+  if(!host) return;
+
+  // Only accounts belonging to one person can be merged, so once a
+  // pick is made the list narrows to that person.
+  var pickedPerson = null;
+  if(_mergePick.length){
+    var first = _accountsById[_mergePick[0]];
+    if(first) pickedPerson = first.person;
+  }
+  var accs = (_data.accounts || [])
+    .filter(function(a){ return a.status !== "REMOVED"; })
+    .filter(function(a){ return !pickedPerson || a.person === pickedPerson; })
+    .sort(function(a,b){
+      var pa = ["PHASE_1","PHASE_2","MASTER"].indexOf(a.phase);
+      var pb = ["PHASE_1","PHASE_2","MASTER"].indexOf(b.phase);
+      if(a.person !== b.person) return a.person < b.person ? -1 : 1;
+      return pa - pb;
+    });
+
+  if(!accs.length){
+    host.innerHTML = '<div class="empty">No accounts available to merge</div>';
+    return;
+  }
+
+  host.innerHTML = accs.map(function(a){
+    var on = _mergePick.indexOf(a.accountId) !== -1;
+    var n  = on ? (_mergePick.indexOf(a.accountId) + 1) : "";
+    var st = (_data.accountStats && _data.accountStats[a.accountId]) || null;
+    return '<div class="merge-row'+(on?" on":"")+'" onclick="toggleMergePick(\'' + a.accountId + '\')">'+
+      '<div class="merge-check">'+(on ? n : "")+'</div>'+
+      '<div class="merge-name">'+esc(a.accountName||"(unnamed)")+
+        '<span class="merge-sub">'+esc(a.person)+' · created '+esc(isoToDMY(_dateKeyFromAny(a.createdAt)))+'</span></div>'+
+      '<div class="merge-badges">'+phaseBadge(a.phase)+statusBadge(a.status)+'</div>'+
+      '<div class="merge-n">'+(st?st.total:0)+' trades</div>'+
+      '<div class="merge-cost">'+esc(fmtMoney(a.cost||0))+'</div>'+
+    '</div>';
+  }).join("");
+
+  var btns = document.getElementById("mergeActions");
+  if(_mergePick.length >= 2){
+    var keep = _accountsById[_mergePick[0]];
+    btns.innerHTML =
+      '<div class="meter-note" style="margin-bottom:var(--sp-3)">Keeping <b>'+esc(keep?keep.accountName:"?")+
+      '</b> (picked first). The other '+(_mergePick.length-1)+' become its earlier stages.</div>'+
+      '<button class="jbtn-sm add" onclick="runMerge(true, this)">Preview merge</button> '+
+      '<button class="jbtn-sm" onclick="closeMergeTool()">Cancel</button>';
+  } else {
+    btns.innerHTML = '<div class="meter-note">Pick two or more accounts. The <b>first one you click is the one that survives</b> — pick the furthest-along phase first if you want to keep its name.</div>';
+  }
+}
+
+function runMerge(dryRun, btn){
+  var survivorId = _mergePick[0];
+  var rest = _mergePick.slice(1);
+  if(!survivorId || !rest.length) return;
+
+  if(!dryRun){
+    if(!confirm(
+      "Apply this merge?\n\n" +
+      "This rewrites which account those trades belong to. It cannot be undone from the dashboard.\n\n" +
+      "Make a copy of the spreadsheet first if you have not already (File → Make a copy).\n\n" +
+      "Continue?")) return;
+  }
+
+  var done = btnLoading(btn, dryRun ? "Checking" : "Merging");
+  jsonp(APPS_SCRIPT_URL + "?action=mergeAccounts&token=" + encodeURIComponent(_tok) +
+        "&survivorId=" + encodeURIComponent(survivorId) +
+        "&mergeIds=" + encodeURIComponent(rest.join(",")) +
+        "&dryRun=" + (dryRun ? "true" : "false"), function(d){
+    done();
+    var out = document.getElementById("mergeResult");
+    if(!d){ out.innerHTML = '<div class="jerr show">No response from the server.</div>'; return; }
+
+    if(!d.success){
+      var extra = "";
+      if(d.collisions && d.collisions.length){
+        extra = '<div class="meter-note" style="margin-top:var(--sp-2)">Clashing dates: '+
+          d.collisions.map(function(c){ return esc(isoToDMY(c)); }).join(", ")+'</div>';
+      }
+      out.innerHTML = '<div class="jerr show">'+esc(d.error||"Merge failed.")+'</div>'+extra;
+      return;
+    }
+
+    if(d.dryRun){
+      out.innerHTML = mergePlanHTML(d.plan) +
+        '<div style="margin-top:var(--sp-4)">'+
+          '<button class="jsubmit-btn" onclick="runMerge(false, this)">Apply merge</button> '+
+          '<button class="jbtn-sm" onclick="closeMergeTool()">Cancel</button>'+
+        '</div>';
+      return;
+    }
+
+    out.innerHTML = '<div class="jok show">'+esc(d.message||"Merged.")+'</div>';
+    _mergePick = [];
+    refreshAccountsList();
+    refreshDashboardQuietly(function(){
+      renderManageAccounts();
+      renderMergeTool();
+    });
+  });
+}
+
+function mergePlanHTML(p){
+  var rows = p.stages.map(function(st, i){
+    var lbl = (_config.phaseLabels && _config.phaseLabels[st.phase]) || st.phase;
+    return '<tr>'+
+      '<td>'+(i+1)+'</td>'+
+      '<td style="text-align:left">'+esc(st.name)+'</td>'+
+      '<td style="text-align:left">'+esc(lbl)+'</td>'+
+      '<td>'+esc(isoToDMY(st.startedAt))+'</td>'+
+      '<td>'+(st.endedAt ? esc(isoToDMY(st.endedAt)) : "current")+'</td>'+
+      '<td>'+st.trades+'</td>'+
+      '<td>'+esc(fmtMoney(st.size))+'</td>'+
+    '</tr>';
+  }).join("");
+
+  return '<div class="psub" style="margin:var(--sp-4) 0 var(--sp-3)">Preview — nothing has been changed yet</div>'+
+    '<div class="wtable-wrap"><table class="wtable">'+
+      '<thead><tr><th>#</th><th style="text-align:left">Account</th><th style="text-align:left">Becomes stage</th>'+
+      '<th>From</th><th>To</th><th>Trades</th><th>Size</th></tr></thead>'+
+      '<tbody>'+rows+'</tbody></table></div>'+
+    '<div class="funnel-foot">'+
+      '<div><span class="funnel-foot-lbl">Result</span><span class="funnel-foot-val">'+esc(p.survivor.name)+'</span></div>'+
+      '<div><span class="funnel-foot-lbl">Trades moved</span><span class="funnel-foot-val">'+p.tradesMoved+' of '+p.totalTrades+'</span></div>'+
+      '<div><span class="funnel-foot-lbl">Fee kept</span><span class="funnel-foot-val">'+esc(fmtMoney(p.keptCost))+'</span></div>'+
+      '<div><span class="funnel-foot-lbl">Double-counted fee removed</span><span class="funnel-foot-val pos">'+esc(fmtMoney(p.droppedCost))+'</span></div>'+
+    '</div>';
 }
 
 /* ══════════════════════════════════════
