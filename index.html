@@ -1079,40 +1079,6 @@ body::after {
 .stage-foot b.pos { color: var(--green); }
 .stage-foot b.neg { color: var(--red); }
 
-/* ── Merge tool ── */
-.merge-row {
-  display: grid;
-  grid-template-columns: 26px minmax(120px,1.6fr) auto 90px 80px;
-  align-items: center; gap: var(--sp-3);
-  padding: var(--sp-3); border-radius: var(--r);
-  background: var(--bg3); margin-top: var(--sp-2);
-  cursor: pointer; transition: all 0.16s var(--ease);
-  border: 1px solid transparent;
-}
-.merge-row:hover { background: var(--bg4); }
-.merge-row.on { border-color: var(--gold-rim); background: var(--gold-bg); }
-.merge-check {
-  width: 22px; height: 22px; border-radius: 50%;
-  border: 1px solid var(--border3); display: flex;
-  align-items: center; justify-content: center;
-  font-family: var(--font-mono); font-size: var(--fs-0); font-weight: 700;
-  color: var(--on-accent);
-}
-.merge-row.on .merge-check { background: var(--gold); border-color: var(--gold); }
-.merge-name {
-  font-family: var(--font-display); font-size: var(--fs-2); font-weight: 600; color: var(--txt);
-  overflow: hidden; text-overflow: ellipsis;
-}
-.merge-sub {
-  display: block; font-family: var(--font-mono); font-size: var(--fs-0);
-  font-weight: 400; color: var(--txt4); margin-top: 2px;
-}
-.merge-badges { display: flex; gap: var(--sp-1); flex-wrap: wrap; }
-.merge-n, .merge-cost {
-  font-family: var(--font-mono); font-size: var(--fs-0);
-  color: var(--txt3); text-align: right;
-}
-
 /* ── Challenge funnel footer ── */
 .funnel-foot {
   display: flex; flex-wrap: wrap; gap: var(--sp-5);
@@ -1433,8 +1399,6 @@ body::after {
   /* Five columns at 320px leaves ~55px per cell. Wrap to 3 + 2. */
   .daygrid { grid-template-columns: repeat(3,1fr); }
   .setup-head, .setup-row { grid-template-columns: 1fr 40px 48px 72px; }
-  .merge-row { grid-template-columns: 24px 1fr auto; }
-  .merge-n, .merge-cost { display: none; }
   .stage-step { grid-template-columns: 14px 1fr 84px; }
   .stage-when, .stage-n { display: none; }
   .setup-head .setup-bar, .setup-row .setup-bar { display: none; }
@@ -1911,7 +1875,6 @@ body::after {
       <div class="macc-count" id="maccCount"></div>
       <div style="display:flex;gap:var(--sp-2);align-items:center;flex-wrap:wrap;">
         <button class="fb-preset" id="maccRemovedBtn" style="display:none" onclick="toggleMaccRemoved()">Show removed</button>
-        <button class="fb-preset" onclick="openMergeTool()">Merge accounts</button>
         <div class="viewtoggle" id="maccViewToggle">
           <button data-v="cards" onclick="setMaccView('cards')">Cards</button>
           <button data-v="table" onclick="setMaccView('table')">Table</button>
@@ -1919,13 +1882,6 @@ body::after {
       </div>
     </div>
 
-    <div class="panel d1" id="mergePanel" style="display:none;margin-bottom:var(--sp-4)">
-      <div class="ptitle">Merge into one challenge</div>
-      <div class="psub">For accounts you had to add once per phase — joining them counts the fee once and reads as one history</div>
-      <div id="mergeList"></div>
-      <div id="mergeActions" style="margin-top:var(--sp-4)"></div>
-      <div id="mergeResult"></div>
-    </div>
     <div id="maccList"></div>
   </div>
 
@@ -4206,9 +4162,8 @@ function renderManageAccounts(){
   syncMaccViewToggle();
 
   var all = filterAccounts(_data.accounts, { includeRemoved: true });
-  // Removed accounts are merged-away or deleted rows. They are kept
-  // forever but hidden by default, because otherwise every merge leaves
-  // ghost cards behind.
+  // Removed accounts are soft-deleted rows. They are kept forever but
+  // hidden by default so they don't clutter the list.
   var removed = all.filter(function(a){ return a.status === "REMOVED"; });
   var accs = _maccShowRemoved ? all : all.filter(function(a){ return a.status !== "REMOVED"; });
 
@@ -4795,169 +4750,6 @@ function gotoPayout(accountId){
     onPayoutPersonChange();
     if(acc) document.getElementById("poAccount").value = accountId;
   }, 50);
-}
-
-/* ══════════════════════════════════════
-   MERGE ACCOUNTS
-
-   For accounts that were added once per phase before v15. Joining them
-   makes the fee count once and the history read as one challenge.
-
-   This is the only destructive action in the app — it rewrites
-   Trades.accountId — so it is always dry-run first, and the backend
-   refuses outright if two accounts hold a trade on the same date
-   (trade identity is person + accountId + date).
-══════════════════════════════════════ */
-var _mergePick = [];   // accountIds selected, in click order
-
-function openMergeTool(){
-  _mergePick = [];
-  document.getElementById("mergePanel").style.display = "block";
-  renderMergeTool();
-  document.getElementById("mergePanel").scrollIntoView({ behavior:"smooth", block:"start" });
-}
-function closeMergeTool(){
-  _mergePick = [];
-  document.getElementById("mergePanel").style.display = "none";
-  document.getElementById("mergeResult").innerHTML = "";
-}
-
-function toggleMergePick(id){
-  var i = _mergePick.indexOf(id);
-  if(i === -1) _mergePick.push(id); else _mergePick.splice(i, 1);
-  renderMergeTool();
-  document.getElementById("mergeResult").innerHTML = "";
-}
-
-function renderMergeTool(){
-  var host = document.getElementById("mergeList");
-  if(!host) return;
-
-  // Only accounts belonging to one person can be merged, so once a
-  // pick is made the list narrows to that person.
-  var pickedPerson = null;
-  if(_mergePick.length){
-    var first = _accountsById[_mergePick[0]];
-    if(first) pickedPerson = first.person;
-  }
-  var accs = (_data.accounts || [])
-    .filter(function(a){ return a.status !== "REMOVED"; })
-    .filter(function(a){ return !pickedPerson || a.person === pickedPerson; })
-    .sort(function(a,b){
-      var pa = ["PHASE_1","PHASE_2","MASTER"].indexOf(a.phase);
-      var pb = ["PHASE_1","PHASE_2","MASTER"].indexOf(b.phase);
-      if(a.person !== b.person) return a.person < b.person ? -1 : 1;
-      return pa - pb;
-    });
-
-  if(!accs.length){
-    host.innerHTML = '<div class="empty">No accounts available to merge</div>';
-    return;
-  }
-
-  host.innerHTML = accs.map(function(a){
-    var on = _mergePick.indexOf(a.accountId) !== -1;
-    var n  = on ? (_mergePick.indexOf(a.accountId) + 1) : "";
-    var st = (_data.accountStats && _data.accountStats[a.accountId]) || null;
-    return '<div class="merge-row'+(on?" on":"")+'" onclick="toggleMergePick(\'' + a.accountId + '\')">'+
-      '<div class="merge-check">'+(on ? n : "")+'</div>'+
-      '<div class="merge-name">'+esc(a.accountName||"(unnamed)")+
-        '<span class="merge-sub">'+esc(a.person)+' · created '+esc(isoToDMY(_dateKeyFromAny(a.createdAt)))+'</span></div>'+
-      '<div class="merge-badges">'+phaseBadge(a.phase)+statusBadge(a.status)+'</div>'+
-      '<div class="merge-n">'+(st?st.total:0)+' trades</div>'+
-      '<div class="merge-cost">'+esc(fmtMoney(a.cost||0))+'</div>'+
-    '</div>';
-  }).join("");
-
-  var btns = document.getElementById("mergeActions");
-  if(_mergePick.length >= 2){
-    var keep = _accountsById[_mergePick[0]];
-    btns.innerHTML =
-      '<div class="meter-note" style="margin-bottom:var(--sp-3)">Keeping <b>'+esc(keep?keep.accountName:"?")+
-      '</b> (picked first). The other '+(_mergePick.length-1)+' become its earlier stages.</div>'+
-      '<button class="jbtn-sm add" onclick="runMerge(true, this)">Preview merge</button> '+
-      '<button class="jbtn-sm" onclick="closeMergeTool()">Cancel</button>';
-  } else {
-    btns.innerHTML = '<div class="meter-note">Pick two or more accounts. The <b>first one you click is the one that survives</b> — pick the furthest-along phase first if you want to keep its name.</div>';
-  }
-}
-
-function runMerge(dryRun, btn){
-  var survivorId = _mergePick[0];
-  var rest = _mergePick.slice(1);
-  if(!survivorId || !rest.length) return;
-
-  if(!dryRun){
-    if(!confirm(
-      "Apply this merge?\n\n" +
-      "This rewrites which account those trades belong to. It cannot be undone from the dashboard.\n\n" +
-      "Make a copy of the spreadsheet first if you have not already (File → Make a copy).\n\n" +
-      "Continue?")) return;
-  }
-
-  var done = btnLoading(btn, dryRun ? "Checking" : "Merging");
-  jsonp(APPS_SCRIPT_URL + "?action=mergeAccounts&token=" + encodeURIComponent(_tok) +
-        "&survivorId=" + encodeURIComponent(survivorId) +
-        "&mergeIds=" + encodeURIComponent(rest.join(",")) +
-        "&dryRun=" + (dryRun ? "true" : "false"), function(d){
-    done();
-    var out = document.getElementById("mergeResult");
-    if(!d){ out.innerHTML = '<div class="jerr show">No response from the server.</div>'; return; }
-
-    if(!d.success){
-      var extra = "";
-      if(d.collisions && d.collisions.length){
-        extra = '<div class="meter-note" style="margin-top:var(--sp-2)">Clashing dates: '+
-          d.collisions.map(function(c){ return esc(isoToDMY(c)); }).join(", ")+'</div>';
-      }
-      out.innerHTML = '<div class="jerr show">'+esc(d.error||"Merge failed.")+'</div>'+extra;
-      return;
-    }
-
-    if(d.dryRun){
-      out.innerHTML = mergePlanHTML(d.plan) +
-        '<div style="margin-top:var(--sp-4)">'+
-          '<button class="jsubmit-btn" onclick="runMerge(false, this)">Apply merge</button> '+
-          '<button class="jbtn-sm" onclick="closeMergeTool()">Cancel</button>'+
-        '</div>';
-      return;
-    }
-
-    out.innerHTML = '<div class="jok show">'+esc(d.message||"Merged.")+'</div>';
-    _mergePick = [];
-    refreshAccountsList();
-    refreshDashboardQuietly(function(){
-      renderManageAccounts();
-      renderMergeTool();
-    });
-  });
-}
-
-function mergePlanHTML(p){
-  var rows = p.stages.map(function(st, i){
-    var lbl = (_config.phaseLabels && _config.phaseLabels[st.phase]) || st.phase;
-    return '<tr>'+
-      '<td>'+(i+1)+'</td>'+
-      '<td style="text-align:left">'+esc(st.name)+'</td>'+
-      '<td style="text-align:left">'+esc(lbl)+'</td>'+
-      '<td>'+esc(isoToDMY(st.startedAt))+'</td>'+
-      '<td>'+(st.endedAt ? esc(isoToDMY(st.endedAt)) : "current")+'</td>'+
-      '<td>'+st.trades+'</td>'+
-      '<td>'+esc(fmtMoney(st.size))+'</td>'+
-    '</tr>';
-  }).join("");
-
-  return '<div class="psub" style="margin:var(--sp-4) 0 var(--sp-3)">Preview — nothing has been changed yet</div>'+
-    '<div class="wtable-wrap"><table class="wtable">'+
-      '<thead><tr><th>#</th><th style="text-align:left">Account</th><th style="text-align:left">Becomes stage</th>'+
-      '<th>From</th><th>To</th><th>Trades</th><th>Size</th></tr></thead>'+
-      '<tbody>'+rows+'</tbody></table></div>'+
-    '<div class="funnel-foot">'+
-      '<div><span class="funnel-foot-lbl">Result</span><span class="funnel-foot-val">'+esc(p.survivor.name)+'</span></div>'+
-      '<div><span class="funnel-foot-lbl">Trades moved</span><span class="funnel-foot-val">'+p.tradesMoved+' of '+p.totalTrades+'</span></div>'+
-      '<div><span class="funnel-foot-lbl">Fee kept</span><span class="funnel-foot-val">'+esc(fmtMoney(p.keptCost))+'</span></div>'+
-      '<div><span class="funnel-foot-lbl">Double-counted fee removed</span><span class="funnel-foot-val pos">'+esc(fmtMoney(p.droppedCost))+'</span></div>'+
-    '</div>';
 }
 
 /* ══════════════════════════════════════
