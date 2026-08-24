@@ -1910,6 +1910,7 @@ body::after {
     <div class="macc-toolbar">
       <div class="macc-count" id="maccCount"></div>
       <div style="display:flex;gap:var(--sp-2);align-items:center;flex-wrap:wrap;">
+        <button class="fb-preset" id="maccRemovedBtn" style="display:none" onclick="toggleMaccRemoved()">Show removed</button>
         <button class="fb-preset" onclick="openMergeTool()">Merge accounts</button>
         <div class="viewtoggle" id="maccViewToggle">
           <button data-v="cards" onclick="setMaccView('cards')">Cards</button>
@@ -2086,6 +2087,7 @@ var _maccSort = { key:"name", dir:1 }; // table view sort
 var _equityUnit = "abs";               // "abs" ($) | "pct" (% of account size)
 var _equityIncludeClosed = false;      // active accounts only by default
 var _setupDim = "pair";                // Setup Performance dimension
+var _maccShowRemoved = false;          // soft-deleted accounts are hidden by default
 
 var PHASE_BADGE_CLASS  = { PHASE_1:"p1", PHASE_2:"p2", MASTER:"master" };
 var STATUS_BADGE_CLASS = { ACTIVE:"active", PASSED:"passed", BLOWN:"blown", REMOVED:"removed" };
@@ -2208,6 +2210,7 @@ function loadViewPrefs(){
     _equityIncludeClosed = localStorage.getItem("tj_equityClosed") === "1";
     var sd = localStorage.getItem("tj_setupDim");
     if(sd) _setupDim = sd;
+    _maccShowRemoved = localStorage.getItem("tj_maccRemoved") === "1";
   } catch(e){}
 }
 
@@ -2311,9 +2314,14 @@ function filtersActive(){
 // Accounts visible under the current filters. Period/date range is
 // deliberately NOT applied here: an account exists regardless of
 // which month you're looking at.
-function filterAccounts(accounts){
+function filterAccounts(accounts, opts){
   var q = (_filters.q || "").trim().toLowerCase();
+  var includeRemoved = !!(opts && opts.includeRemoved);
   return (accounts || []).filter(function(a){
+    // REMOVED means merged away or deleted. It is never part of a
+    // total, a card list or the equity curve — only Manage Accounts
+    // asks for it, via its "Show removed" toggle.
+    if(a.status === "REMOVED" && !includeRemoved) return false;
     if(_filters.person   !== "all" && a.person    !== _filters.person)   return false;
     if(_filters.status   !== "all" && a.status    !== _filters.status)   return false;
     if(_filters.phase    !== "all" && a.phase     !== _filters.phase)    return false;
@@ -3088,7 +3096,14 @@ function renderCapital(){
   var fdEver = 0, fdActive = 0, fdBlown = 0, fdPaid = 0;
   var nearestTarget = null;
 
+  var everTraded = 0;
   accs.forEach(function(a){
+    // REMOVED is a soft-delete bucket — merged away or deleted. It
+    // contributes to nothing, or a merged-away account keeps its fee in
+    // "Fees paid" and merging never actually removes the double charge.
+    if(a.status === "REMOVED") return;
+    everTraded++;
+
     payouts += a.paidOut || 0;
     fees    += a.cost    || 0;
     if(a.status === "BLOWN") sunk += a.cost || 0;
@@ -3111,7 +3126,7 @@ function renderCapital(){
       if(a.status === "BLOWN")  fdBlown++;
       if((a.paidOut||0) > 0)    fdPaid++;
     }
-    if(startedAsEval && a.status !== "REMOVED"){
+    if(startedAsEval){
       evTaken++;
       // Reaching Master IS passing the evaluation. Without stages we
       // fall back to the PASSED status.
@@ -3153,7 +3168,7 @@ function renderCapital(){
   document.getElementById("realKpiStrip").innerHTML =
     kp("Total payouts", fmtMoney(payouts), "g", "cash withdrawn, all time", "d1") +
     kp("Fees paid", fmtMoney(fees), "r",
-       accs.length + " account" + (accs.length===1?"":"s") + " bought", "d2") +
+       everTraded + " account" + (everTraded===1?"":"s") + " bought", "d2") +
     kp("Real net profit", (net>=0?"+":"−")+fmtMoney(Math.abs(net)), netCls,
        "payouts − fees", "d3") +
     kp("This month", fmtMoney(payoutsThisMonth()), "b", "payouts received", "d4");
@@ -3445,6 +3460,8 @@ function computeEquity(){
   var pct = _equityUnit === "pct";
 
   var accs = filterAccountsIgnoringPeriod().filter(function(a){
+    // "Include closed" means passed and blown, never merged-away rows.
+    if(a.status === "REMOVED") return false;
     return _equityIncludeClosed || a.status === "ACTIVE";
   });
   var inScope = {};
@@ -4188,12 +4205,29 @@ function renderManageAccounts(){
   renderMaccSummary();
   syncMaccViewToggle();
 
-  var accs = filterAccounts(_data.accounts);
-  var total = (_data.accounts||[]).length;
-  document.getElementById("maccCount").textContent =
-    accs.length === total
-      ? total + " account" + (total===1?"":"s")
-      : "Showing " + accs.length + " of " + total + " accounts";
+  var all = filterAccounts(_data.accounts, { includeRemoved: true });
+  // Removed accounts are merged-away or deleted rows. They are kept
+  // forever but hidden by default, because otherwise every merge leaves
+  // ghost cards behind.
+  var removed = all.filter(function(a){ return a.status === "REMOVED"; });
+  var accs = _maccShowRemoved ? all : all.filter(function(a){ return a.status !== "REMOVED"; });
+
+  var total = (_data.accounts||[]).filter(function(a){ return a.status !== "REMOVED"; }).length;
+  var countTxt = accs.length === total
+    ? total + " account" + (total===1?"":"s")
+    : "Showing " + accs.length + " of " + total + " accounts";
+  if(removed.length){
+    countTxt += " · " + removed.length + " removed " +
+      (_maccShowRemoved ? "shown" : "hidden");
+  }
+  document.getElementById("maccCount").textContent = countTxt;
+
+  var rmBtn = document.getElementById("maccRemovedBtn");
+  if(rmBtn){
+    rmBtn.style.display = removed.length ? "" : "none";
+    rmBtn.classList.toggle("on", _maccShowRemoved);
+    rmBtn.textContent = _maccShowRemoved ? "Hide removed" : "Show removed (" + removed.length + ")";
+  }
 
   if(!accs.length){
     document.getElementById("maccList").innerHTML =
@@ -4206,6 +4240,12 @@ function renderManageAccounts(){
 
   document.getElementById("maccList").innerHTML =
     _maccView === "table" ? maccTableHTML(accs) : maccCardsHTML(accs);
+}
+
+function toggleMaccRemoved(){
+  _maccShowRemoved = !_maccShowRemoved;
+  try { localStorage.setItem("tj_maccRemoved", _maccShowRemoved ? "1" : "0"); } catch(e){}
+  renderManageAccounts();
 }
 
 function setMaccView(v){
