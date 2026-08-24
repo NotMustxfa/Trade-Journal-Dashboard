@@ -52,17 +52,59 @@
   --blue-bg:    rgba(91,156,246,0.06);
   --blue-rim:   rgba(91,156,246,0.20);
 
+  --green-dk:   #2FA894;
   --orange:     #E8924A;
   --orange-bg:  rgba(232,146,74,0.06);
   --orange-rim: rgba(232,146,74,0.20);
 
+  /* Text that sits ON a solid accent fill (gold buttons, active pills). */
+  --on-accent:  #08070A;
+
   --font-display: 'Sora', sans-serif;
   --font-mono:    'JetBrains Mono', monospace;
+
+  /* ── Type scale ──
+     Eight steps, replacing the 26 ad-hoc sizes this file used to
+     carry (including a 7px label and four half-pixel sizes that
+     existed only to squeeze between neighbours). */
+  --fs-0: 10px;   /* badges, the smallest labels */
+  --fs-1: 11px;   /* micro-labels, table cells */
+  --fs-2: 12px;   /* secondary text, panel titles */
+  --fs-3: 13px;   /* body */
+  --fs-4: 15px;   /* emphasised body */
+  --fs-5: 18px;   /* card names */
+  --fs-6: 24px;   /* small display numerals */
+  --fs-7: 32px;   /* display numerals */
+  --fs-8: 44px;   /* hero numerals */
+
+  /* ── Letter-spacing ──
+     Was 21 distinct values peaking at 0.4em on 9px uppercase.
+     Micro-labels now sit at 0.08em, which is readable. */
+  --tr-0:     0;
+  --tr-label: 0.08em;
+  --tr-tag:   0.14em;
+  --tr-tight: -0.02em;
+
+  /* ── Spacing ── */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
 
   --r:  6px;
   --r2: 10px;
   --r3: 16px;
   --r4: 22px;
+  --r-pill: 20px;
+
+  --shadow-1: 0 4px 20px rgba(0,0,0,0.30);
+  --shadow-2: 0 8px 40px rgba(0,0,0,0.35);
+  --shadow-3: 0 20px 60px rgba(0,0,0,0.60);
+
+  /* The de-facto house easing — was pasted as a literal 6 times. */
+  --ease: cubic-bezier(.22,1,.36,1);
 }
 
 html { scroll-behavior: smooth; }
@@ -71,7 +113,7 @@ body {
   background: var(--bg);
   color: var(--txt);
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: var(--fs-3);
   font-weight: 400;
   line-height: 1.6;
   min-height: 100vh;
@@ -107,14 +149,14 @@ body::after {
 .loader-logo { display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .loader-wordmark {
   font-family: var(--font-display);
-  font-size: 26px; font-weight: 700;
-  letter-spacing: 0.08em; text-transform: uppercase;
+  font-size: var(--fs-6); font-weight: 700;
+  letter-spacing: var(--tr-label); text-transform: uppercase;
   color: var(--txt);
 }
 .loader-wordmark span { color: var(--gold); }
 .loader-sub {
   font-family: var(--font-mono);
-  font-size: 9px; letter-spacing: 0.4em;
+  font-size: var(--fs-1); letter-spacing: var(--tr-tag);
   text-transform: uppercase; color: var(--txt4);
 }
 
@@ -155,8 +197,8 @@ body::after {
   box-shadow: 0 0 10px var(--gold);
 }
 .loader-label {
-  font-family: var(--font-mono); font-size: 9px;
-  color: var(--txt4); letter-spacing: 0.28em; text-transform: uppercase;
+  font-family: var(--font-mono); font-size: var(--fs-1);
+  color: var(--txt4); letter-spacing: var(--tr-label); text-transform: uppercase;
 }
 
 .login {
@@ -172,7 +214,7 @@ body::after {
   border: 1px solid var(--border2);
   border-radius: var(--r4);
   overflow: hidden;
-  animation: fadeUp 0.5s cubic-bezier(.22,1,.36,1) both;
+  animation: fadeUp 0.5s var(--ease) both;
   box-shadow: 0 0 0 1px rgba(200,168,75,0.05), 0 48px 120px rgba(0,0,0,0.8), 0 0 100px rgba(200,168,75,0.04);
 }
 
@@ -181,7 +223,6 @@ body::after {
   background: linear-gradient(90deg, transparent 0%, var(--gold-dk) 15%, var(--gold) 50%, var(--gold-lt) 75%, transparent 100%);
 }
 
-@keyframes fadeUp { from { opacity:0; transform: translateY(28px); } to { opacity:1; transform: none; } }
 
 .login-header {
   padding: 44px 44px 30px;
@@ -212,20 +253,20 @@ body::after {
   animation: pulseDot 2s ease-in-out infinite;
 }
 .login-eyebrow-text {
-  font-family: var(--font-mono); font-size: 8.5px;
-  color: var(--gold); letter-spacing: 0.32em;
+  font-family: var(--font-mono); font-size: var(--fs-0);
+  color: var(--gold); letter-spacing: var(--tr-tag);
   text-transform: uppercase; font-weight: 500;
 }
 
 .login-title {
   font-family: var(--font-display);
-  font-size: 36px; font-weight: 800;
-  letter-spacing: -0.01em; color: var(--txt); line-height: 1;
+  font-size: var(--fs-7); font-weight: 800;
+  letter-spacing: var(--tr-tight); color: var(--txt); line-height: 1;
 }
 .login-title span { color: var(--gold); }
 .login-title-sub {
-  font-family: var(--font-display); font-size: 13px; font-weight: 300;
-  letter-spacing: 0.16em; text-transform: uppercase;
+  font-family: var(--font-display); font-size: var(--fs-3); font-weight: 300;
+  letter-spacing: var(--tr-label); text-transform: uppercase;
   color: var(--txt3); margin-top: 8px;
 }
 
@@ -234,8 +275,8 @@ body::after {
 .login-field { margin-bottom: 4px; }
 .login-label {
   display: block;
-  font-family: var(--font-display); font-size: 10px; font-weight: 600;
-  color: var(--txt3); letter-spacing: 0.22em; text-transform: uppercase;
+  font-family: var(--font-display); font-size: var(--fs-1); font-weight: 600;
+  color: var(--txt3); letter-spacing: var(--tr-label); text-transform: none;
   margin-bottom: 10px;
 }
 .login-input-wrap { position: relative; }
@@ -245,8 +286,8 @@ body::after {
   border: 1px solid var(--border2);
   border-radius: var(--r2);
   color: var(--txt);
-  font-family: var(--font-mono); font-size: 15px; font-weight: 400;
-  outline: none; letter-spacing: 0.08em;
+  font-family: var(--font-mono); font-size: var(--fs-4); font-weight: 400;
+  outline: none; letter-spacing: var(--tr-label);
   transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
 }
 .login-input:focus {
@@ -259,10 +300,10 @@ body::after {
 .login-btn {
   width: 100%; margin-top: 18px;
   padding: 16px 24px;
-  background: var(--gold); color: #08070A;
+  background: var(--gold); color: var(--on-accent);
   border: none; border-radius: var(--r2);
-  font-family: var(--font-display); font-size: 12px; font-weight: 700;
-  letter-spacing: 0.22em; text-transform: uppercase;
+  font-family: var(--font-display); font-size: var(--fs-2); font-weight: 700;
+  letter-spacing: var(--tr-label); text-transform: none;
   cursor: pointer; transition: all 0.25s;
   position: relative; overflow: hidden;
 }
@@ -288,7 +329,7 @@ body::after {
   background: var(--red-bg);
   border: 1px solid var(--red-rim);
   border-radius: var(--r);
-  font-size: 12px; color: var(--red); font-weight: 500; letter-spacing: 0.02em;
+  font-size: var(--fs-2); color: var(--red); font-weight: 500; letter-spacing: var(--tr-label);
 }
 .login-err.show { display: block; animation: fadeUp 0.2s ease; }
 
@@ -319,21 +360,21 @@ body::after {
   border: 1px solid var(--gold-rim);
   border-radius: 9px;
   display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; font-size: 14px; color: var(--gold);
+  flex-shrink: 0; font-size: var(--fs-3); color: var(--gold);
   box-shadow: 0 0 18px rgba(200,168,75,0.12);
   transition: box-shadow 0.3s;
 }
 .brand-icon:hover { box-shadow: 0 0 28px rgba(200,168,75,0.25); }
 .brand-text {
-  font-family: var(--font-display); font-size: 16px; font-weight: 700;
-  letter-spacing: 0.06em; text-transform: uppercase; color: var(--txt);
+  font-family: var(--font-display); font-size: var(--fs-4); font-weight: 700;
+  letter-spacing: var(--tr-tag); text-transform: uppercase; color: var(--txt);
 }
 .brand-text span { color: var(--gold); }
 
 .tb-divider { width: 1px; height: 20px; background: var(--border2); }
 .topbar-tag {
-  font-family: var(--font-display); font-size: 10px; font-weight: 400;
-  color: var(--txt4); letter-spacing: 0.2em; text-transform: uppercase;
+  font-family: var(--font-display); font-size: var(--fs-1); font-weight: 400;
+  color: var(--txt4); letter-spacing: var(--tr-label); text-transform: uppercase;
 }
 
 .topbar-r { display: flex; align-items: center; gap: 16px; }
@@ -351,19 +392,19 @@ body::after {
   animation: pulse 2.2s ease-in-out infinite;
 }
 .live-text {
-  font-family: var(--font-mono); font-size: 9px; color: var(--green);
-  letter-spacing: 0.22em; text-transform: uppercase; font-weight: 500;
+  font-family: var(--font-mono); font-size: var(--fs-1); color: var(--green);
+  letter-spacing: var(--tr-label); text-transform: uppercase; font-weight: 500;
 }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.25} }
 
-.gen-time { font-family: var(--font-mono); font-size: 10px; color: var(--txt4); letter-spacing: 0.04em; }
+.gen-time { font-family: var(--font-mono); font-size: var(--fs-1); color: var(--txt4); letter-spacing: var(--tr-label); }
 
 .logout-btn {
-  font-family: var(--font-display); font-size: 10px; font-weight: 600;
+  font-family: var(--font-display); font-size: var(--fs-1); font-weight: 600;
   color: var(--txt4); background: none;
   border: 1px solid var(--border2); border-radius: var(--r);
   padding: 6px 16px; cursor: pointer;
-  letter-spacing: 0.16em; text-transform: uppercase;
+  letter-spacing: var(--tr-label); text-transform: none;
   transition: all 0.2s;
 }
 .logout-btn:hover { border-color: var(--red-rim); color: var(--red); background: var(--red-bg); }
@@ -374,8 +415,8 @@ body::after {
   border-bottom: 1px solid var(--border);
 }
 .navtab {
-  font-family: var(--font-display); font-size: 11px; font-weight: 600;
-  letter-spacing: 0.14em; text-transform: uppercase;
+  font-family: var(--font-display); font-size: var(--fs-2); font-weight: 600;
+  letter-spacing: var(--tr-tag); text-transform: uppercase;
   color: var(--txt3); background: none; border: none;
   padding: 10px 18px 12px; cursor: pointer;
   border-bottom: 2px solid transparent;
@@ -400,8 +441,8 @@ body::after {
 .ticker-inner { display: flex; align-items: center; white-space: nowrap; animation: ticker-scroll 30s linear infinite; }
 .ticker-item {
   display: flex; align-items: center; gap: 10px;
-  font-family: var(--font-mono); font-size: 9.5px; color: var(--txt4);
-  letter-spacing: 0.08em; padding: 0 28px;
+  font-family: var(--font-mono); font-size: var(--fs-1); color: var(--txt4);
+  letter-spacing: var(--tr-label); padding: 0 28px;
   border-right: 1px solid var(--border);
 }
 .ticker-key { text-transform: uppercase; font-weight: 400; }
@@ -419,40 +460,20 @@ body::after {
   border-bottom: 1px solid var(--border);
 }
 .page-title {
-  font-family: var(--font-display); font-size: 11px; font-weight: 600;
-  color: var(--txt4); letter-spacing: 0.3em; text-transform: uppercase;
+  font-family: var(--font-display); font-size: var(--fs-2); font-weight: 600;
+  color: var(--txt4); letter-spacing: var(--tr-tag); text-transform: uppercase;
 }
-
-.filter-row {
-  display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
-  margin-bottom: 28px; padding: 13px 18px;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--r3);
-  position: relative; overflow: hidden;
-}
-.filter-row::before {
-  content: '';
-  position: absolute; top:0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(200,168,75,0.12), transparent);
-}
-.filter-label {
-  font-family: var(--font-display); font-size: 9px; font-weight: 600;
-  color: var(--txt4); letter-spacing: 0.3em; text-transform: uppercase;
-  margin-right: 4px;
-}
-.f-sep { width: 1px; height: 20px; background: var(--border2); margin: 0 12px; }
 
 .pill {
-  font-family: var(--font-display); font-size: 10px; font-weight: 500;
+  font-family: var(--font-display); font-size: var(--fs-1); font-weight: 500;
   padding: 5px 16px; border: 1px solid transparent; border-radius: 20px;
   background: none; color: var(--txt3); cursor: pointer;
-  letter-spacing: 0.08em; text-transform: uppercase;
+  letter-spacing: var(--tr-label); text-transform: uppercase;
   transition: all 0.18s;
 }
 .pill:hover { color: var(--txt2); border-color: var(--border3); background: var(--bg3); }
 .pill.active {
-  background: var(--gold); color: #08070A; border-color: var(--gold);
+  background: var(--gold); color: var(--on-accent); border-color: var(--gold);
   font-weight: 700; box-shadow: 0 2px 16px rgba(200,168,75,0.25);
 }
 .pill.acc.active {
@@ -468,9 +489,9 @@ body::after {
   background: var(--bg2); border: 1px solid var(--border);
   border-radius: var(--r3); padding: 26px 26px 22px;
   position: relative; overflow: hidden;
-  transition: border-color 0.25s, transform 0.3s cubic-bezier(.22,1,.36,1), box-shadow 0.3s;
+  transition: border-color 0.25s, transform 0.3s var(--ease), box-shadow 0.3s;
   cursor: default;
-  animation: fadeUp 0.5s cubic-bezier(.22,1,.36,1) both;
+  animation: fadeUp 0.5s var(--ease) both;
 }
 .kpi:hover { border-color: var(--border3); transform: translateY(-4px); box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
 
@@ -505,13 +526,16 @@ body::after {
 .kpi.b .kpi-dot { background: var(--blue);  box-shadow: 0 0 6px var(--blue); }
 
 .kpi-label {
-  font-family: var(--font-display); font-size: 9px; font-weight: 600;
-  color: var(--txt3); letter-spacing: 0.26em; text-transform: uppercase;
+  font-family: var(--font-display); font-size: var(--fs-1); font-weight: 600;
+  color: var(--txt3); letter-spacing: var(--tr-label); text-transform: none;
 }
 .kpi-val {
-  font-family: var(--font-display); font-size: 52px; line-height: 1; font-weight: 800;
-  letter-spacing: -0.02em; margin-bottom: 14px; transition: transform 0.3s;
+  font-family: var(--font-display); font-size: var(--fs-7); line-height: 1; font-weight: 800;
+  letter-spacing: var(--tr-tight); margin-bottom: var(--sp-3); transition: transform 0.3s;
 }
+/* The hero row is the only place a numeral is allowed to shout. */
+.kpi.hero .kpi-val { font-size: var(--fs-8); }
+.kpi.hero { padding: var(--sp-6) var(--sp-6) var(--sp-5); }
 .kpi:hover .kpi-val { transform: scale(1.02); }
 .kpi.g .kpi-val { color: var(--green); }
 .kpi.r .kpi-val { color: var(--red); }
@@ -519,24 +543,52 @@ body::after {
 .kpi.b .kpi-val { color: var(--blue); }
 
 .kpi-divider { height: 1px; background: var(--border); margin-bottom: 12px; }
-.kpi-sub { font-family: var(--font-display); font-size: 11px; color: var(--txt3); font-weight: 400; letter-spacing: 0.02em; }
+.kpi-sub { font-family: var(--font-display); font-size: var(--fs-2); color: var(--txt3); font-weight: 400; letter-spacing: var(--tr-label); }
 
-.sh { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
-.sh-num { font-family: var(--font-mono); font-size: 9px; color: var(--txt4); letter-spacing: 0.1em; flex-shrink: 0; }
+/* ── Two-level page hierarchy ──
+   .group-header names one of the four groups (Money / Performance /
+   Behaviour / Detail); .sh names a subsection inside it. The page used
+   to be eight numbered sections of identical weight, three of which
+   were all numbered 00, plus one strip with no header at all. */
+.group { margin-bottom: var(--sp-6); }
+.group + .group { margin-top: 56px; }
+.group-header {
+  display: flex; align-items: baseline; gap: var(--sp-4);
+  flex-wrap: wrap; margin-bottom: var(--sp-5);
+  padding-bottom: var(--sp-3);
+  border-bottom: 1px solid var(--border2);
+}
+.group-title {
+  font-family: var(--font-display); font-size: var(--fs-5); font-weight: 800;
+  color: var(--txt); letter-spacing: var(--tr-tight); white-space: nowrap;
+}
+.group-line {
+  flex: 1; height: 1px; min-width: 20px;
+  background: linear-gradient(90deg, var(--gold-rim), transparent);
+}
+.group-sub {
+  font-family: var(--font-display); font-size: var(--fs-1); font-weight: 400;
+  color: var(--txt3); letter-spacing: var(--tr-0);
+}
+
+/* The hero row — three tiles, one step louder than everything else. */
+.hero-strip { margin-bottom: var(--sp-6); }
+
+.sh { display: flex; align-items: center; gap: var(--sp-4); margin-bottom: var(--sp-3); }
 .sh-title {
-  font-family: var(--font-display); font-size: 12px; font-weight: 700;
-  color: var(--txt); white-space: nowrap; letter-spacing: 0.18em; text-transform: uppercase;
+  font-family: var(--font-display); font-size: var(--fs-2); font-weight: 700;
+  color: var(--txt); white-space: nowrap; letter-spacing: var(--tr-tag); text-transform: uppercase;
 }
 .sh-line { flex: 1; height: 1px; background: linear-gradient(90deg, var(--border2), transparent); }
 .sh-tag {
-  font-family: var(--font-mono); font-size: 8px; color: var(--txt4);
-  letter-spacing: 0.24em; text-transform: uppercase; white-space: nowrap;
+  font-family: var(--font-mono); font-size: var(--fs-0); color: var(--txt4);
+  letter-spacing: var(--tr-tag); text-transform: uppercase; white-space: nowrap;
 }
 
 .panel {
   background: var(--bg2); border: 1px solid var(--border);
   border-radius: var(--r3); padding: 24px 26px;
-  animation: fadeUp 0.5s cubic-bezier(.22,1,.36,1) both;
+  animation: fadeUp 0.5s var(--ease) both;
   position: relative; overflow: hidden;
   transition: border-color 0.22s, box-shadow 0.22s;
 }
@@ -548,12 +600,12 @@ body::after {
 }
 
 .ptitle {
-  font-family: var(--font-display); font-size: 12px; font-weight: 700;
-  color: var(--txt); margin-bottom: 3px; letter-spacing: 0.1em; text-transform: uppercase;
+  font-family: var(--font-display); font-size: var(--fs-2); font-weight: 700;
+  color: var(--txt); margin-bottom: 3px; letter-spacing: var(--tr-label); text-transform: none;
 }
 .psub {
-  font-family: var(--font-display); font-size: 9px; font-weight: 400;
-  color: var(--txt4); letter-spacing: 0.22em; text-transform: uppercase; margin-bottom: 22px;
+  font-family: var(--font-display); font-size: var(--fs-1); font-weight: 400;
+  color: var(--txt4); letter-spacing: var(--tr-label); text-transform: none; margin-bottom: 22px;
 }
 
 .g2  { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -570,16 +622,16 @@ body::after {
 .brow:last-child { margin-bottom: 0; }
 .brow:hover { border-color: var(--border2); transform: translateX(2px); }
 
-.blabel { font-family: var(--font-display); font-size: 10.5px; font-weight: 500; color: var(--txt2); width: 90px; flex-shrink: 0; }
+.blabel { font-family: var(--font-display); font-size: var(--fs-1); font-weight: 500; color: var(--txt2); width: 90px; flex-shrink: 0; }
 .btrack { flex: 1; height: 3px; background: var(--bg5); border-radius: 2px; overflow: hidden; }
-.bfill { height: 100%; border-radius: 2px; transition: width 1.4s cubic-bezier(.22,1,.36,1); position: relative; }
+.bfill { height: 100%; border-radius: 2px; transition: width 1.4s var(--ease); position: relative; }
 .bfill::after {
   content: '';
   position: absolute; right: 0; top: -1px; bottom: -1px; width: 4px;
   background: inherit; border-radius: 50%; filter: blur(2px); opacity: 0.8;
 }
-.bnum { font-family: var(--font-mono); font-size: 14px; font-weight: 700; width: 28px; text-align: right; flex-shrink: 0; }
-.bpct { font-family: var(--font-mono); font-size: 10px; color: var(--txt4); width: 36px; text-align: right; flex-shrink: 0; }
+.bnum { font-family: var(--font-mono); font-size: var(--fs-3); font-weight: 700; width: 28px; text-align: right; flex-shrink: 0; }
+.bpct { font-family: var(--font-mono); font-size: var(--fs-1); color: var(--txt4); width: 36px; text-align: right; flex-shrink: 0; }
 
 .mrow {
   display: flex; align-items: center; gap: 12px;
@@ -590,11 +642,11 @@ body::after {
 .mrow:last-child { margin-bottom: 0; }
 .mrow:hover { border-color: var(--border2); transform: translateX(2px); }
 
-.mrank { font-family: var(--font-mono); font-size: 9px; color: var(--txt4); width: 16px; flex-shrink: 0; text-align: center; font-weight: 600; }
-.mname { font-family: var(--font-display); font-size: 11px; font-weight: 500; color: var(--txt2); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mrank { font-family: var(--font-mono); font-size: var(--fs-1); color: var(--txt4); width: 16px; flex-shrink: 0; text-align: center; font-weight: 600; }
+.mname { font-family: var(--font-display); font-size: var(--fs-2); font-weight: 500; color: var(--txt2); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mbar { width: 64px; height: 3px; background: var(--bg5); border-radius: 2px; overflow: hidden; flex-shrink: 0; }
-.mfill { height: 100%; background: linear-gradient(90deg, var(--gold-dk), var(--gold)); border-radius: 2px; transition: width 1.4s cubic-bezier(.22,1,.36,1); }
-.mn { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--gold); width: 22px; text-align: right; flex-shrink: 0; }
+.mfill { height: 100%; background: linear-gradient(90deg, var(--gold-dk), var(--gold)); border-radius: 2px; transition: width 1.4s var(--ease); }
+.mn { font-family: var(--font-mono); font-size: var(--fs-3); font-weight: 700; color: var(--gold); width: 22px; text-align: right; flex-shrink: 0; }
 
 .daygrid { display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; }
 
@@ -614,25 +666,104 @@ body::after {
   position: absolute; top:0; left:0; right:0; height: 1px;
   background: linear-gradient(90deg, transparent, var(--green), transparent);
 }
-.dname { font-family: var(--font-display); font-size: 8px; font-weight: 700; letter-spacing: 0.26em; text-transform: uppercase; color: var(--txt4); margin-bottom: 10px; }
+.dname { font-family: var(--font-display); font-size: var(--fs-0); font-weight: 700; letter-spacing: var(--tr-label); text-transform: none; color: var(--txt4); margin-bottom: 10px; }
 .daycell.best .dname { color: var(--green); }
-.dcount { font-family: var(--font-display); font-size: 32px; line-height: 1; font-weight: 800; margin-bottom: 10px; color: var(--txt); }
-.daycell.best .dcount { color: var(--green); text-shadow: 0 0 20px rgba(62,207,181,0.3); }
-.dpips { display: flex; justify-content: center; gap: 3px; flex-wrap: wrap; min-height: 8px; }
-.pip { width: 4px; height: 4px; border-radius: 50%; background: var(--bg5); border: 1px solid var(--border2); }
-.pip.on { background: var(--green); border-color: var(--green); box-shadow: 0 0 5px rgba(62,207,181,0.6); }
+.dcount { font-family: var(--font-display); font-size: var(--fs-6); line-height: 1; font-weight: 800; margin-bottom: 10px; color: var(--txt); }
+.daycell.best .dcount { color: var(--green); text-shadow: 0 0 16px rgba(62,207,181,0.3); }
+/* The pip row was capped at Math.min(v,10), so 10 trades and 40 looked
+   identical. Replaced by a proportional P&L bar. */
+.dbar { height: 4px; border-radius: var(--r-pill); background: var(--bg5); overflow: hidden; margin-bottom: var(--sp-2); }
+.dfill { height: 100%; border-radius: var(--r-pill); transition: width 0.5s var(--ease); }
+.dfill.pos { background: var(--green); }
+.dfill.neg { background: var(--red); }
+.dpnl { font-family: var(--font-mono); font-size: var(--fs-1); font-weight: 600; color: var(--txt2); }
+.dpnl.pos { color: var(--green); }
+.dpnl.neg { color: var(--red); }
+.dn { font-family: var(--font-mono); font-size: var(--fs-0); color: var(--txt4); margin-top: var(--sp-1); }
+/* Too few trades to rank, or none at all. */
+.daycell.thin { opacity: 0.55; }
+.daycell.muted { opacity: 0.35; }
+
+/* ── Streaks ── */
+.streak-now {
+  border: 1px solid var(--border2); border-radius: var(--r2);
+  background: var(--bg3); padding: var(--sp-4) var(--sp-4);
+  text-align: center; margin-bottom: var(--sp-4);
+}
+.streak-now.pos { border-color: var(--green-rim); background: var(--green-bg); }
+.streak-now.neg { border-color: var(--red-rim);   background: var(--red-bg); }
+.streak-now-val {
+  font-family: var(--font-display); font-size: var(--fs-6); font-weight: 800;
+  letter-spacing: var(--tr-tight); color: var(--txt);
+}
+.streak-now.pos .streak-now-val { color: var(--green); }
+.streak-now.neg .streak-now-val { color: var(--red); }
+.streak-now-lbl {
+  font-family: var(--font-display); font-size: var(--fs-0); color: var(--txt4);
+  letter-spacing: var(--tr-label); margin-top: var(--sp-1);
+}
+
+/* ── Setup performance table ── */
+.setup-table { margin-top: var(--sp-4); }
+.setup-head, .setup-row {
+  display: grid;
+  grid-template-columns: minmax(90px,1.4fr) 56px 56px minmax(60px,1fr) 96px;
+  align-items: center; gap: var(--sp-3);
+}
+.setup-head {
+  padding: 0 var(--sp-3) var(--sp-2);
+  border-bottom: 1px solid var(--border2);
+}
+.setup-head > div {
+  font-family: var(--font-display); font-size: var(--fs-0); font-weight: 700;
+  color: var(--txt4); letter-spacing: var(--tr-label);
+}
+.setup-head .setup-n, .setup-head .setup-wr, .setup-head .setup-pnl { text-align: right; }
+.setup-row {
+  padding: var(--sp-3); border-radius: var(--r);
+  background: var(--bg3); margin-top: var(--sp-2);
+  transition: transform 0.18s var(--ease);
+}
+.setup-row:hover { transform: translateX(2px); }
+.setup-row.thin { opacity: 0.5; }
+.setup-name {
+  font-family: var(--font-display); font-size: var(--fs-2); font-weight: 600;
+  color: var(--txt); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.setup-flag {
+  font-family: var(--font-mono); font-size: var(--fs-0); color: var(--txt4);
+  margin-left: var(--sp-2); font-weight: 400;
+}
+.setup-n, .setup-wr, .setup-pnl {
+  font-family: var(--font-mono); font-size: var(--fs-1); text-align: right; color: var(--txt2);
+}
+.setup-wr.pos, .setup-pnl.pos { color: var(--green); }
+.setup-wr.neg, .setup-pnl.neg { color: var(--red); }
+.setup-pnl { font-weight: 600; }
+.setup-bar { height: 4px; border-radius: var(--r-pill); background: var(--bg5); overflow: hidden; }
+.setup-fill { height: 100%; border-radius: var(--r-pill); transition: width 0.5s var(--ease); }
+.setup-fill.pos { background: var(--green); }
+.setup-fill.neg { background: var(--red); }
+
+.acc-wr-lbl { margin-top: -14px; margin-bottom: 18px; }
 
 .gauge-wrap { display: flex; flex-direction: column; align-items: center; padding: 6px 0; }
-.gauge-svg { width: 160px; height: 90px; overflow: visible; }
-.gauge-num { font-family: var(--font-display); font-size: 40px; font-weight: 800; text-align: center; margin-top: -4px; letter-spacing: -0.03em; }
-.gauge-lbl { font-family: var(--font-display); font-size: 9px; font-weight: 400; color: var(--txt4); text-align: center; letter-spacing: 0.2em; text-transform: uppercase; margin-top: 10px; }
+.gauge-svg { width: 100%; max-width: 180px; height: auto; overflow: visible; }
+.gauge-num { font-family: var(--font-display); font-size: var(--fs-6); font-weight: 800; text-align: center; margin-top: -4px; letter-spacing: var(--tr-tight); }
+.gauge-lbl { font-family: var(--font-display); font-size: var(--fs-1); font-weight: 400; color: var(--txt4); text-align: center; letter-spacing: var(--tr-label); text-transform: none; margin-top: 10px; }
 
 .rr-hero { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 0 6px; text-align: center; }
-.rr-pre { font-family: var(--font-display); font-size: 12px; font-weight: 400; color: var(--txt3); letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 6px; }
-.rr-num { font-family: var(--font-display); font-size: 76px; line-height: 1; font-weight: 800; letter-spacing: -0.03em; color: var(--gold); text-shadow: 0 0 60px rgba(200,168,75,0.28); }
-.rr-cap { font-family: var(--font-display); font-size: 9px; font-weight: 400; color: var(--txt4); margin-top: 12px; letter-spacing: 0.24em; text-transform: uppercase; }
+.rr-pre { font-family: var(--font-display); font-size: var(--fs-2); font-weight: 400; color: var(--txt3); letter-spacing: var(--tr-label); text-transform: none; margin-bottom: 6px; }
+.rr-num { font-family: var(--font-display); font-size: var(--fs-7); line-height: 1; font-weight: 800; letter-spacing: var(--tr-tight); color: var(--gold); text-shadow: 0 0 26px rgba(200,168,75,0.28); }
+.rr-cap { font-family: var(--font-display); font-size: var(--fs-1); font-weight: 400; color: var(--txt4); margin-top: 12px; letter-spacing: var(--tr-label); text-transform: none; }
 
-.chart-wrap { height: 210px; position: relative; }
+.chart-wrap { height: clamp(200px, 26vw, 300px); position: relative; }
+/* Empty state overlays the canvas instead of replacing it — see renderEquity. */
+.chart-empty {
+  position: absolute; inset: 0; display: flex; align-items: center;
+  justify-content: center; text-align: center; padding: var(--sp-4);
+  font-size: var(--fs-1); color: var(--txt4); letter-spacing: var(--tr-label);
+}
 
 .acc-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
 
@@ -648,36 +779,36 @@ body::after {
 .acc-card:hover { border-color: var(--border2); transform: translateY(-2px); }
 .acc-card:hover::after { background: linear-gradient(180deg, transparent, var(--gold), transparent); }
 
-.acc-name { font-family: var(--font-display); font-size: 8px; font-weight: 700; letter-spacing: 0.3em; text-transform: uppercase; color: var(--txt4); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.acc-wr { font-family: var(--font-display); font-size: 40px; line-height: 1; font-weight: 800; margin-bottom: 18px; letter-spacing: -0.02em; }
+.acc-name { font-family: var(--font-display); font-size: var(--fs-0); font-weight: 700; letter-spacing: var(--tr-label); text-transform: none; color: var(--txt4); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.acc-wr { font-family: var(--font-display); font-size: var(--fs-6); line-height: 1; font-weight: 800; margin-bottom: 18px; letter-spacing: var(--tr-tight); }
 .acc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.acc-sv { font-family: var(--font-display); font-size: 20px; font-weight: 700; line-height: 1; letter-spacing: -0.01em; }
-.acc-sl { font-family: var(--font-display); font-size: 8px; font-weight: 400; color: var(--txt4); letter-spacing: 0.18em; text-transform: uppercase; margin-top: 4px; }
+.acc-sv { font-family: var(--font-display); font-size: var(--fs-5); font-weight: 700; line-height: 1; letter-spacing: var(--tr-tight); }
+.acc-sl { font-family: var(--font-display); font-size: var(--fs-0); font-weight: 400; color: var(--txt4); letter-spacing: var(--tr-label); text-transform: none; margin-top: 4px; }
 
 .wtable { width: 100%; border-collapse: collapse; }
 .wtable-wrap { overflow-x: auto; }
 .wtable thead th {
-  font-family: var(--font-display); font-size: 8px; font-weight: 700;
-  letter-spacing: 0.2em; text-transform: uppercase;
+  font-family: var(--font-display); font-size: var(--fs-0); font-weight: 700;
+  letter-spacing: var(--tr-label); text-transform: none;
   color: var(--txt4); padding: 0 14px 14px; text-align: left;
   border-bottom: 1px solid var(--border2); white-space: nowrap;
 }
 .wtable tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s, transform 0.15s; }
 .wtable tbody tr:last-child { border-bottom: none; }
 .wtable tbody tr:hover { background: var(--bg3); }
-.wtable td { padding: 10px 14px; font-family: var(--font-display); font-size: 11.5px; font-weight: 400; color: var(--txt2); white-space: nowrap; }
-.wtable td:first-child { font-family: var(--font-mono); font-size: 10px; font-weight: 600; color: var(--txt); letter-spacing: 0.08em; }
+.wtable td { padding: 10px 14px; font-family: var(--font-display); font-size: var(--fs-2); font-weight: 400; color: var(--txt2); white-space: nowrap; }
+.wtable td:first-child { font-family: var(--font-mono); font-size: var(--fs-1); font-weight: 600; color: var(--txt); letter-spacing: var(--tr-label); }
 
 .wbadge {
   display: inline-block; padding: 3px 10px;
-  font-family: var(--font-mono); font-size: 10px; font-weight: 700;
-  border: 1px solid; border-radius: 4px; letter-spacing: 0.08em;
+  font-family: var(--font-mono); font-size: var(--fs-1); font-weight: 700;
+  border: 1px solid; border-radius: 4px; letter-spacing: var(--tr-label);
 }
 .wbadge.good { border-color: var(--green-rim); color: var(--green); background: var(--green-bg); }
 .wbadge.mid  { border-color: var(--orange-rim); color: var(--orange); background: var(--orange-bg); }
 .wbadge.bad  { border-color: var(--red-rim);   color: var(--red);   background: var(--red-bg); }
 
-.empty { text-align: center; padding: 36px; font-family: var(--font-display); font-size: 11px; font-weight: 400; color: var(--txt4); letter-spacing: 0.16em; }
+.empty { text-align: center; padding: 36px; font-family: var(--font-display); font-size: var(--fs-2); font-weight: 400; color: var(--txt4); letter-spacing: var(--tr-label); }
 
 .journal-wrap { max-width: 880px; margin: 0 auto; }
 
@@ -685,8 +816,8 @@ body::after {
 .jfield { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
 .jgrid .jfield { margin-bottom: 0; }
 .jlabel {
-  font-family: var(--font-display); font-size: 9px; font-weight: 600;
-  color: var(--txt3); letter-spacing: 0.2em; text-transform: uppercase;
+  font-family: var(--font-display); font-size: var(--fs-1); font-weight: 600;
+  color: var(--txt3); letter-spacing: var(--tr-label); text-transform: none;
 }
 .jselect, .jinput {
   padding: 12px 14px;
@@ -694,7 +825,7 @@ body::after {
   border: 1px solid var(--border2);
   border-radius: var(--r2);
   color: var(--txt);
-  font-family: var(--font-mono); font-size: 13px;
+  font-family: var(--font-mono); font-size: var(--fs-3);
   outline: none; width: 100%;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
@@ -705,7 +836,7 @@ body::after {
 .jselect:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .jstatus {
-  font-family: var(--font-mono); font-size: 11px; color: var(--txt3);
+  font-family: var(--font-mono); font-size: var(--fs-2); color: var(--txt3);
   padding: 11px 14px;
   background: var(--bg3); border: 1px solid var(--border); border-radius: var(--r);
   margin-bottom: 18px;
@@ -713,7 +844,7 @@ body::after {
 .jstatus b { color: var(--gold); font-weight: 600; }
 
 .jrules {
-  font-family: var(--font-display); font-size: 12px; font-weight: 600;
+  font-family: var(--font-display); font-size: var(--fs-2); font-weight: 600;
   padding: 12px 16px;
   background: var(--bg3); border: 1px solid var(--border); border-radius: var(--r);
   margin: 4px 0 22px;
@@ -722,10 +853,10 @@ body::after {
 .jactions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .jsubmit-btn {
   padding: 16px 32px;
-  background: var(--gold); color: #08070A;
+  background: var(--gold); color: var(--on-accent);
   border: none; border-radius: var(--r2);
-  font-family: var(--font-display); font-size: 12px; font-weight: 700;
-  letter-spacing: 0.2em; text-transform: uppercase;
+  font-family: var(--font-display); font-size: var(--fs-2); font-weight: 700;
+  letter-spacing: var(--tr-label); text-transform: none;
   cursor: pointer; transition: all 0.25s;
   display: inline-flex; align-items: center; justify-content: center;
 }
@@ -736,32 +867,32 @@ body::after {
   padding: 16px 24px;
   background: none; border: 1px solid var(--red-rim); color: var(--red);
   border-radius: var(--r2);
-  font-family: var(--font-display); font-size: 12px; font-weight: 700;
-  letter-spacing: 0.16em; text-transform: uppercase;
+  font-family: var(--font-display); font-size: var(--fs-2); font-weight: 700;
+  letter-spacing: var(--tr-label); text-transform: none;
   cursor: pointer; transition: all 0.2s;
   display: inline-flex; align-items: center; justify-content: center;
 }
 .jdelete-btn:hover { background: var(--red-bg); }
 .jdelete-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-.jerr { margin-top: 14px; font-family: var(--font-display); font-size: 12px; color: var(--red); }
-.jok  { margin-top: 14px; font-family: var(--font-display); font-size: 12px; color: var(--green); }
+.jerr { margin-top: 14px; font-family: var(--font-display); font-size: var(--fs-2); color: var(--red); }
+.jok  { margin-top: 14px; font-family: var(--font-display); font-size: var(--fs-2); color: var(--green); }
 
 .jbtn-sm {
-  padding: 9px 16px; font-size: 9.5px;
+  padding: 9px 16px; font-size: var(--fs-1);
   font-family: var(--font-display); font-weight: 700;
-  letter-spacing: 0.14em; text-transform: uppercase;
+  letter-spacing: var(--tr-label); text-transform: none;
   border-radius: var(--r2); cursor: pointer; transition: all 0.2s;
   white-space: nowrap; border: 1px solid var(--border2); background: var(--bg4); color: var(--txt2);
   display: inline-flex; align-items: center; justify-content: center;
 }
 .jbtn-sm:hover { border-color: var(--border3); color: var(--txt); }
 .jbtn-sm.add     { background: var(--green-bg); border-color: var(--green-rim); color: var(--green); }
-.jbtn-sm.add:hover { background: var(--green); color: #08070A; }
+.jbtn-sm.add:hover { background: var(--green); color: var(--on-accent); }
 .jbtn-sm.remove  { background: none; border-color: var(--red-rim); color: var(--red); }
 .jbtn-sm.remove:hover { background: var(--red-bg); }
 .jbtn-sm.gold    { background: var(--gold-bg); border-color: var(--gold-rim); color: var(--gold); }
-.jbtn-sm.gold:hover { background: var(--gold); color: #08070A; }
+.jbtn-sm.gold:hover { background: var(--gold); color: var(--on-accent); }
 .jbtn-sm:disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* ── Inline button loading spinner (used across all action buttons) ── */
@@ -769,9 +900,9 @@ body::after {
   display: inline-block; width: 12px; height: 12px;
   margin-right: 8px; vertical-align: -2px;
   border: 2px solid rgba(8,7,10,0.28);
-  border-top-color: #08070A;
+  border-top-color: var(--on-accent);
   border-radius: 50%;
-  animation: btnspin 0.65s linear infinite;
+  animation: spin 0.65s linear infinite;
   flex-shrink: 0;
 }
 /* Buttons with dark/transparent backgrounds need a lighter spinner */
@@ -783,16 +914,15 @@ body::after {
 }
 .jdelete-btn .btn-spinner { border-color: rgba(224,82,82,0.28); border-top-color: var(--red); }
 .jbtn-sm.remove .btn-spinner { border-color: rgba(224,82,82,0.28); border-top-color: var(--red); }
-.jbtn-sm.add .btn-spinner { border-color: rgba(8,7,10,0.28); border-top-color: #08070A; }
-.jbtn-sm.gold .btn-spinner { border-color: rgba(8,7,10,0.28); border-top-color: #08070A; }
+.jbtn-sm.add .btn-spinner { border-color: rgba(8,7,10,0.28); border-top-color: var(--on-accent); }
+.jbtn-sm.gold .btn-spinner { border-color: rgba(8,7,10,0.28); border-top-color: var(--on-accent); }
 .jbtn-sm .btn-spinner { width: 10px; height: 10px; border-width: 2px; margin-right: 6px; }
-@keyframes btnspin { to { transform: rotate(360deg); } }
 
 /* ── Badges: phase / status ── */
 .badge-phase, .badge-status {
   display: inline-block; padding: 2px 9px; border-radius: 20px;
-  font-family: var(--font-mono); font-size: 8.5px; font-weight: 700;
-  letter-spacing: 0.06em; text-transform: uppercase; border: 1px solid;
+  font-family: var(--font-mono); font-size: var(--fs-0); font-weight: 700;
+  letter-spacing: var(--tr-tag); text-transform: uppercase; border: 1px solid;
   vertical-align: middle; white-space: nowrap;
 }
 .badge-phase.p1     { color: var(--blue);   border-color: var(--blue-rim);   background: var(--blue-bg); }
@@ -812,19 +942,19 @@ body::after {
   background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r2);
   padding: 16px 18px;
 }
-.macc-summary-val { font-family: var(--font-display); font-size: 24px; font-weight: 800; color: var(--txt); letter-spacing: -0.02em; }
+.macc-summary-val { font-family: var(--font-display); font-size: var(--fs-6); font-weight: 800; color: var(--txt); letter-spacing: var(--tr-tight); }
 .macc-summary-val.pos { color: var(--green); }
 .macc-summary-val.neg { color: var(--red); }
-.macc-summary-lbl { font-family: var(--font-display); font-size: 8.5px; font-weight: 600; color: var(--txt4); letter-spacing: 0.22em; text-transform: uppercase; margin-top: 6px; }
+.macc-summary-lbl { font-family: var(--font-display); font-size: var(--fs-0); font-weight: 600; color: var(--txt4); letter-spacing: var(--tr-label); text-transform: none; margin-top: 6px; }
 
 .macc-person-header {
   display: flex; align-items: baseline; gap: 10px;
-  font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 0.28em;
+  font-family: var(--font-display); font-size: var(--fs-2); font-weight: 700; letter-spacing: var(--tr-tag);
   text-transform: uppercase; color: var(--gold); margin: 26px 0 12px;
   padding-bottom: 10px; border-bottom: 1px solid var(--border2);
 }
 .macc-person-header:first-child { margin-top: 0; }
-.macc-person-count { font-family: var(--font-mono); font-size: 9px; font-weight: 500; color: var(--txt4); letter-spacing: 0.05em; text-transform: none; }
+.macc-person-count { font-family: var(--font-mono); font-size: var(--fs-1); font-weight: 500; color: var(--txt4); letter-spacing: var(--tr-label); text-transform: none; }
 
 .macc-card {
   background: var(--bg3); border: 1px solid var(--border); border-radius: var(--r3);
@@ -845,19 +975,19 @@ body::after {
 
 .macc-identity { min-width: 0; }
 .macc-eyebrow {
-  font-family: var(--font-display); font-size: 8px; font-weight: 700;
-  letter-spacing: 0.26em; text-transform: uppercase; color: var(--txt4);
+  font-family: var(--font-display); font-size: var(--fs-0); font-weight: 700;
+  letter-spacing: var(--tr-label); text-transform: none; color: var(--txt4);
   margin-bottom: 6px;
 }
 .macc-name-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .macc-name {
-  font-family: var(--font-display); font-size: 20px; font-weight: 800;
-  color: var(--txt); letter-spacing: -0.01em; line-height: 1.15;
+  font-family: var(--font-display); font-size: var(--fs-5); font-weight: 800;
+  color: var(--txt); letter-spacing: var(--tr-tight); line-height: 1.15;
 }
 .macc-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .macc-id {
-  font-family: var(--font-mono); font-size: 9px; color: var(--txt4);
-  margin-top: 6px; letter-spacing: 0.02em;
+  font-family: var(--font-mono); font-size: var(--fs-1); color: var(--txt4);
+  margin-top: 6px; letter-spacing: var(--tr-label);
 }
 .macc-actions { display: flex; gap: 8px; flex-wrap: wrap; flex-shrink: 0; }
 
@@ -870,12 +1000,12 @@ body::after {
   padding: 10px 12px;
 }
 .macc-detail-lbl {
-  font-family: var(--font-display); font-size: 7.5px; font-weight: 700;
-  color: var(--txt4); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 6px;
+  font-family: var(--font-display); font-size: var(--fs-0); font-weight: 700;
+  color: var(--txt4); letter-spacing: var(--tr-label); text-transform: none; margin-bottom: 6px;
 }
 .macc-detail-val {
-  font-family: var(--font-display); font-size: 15px; font-weight: 700;
-  color: var(--txt2); letter-spacing: -0.01em; line-height: 1.2;
+  font-family: var(--font-display); font-size: var(--fs-4); font-weight: 700;
+  color: var(--txt2); letter-spacing: var(--tr-tight); line-height: 1.2;
 }
 .macc-detail-val.pos { color: var(--green); }
 .macc-detail-val.neg { color: var(--red); }
@@ -895,10 +1025,10 @@ body::after {
   margin-bottom: 6px;
 }
 .meter-lbl {
-  font-family: var(--font-display); font-size: 7.5px; font-weight: 700;
-  color: var(--txt4); letter-spacing: 0.2em; text-transform: uppercase;
+  font-family: var(--font-display); font-size: var(--fs-0); font-weight: 700;
+  color: var(--txt4); letter-spacing: var(--tr-label); text-transform: none;
 }
-.meter-val { font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; color: var(--txt2); }
+.meter-val { font-family: var(--font-mono); font-size: var(--fs-1); font-weight: 600; color: var(--txt2); }
 .meter-val.pos { color: var(--green); }
 .meter-val.neg { color: var(--red); }
 .meter-val.warn { color: var(--orange); }
@@ -912,15 +1042,15 @@ body::after {
 .meter-fill.warn { background: linear-gradient(90deg, var(--orange), var(--gold)); }
 .meter-fill.bad  { background: linear-gradient(90deg, var(--red), var(--orange)); }
 .meter-fill.gold { background: linear-gradient(90deg, var(--gold-dk, var(--gold)), var(--gold)); }
-.meter-note { font-family: var(--font-mono); font-size: 8.5px; color: var(--txt4); margin-top: 5px; }
+.meter-note { font-family: var(--font-mono); font-size: var(--fs-0); color: var(--txt4); margin-top: 5px; }
 
 /* A breached account gets an unmissable rail + tag. */
 .macc-card.breached { border-color: var(--red-rim); }
 .macc-card.breached::before { background: var(--red); }
 .macc-breach-tag {
   display: inline-block; padding: 2px 9px; border-radius: 20px;
-  font-family: var(--font-mono); font-size: 8.5px; font-weight: 700;
-  letter-spacing: 0.06em; text-transform: uppercase;
+  font-family: var(--font-mono); font-size: var(--fs-0); font-weight: 700;
+  letter-spacing: var(--tr-tag); text-transform: uppercase;
   color: var(--red); border: 1px solid var(--red-rim); background: var(--red-bg);
 }
 
@@ -929,16 +1059,16 @@ body::after {
   display: flex; align-items: center; justify-content: space-between;
   gap: 14px; flex-wrap: wrap; margin-bottom: 18px;
 }
-.macc-count { font-family: var(--font-mono); font-size: 10px; color: var(--txt3); letter-spacing: 0.04em; }
+.macc-count { font-family: var(--font-mono); font-size: var(--fs-1); color: var(--txt3); letter-spacing: var(--tr-label); }
 .viewtoggle { display: flex; gap: 4px; background: var(--bg2); border: 1px solid var(--border); border-radius: 20px; padding: 3px; }
 .viewtoggle button {
-  font-family: var(--font-display); font-size: 9px; font-weight: 600;
-  letter-spacing: 0.16em; text-transform: uppercase;
+  font-family: var(--font-display); font-size: var(--fs-1); font-weight: 600;
+  letter-spacing: var(--tr-label); text-transform: none;
   padding: 5px 14px; border-radius: 20px; border: none;
   background: none; color: var(--txt3); cursor: pointer; transition: all 0.16s;
 }
 .viewtoggle button:hover { color: var(--txt2); }
-.viewtoggle button.active { background: var(--gold); color: #08070A; font-weight: 700; }
+.viewtoggle button.active { background: var(--gold); color: var(--on-accent); font-weight: 700; }
 
 .macc-group-header {
   display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
@@ -947,22 +1077,22 @@ body::after {
 }
 .macc-group-header:first-child { margin-top: 0; }
 .macc-group-title {
-  font-family: var(--font-display); font-size: 11px; font-weight: 700;
-  letter-spacing: 0.28em; text-transform: uppercase; color: var(--gold);
+  font-family: var(--font-display); font-size: var(--fs-2); font-weight: 700;
+  letter-spacing: var(--tr-tag); text-transform: uppercase; color: var(--gold);
 }
 .macc-group-title.p1 { color: var(--blue); }
 .macc-group-title.p2 { color: var(--orange); }
 .macc-group-sub {
-  font-family: var(--font-mono); font-size: 9px; font-weight: 500;
-  color: var(--txt4); letter-spacing: 0.04em; margin-left: auto;
+  font-family: var(--font-mono); font-size: var(--fs-1); font-weight: 500;
+  color: var(--txt4); letter-spacing: var(--tr-label); margin-left: auto;
 }
 
 /* ── Manage Accounts: table view ── */
 .macc-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--r3); background: var(--bg2); }
 .macc-table { width: 100%; border-collapse: collapse; min-width: 1100px; }
 .macc-table th {
-  font-family: var(--font-display); font-size: 7.5px; font-weight: 700;
-  color: var(--txt4); letter-spacing: 0.18em; text-transform: uppercase;
+  font-family: var(--font-display); font-size: var(--fs-0); font-weight: 700;
+  color: var(--txt4); letter-spacing: var(--tr-label); text-transform: none;
   text-align: right; padding: 12px 12px; border-bottom: 1px solid var(--border2);
   white-space: nowrap; cursor: pointer; user-select: none; transition: color 0.15s;
 }
@@ -970,9 +1100,9 @@ body::after {
 .macc-table th.tl { text-align: left; }
 .macc-table th:hover { color: var(--txt2); }
 .macc-table th.sorted { color: var(--gold); }
-.macc-table th .sort-caret { font-size: 8px; margin-left: 3px; }
+.macc-table th .sort-caret { font-size: var(--fs-0); margin-left: 3px; }
 .macc-table td {
-  font-family: var(--font-mono); font-size: 11px; color: var(--txt2);
+  font-family: var(--font-mono); font-size: var(--fs-2); color: var(--txt2);
   padding: 11px 12px; border-bottom: 1px solid var(--border);
   text-align: right; white-space: nowrap;
 }
@@ -982,7 +1112,7 @@ body::after {
 .macc-table tbody tr.st-passed td:first-child { border-left: 2px solid var(--gold); }
 .macc-table tbody tr.st-active td:first-child { border-left: 2px solid var(--green); }
 .macc-table tbody tr.st-removed td:first-child { border-left: 2px solid var(--txt4); }
-.macc-table td.name { font-family: var(--font-display); font-size: 12.5px; font-weight: 700; color: var(--txt); }
+.macc-table td.name { font-family: var(--font-display); font-size: var(--fs-2); font-weight: 700; color: var(--txt); }
 .macc-table td.pos { color: var(--green); }
 .macc-table td.neg { color: var(--red); }
 .macc-table td.gold { color: var(--gold); }
@@ -1006,15 +1136,15 @@ body::after {
 .fb-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 10px 16px; }
 .fb-row + .fb-row { border-top: 1px solid var(--border); }
 .fb-label {
-  font-family: var(--font-display); font-size: 8.5px; font-weight: 700;
-  color: var(--txt4); letter-spacing: 0.26em; text-transform: uppercase;
+  font-family: var(--font-display); font-size: var(--fs-0); font-weight: 700;
+  color: var(--txt4); letter-spacing: var(--tr-label); text-transform: none;
   margin-right: 2px;
 }
 .fb-preset {
-  font-family: var(--font-display); font-size: 9.5px; font-weight: 600;
+  font-family: var(--font-display); font-size: var(--fs-1); font-weight: 600;
   padding: 5px 14px; border: 1px solid var(--border2); border-radius: 20px;
   background: var(--bg3); color: var(--txt3); cursor: pointer;
-  letter-spacing: 0.1em; text-transform: uppercase; transition: all 0.16s;
+  letter-spacing: var(--tr-label); text-transform: none; transition: all 0.16s;
 }
 .fb-preset:hover { color: var(--txt); border-color: var(--border4); background: var(--bg4); }
 .fb-preset.on { background: var(--gold-bg); color: var(--gold); border-color: var(--gold-rim); font-weight: 700; }
@@ -1023,11 +1153,11 @@ body::after {
 
 .fb-field { display: flex; flex-direction: column; gap: 3px; }
 .fb-field-lbl {
-  font-family: var(--font-display); font-size: 7px; font-weight: 700;
-  color: var(--txt4); letter-spacing: 0.2em; text-transform: uppercase;
+  font-family: var(--font-display); font-size: var(--fs-0); font-weight: 700;
+  color: var(--txt4); letter-spacing: var(--tr-label); text-transform: none;
 }
 .fb-select, .fb-search {
-  font-family: var(--font-display); font-size: 11px; font-weight: 500;
+  font-family: var(--font-display); font-size: var(--fs-2); font-weight: 500;
   background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--r);
   color: var(--txt); padding: 6px 10px; min-width: 116px; cursor: pointer;
   transition: border-color 0.16s;
@@ -1040,23 +1170,23 @@ body::after {
 .fb-chips { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .fb-chip {
   display: inline-flex; align-items: center; gap: 7px;
-  font-family: var(--font-mono); font-size: 9.5px; font-weight: 500;
+  font-family: var(--font-mono); font-size: var(--fs-1); font-weight: 500;
   padding: 4px 6px 4px 11px; border-radius: 20px;
   background: var(--gold-bg); color: var(--gold); border: 1px solid var(--gold-rim);
 }
 .fb-chip b { font-weight: 700; }
 .fb-chip button {
   border: none; background: none; color: var(--gold); cursor: pointer;
-  font-size: 12px; line-height: 1; padding: 0 3px; opacity: 0.65; transition: opacity 0.15s;
+  font-size: var(--fs-2); line-height: 1; padding: 0 3px; opacity: 0.65; transition: opacity 0.15s;
 }
 .fb-chip button:hover { opacity: 1; }
-.fb-empty { font-family: var(--font-mono); font-size: 9.5px; color: var(--txt4); }
+.fb-empty { font-family: var(--font-mono); font-size: var(--fs-1); color: var(--txt4); }
 
 /* ── Section scope tags: says WHICH accounts a block counts ── */
 .scope-tag {
   display: inline-flex; align-items: center; gap: 6px;
-  font-family: var(--font-mono); font-size: 8.5px; font-weight: 600;
-  padding: 3px 10px; border-radius: 20px; letter-spacing: 0.04em;
+  font-family: var(--font-mono); font-size: var(--fs-0); font-weight: 600;
+  padding: 3px 10px; border-radius: 20px; letter-spacing: var(--tr-tag);
   text-transform: uppercase; white-space: nowrap;
 }
 .scope-tag.live { color: var(--green); border: 1px solid var(--green-rim); background: var(--green-bg); }
@@ -1066,13 +1196,13 @@ body::after {
 /* Small inline segmented control, used by the equity $ / % switch. */
 .seg { display: inline-flex; gap: 3px; background: var(--bg3); border: 1px solid var(--border2); border-radius: 20px; padding: 2px; }
 .seg button {
-  font-family: var(--font-display); font-size: 8.5px; font-weight: 600;
-  letter-spacing: 0.12em; text-transform: uppercase;
+  font-family: var(--font-display); font-size: var(--fs-0); font-weight: 600;
+  letter-spacing: var(--tr-label); text-transform: none;
   padding: 4px 12px; border-radius: 20px; border: none;
   background: none; color: var(--txt3); cursor: pointer; transition: all 0.15s;
 }
 .seg button:hover { color: var(--txt2); }
-.seg button.active { background: var(--gold); color: #08070A; font-weight: 700; }
+.seg button.active { background: var(--gold); color: var(--on-accent); font-weight: 700; }
 
 .panel-head {
   display: flex; align-items: flex-start; justify-content: space-between;
@@ -1093,7 +1223,7 @@ body::after {
 .datepicker-wrap .jinput { cursor: pointer; padding-right: 40px; }
 .dp-icon {
   position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
-  font-size: 14px; pointer-events: none; opacity: 0.6;
+  font-size: var(--fs-3); pointer-events: none; opacity: 0.6;
 }
 .dp-pop {
   /* position:fixed (not absolute) — the popup is anchored to the
@@ -1124,18 +1254,18 @@ body::after {
 .dp-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .dp-nav {
   background: var(--bg4); border: 1px solid var(--border2); color: var(--txt2);
-  width: 26px; height: 26px; border-radius: 6px; cursor: pointer; font-size: 14px;
+  width: 26px; height: 26px; border-radius: 6px; cursor: pointer; font-size: var(--fs-3);
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
 .dp-nav:hover { border-color: var(--gold-rim); color: var(--gold); }
-.dp-title { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: var(--txt); text-transform: uppercase; }
+.dp-title { font-size: var(--fs-2); font-weight: 700; letter-spacing: var(--tr-label); color: var(--txt); text-transform: none; }
 .dp-dow {
   display: grid;
   grid-template-columns: repeat(7, minmax(0,1fr));
   gap: 2px; margin-bottom: 4px; width: 100%;
 }
-.dp-dow div { font-size: 8px; text-align: center; color: var(--txt4); letter-spacing: 0.08em; text-transform: uppercase; overflow: hidden; }
+.dp-dow div { font-size: var(--fs-0); text-align: center; color: var(--txt4); letter-spacing: var(--tr-label); text-transform: none; overflow: hidden; }
 .dp-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0,1fr));
@@ -1143,7 +1273,7 @@ body::after {
 }
 .dp-cell {
   height: 30px; min-width: 0; display: flex; align-items: center; justify-content: center;
-  font-size: 11px; color: var(--txt2); border-radius: 6px; cursor: pointer;
+  font-size: var(--fs-2); color: var(--txt2); border-radius: 6px; cursor: pointer;
   font-family: var(--font-mono);
 }
 .dp-cell:hover { background: var(--bg5); }
@@ -1151,11 +1281,11 @@ body::after {
 .dp-cell.empty:hover { background: none; }
 .dp-cell.weekend { color: var(--txt4); }
 .dp-cell.today { border: 1px solid var(--gold-rim); color: var(--gold); }
-.dp-cell.sel { background: var(--gold); color: #08070A; font-weight: 700; }
+.dp-cell.sel { background: var(--gold); color: var(--on-accent); font-weight: 700; }
 .dp-foot { margin-top: 10px; text-align: center; border-top: 1px solid var(--border); padding-top: 10px; }
 .dp-today {
   background: none; border: 1px solid var(--border2); color: var(--txt3);
-  font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+  font-size: var(--fs-1); letter-spacing: var(--tr-label); text-transform: none;
   padding: 6px 14px; border-radius: 20px; cursor: pointer;
   font-family: var(--font-display); font-weight: 600;
 }
@@ -1163,7 +1293,7 @@ body::after {
 
 /* ── Rule-reason note under a failing Rules cell ── */
 .rule-reason {
-  display: block; font-size: 8.5px; color: var(--txt4);
+  display: block; font-size: var(--fs-0); color: var(--txt4);
   white-space: normal; max-width: 160px; line-height: 1.35; margin-top: 2px;
 }
 
@@ -1195,7 +1325,7 @@ body::after {
   .page { padding: 18px 16px 80px; }
   .topbar { padding: 0 18px; }
   .navbar { padding: 10px 18px 0; }
-  .kpi-val { font-size: 44px; }
+  .kpi-val { font-size: var(--fs-8); }
   .jgrid { grid-template-columns: 1fr; }
   .macc-detail-grid { grid-template-columns: repeat(2,1fr); }
   /* Sticky costs too much vertical room on a phone. */
@@ -1207,13 +1337,31 @@ body::after {
 @media(max-width:520px) {
   .kpi-strip, .kpi-strip.k3, .kpi-strip.k5 { grid-template-columns: 1fr 1fr; }
   .g3 { grid-template-columns: 1fr; }
-  .brand-text { font-size: 14px; }
+  .brand-text { font-size: var(--fs-3); }
   .topbar-tag,.gen-time { display: none; }
   .macc-summary { grid-template-columns: 1fr 1fr; }
   .macc-detail-grid { grid-template-columns: 1fr 1fr; }
-  .macc-name { font-size: 17px; }
+  .macc-name { font-size: var(--fs-4); }
   .macc-toolbar { gap: 10px; }
   .macc-group-sub { margin-left: 0; width: 100%; }
+  /* Five columns at 320px leaves ~55px per cell. Wrap to 3 + 2. */
+  .daygrid { grid-template-columns: repeat(3,1fr); }
+  .setup-head, .setup-row { grid-template-columns: 1fr 40px 48px 72px; }
+  .setup-head .setup-bar, .setup-row .setup-bar { display: none; }
+  .group-title { font-size: var(--fs-4); }
+}
+
+/* Effects stay on by default — this only fires when the viewer's OS
+   explicitly asks for reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .ticker-inner { animation: none; transform: none; }
+  #cursorCanvas { display: none; }
 }
 </style>
 </head>
@@ -1302,190 +1450,251 @@ body::after {
 
     <div class="filter-bar" id="filterBarAnalytics"></div>
 
-    <div class="sec">
-      <div class="sh">
-        <div class="sh-num">00</div>
-        <div class="sh-title">Live Capital</div>
-        <div class="sh-line"></div>
-        <div class="sh-tag"><span class="scope-tag live">Active accounts only</span></div>
-      </div>
-      <div class="kpi-strip k5" id="liveKpiStrip"></div>
-    </div>
+    <!-- Hero: the three numbers worth leading with. Everything below
+         steps down from here, instead of 19 equally loud tiles. -->
+    <div class="kpi-strip k3 hero-strip" id="heroKpiStrip"></div>
 
-    <div class="sec">
-      <div class="sh">
-        <div class="sh-num">00</div>
-        <div class="sh-title">Real Money</div>
-        <div class="sh-line"></div>
-        <div class="sh-tag"><span class="scope-tag real">Actual currency</span></div>
+    <!-- ═══════════ MONEY ═══════════ -->
+    <div class="group">
+      <div class="group-header">
+        <div class="group-title">Money</div>
+        <div class="group-line"></div>
+        <div class="group-sub">What your capital is doing right now</div>
       </div>
-      <div class="kpi-strip" id="realKpiStrip"></div>
-      <div class="psub" style="margin:-20px 0 0;">Payouts received minus what the challenges cost. Every other figure on this page is prop-firm currency, which you cannot spend.</div>
-    </div>
 
-    <div class="sec">
-      <div class="sh">
-        <div class="sh-num">00</div>
-        <div class="sh-title">Track Record</div>
-        <div class="sh-line"></div>
-        <div class="sh-tag"><span class="scope-tag all">All accounts ever</span></div>
+      <div class="sec">
+        <div class="sh">
+          <div class="sh-title">Live capital</div>
+          <div class="sh-line"></div>
+          <div class="sh-tag"><span class="scope-tag live">Active accounts only</span></div>
+        </div>
+        <div class="kpi-strip k5" id="liveKpiStrip"></div>
       </div>
-      <div class="kpi-strip k5" id="trackKpiStrip"></div>
-    </div>
 
-    <div class="kpi-strip k5" id="kpiStrip"></div>
+      <div class="sec">
+        <div class="sh">
+          <div class="sh-title">Real money</div>
+          <div class="sh-line"></div>
+          <div class="sh-tag"><span class="scope-tag real">Actual currency</span></div>
+        </div>
+        <div class="kpi-strip" id="realKpiStrip"></div>
+        <div class="psub" style="margin-top:var(--sp-3)">Payouts received minus what the challenges cost. Every other figure on this page is prop-firm currency, which you cannot spend.</div>
+      </div>
 
-    <div class="sec">
-      <div class="sh">
-        <div class="sh-num">01</div>
-        <div class="sh-title">Outcomes</div>
-        <div class="sh-line"></div>
-        <div class="sh-tag" id="tradeMeta">— trades</div>
-      </div>
-      <div class="g2">
-        <div class="panel d1" id="resultPanel"></div>
-        <div class="panel d2" id="mistakePanel"></div>
-      </div>
-    </div>
-
-    <div class="sec">
-      <div class="sh">
-        <div class="sh-num">02</div>
-        <div class="sh-title">Percentage Performance</div>
-        <div class="sh-line"></div>
-        <div class="sh-tag">Risk-normalized — % of each account's starting balance</div>
-      </div>
-      <div class="kpi-strip k3" id="pctKpiStrip"></div>
-      <div class="g2">
-        <div class="panel d1" id="pctAccountPanel"></div>
-        <div class="panel d2" id="pctPersonPanel"></div>
-      </div>
-    </div>
-
-    <div class="sec">
-      <div class="sh">
-        <div class="sh-num">03</div>
-        <div class="sh-title">Patterns</div>
-        <div class="sh-line"></div>
-        <div class="sh-tag">Behavioral</div>
-      </div>
-      <div class="g3">
+      <div class="sec">
+        <div class="sh">
+          <div class="sh-title">Payouts</div>
+          <div class="sh-line"></div>
+          <div class="sh-tag"><span class="scope-tag real">Survives blown accounts</span></div>
+        </div>
         <div class="panel d1">
-          <div class="ptitle">Day of Week</div>
-          <div class="psub">Volume distribution</div>
-          <div class="daygrid" id="dayGrid"></div>
-        </div>
-        <div class="panel d2">
-          <div class="ptitle">Risk / Reward</div>
-          <div class="psub">Average ratio</div>
-          <div class="rr-hero" id="rrHero"></div>
-        </div>
-        <div class="panel d3">
-          <div class="ptitle">Rule Compliance</div>
-          <div class="psub">Fixed rule adherence</div>
-          <div class="gauge-wrap" id="gaugeWrap"></div>
+          <div class="ptitle">Withdrawals</div>
+          <div class="psub">Money taken out of Master accounts, all time</div>
+          <div class="kpi-strip k3" id="payoutMiniKpi"></div>
         </div>
       </div>
-    </div>
 
-    <div class="sec">
-      <div class="sh">
-        <div class="sh-num">04</div>
-        <div class="sh-title">Equity</div>
-        <div class="sh-line"></div>
-        <div class="sh-tag">Respects Person / Account / Status — ignores Period</div>
-      </div>
-      <div class="kpi-strip" id="equityKpiStrip"></div>
-      <div class="panel d1">
-        <div class="panel-head">
-          <div>
-            <div class="ptitle">Equity Curve</div>
-            <div class="psub" id="equitySub">Cumulative trading P&amp;L over time</div>
-          </div>
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-            <div class="seg" id="equityUnitSeg">
-              <button class="active" data-v="abs" onclick="setEquityUnit('abs')">$</button>
-              <button data-v="pct" onclick="setEquityUnit('pct')">%</button>
+      <div class="sec">
+        <div class="sh">
+          <div class="sh-title">Equity curve</div>
+          <div class="sh-line"></div>
+          <div class="sh-tag">Respects Person / Account / Status — ignores Period</div>
+        </div>
+        <div class="kpi-strip" id="equityKpiStrip"></div>
+        <div class="panel d1">
+          <div class="panel-head">
+            <div>
+              <div class="ptitle">Equity curve</div>
+              <div class="psub" id="equitySub">Cumulative trading P&amp;L over time</div>
             </div>
-            <button class="fb-preset" id="equityClosedBtn" onclick="toggleEquityClosed()">Include closed</button>
+            <div style="display:flex;gap:var(--sp-2);align-items:center;flex-wrap:wrap;">
+              <div class="seg" id="equityUnitSeg">
+                <button class="active" data-v="abs" onclick="setEquityUnit('abs')">$</button>
+                <button data-v="pct" onclick="setEquityUnit('pct')">%</button>
+              </div>
+              <button class="fb-preset" id="equityClosedBtn" onclick="toggleEquityClosed()">Include closed</button>
+            </div>
           </div>
+          <div class="chart-wrap"><canvas id="equityChart"></canvas></div>
         </div>
-        <div class="chart-wrap"><canvas id="equityChart"></canvas></div>
       </div>
     </div>
 
-    <div class="sec">
-      <div class="sh">
-        <div class="sh-num">05</div>
-        <div class="sh-title">Monthly Trend</div>
-        <div class="sh-line"></div>
-        <div class="sh-tag">Edge over time</div>
+    <!-- ═══════════ PERFORMANCE ═══════════ -->
+    <div class="group">
+      <div class="group-header">
+        <div class="group-title">Performance</div>
+        <div class="group-line"></div>
+        <div class="group-sub">Whether the trading itself is any good</div>
       </div>
-      <div class="panel d1">
-        <div class="ptitle">Win Rate by Month</div>
-        <div class="psub">Performance trajectory</div>
-        <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
-      </div>
-    </div>
 
-    <div class="sec">
-      <div class="sh">
-        <div class="sh-num">06</div>
-        <div class="sh-title">Detail</div>
-        <div class="sh-line"></div>
-        <div class="sh-tag">Per-week & per-account</div>
+      <div class="sec">
+        <div class="sh">
+          <div class="sh-title">Headline</div>
+          <div class="sh-line"></div>
+          <div class="sh-tag" id="tradeMeta">— trades</div>
+        </div>
+        <div class="kpi-strip k5" id="kpiStrip"></div>
+        <div class="psub" style="margin-top:var(--sp-3)">Win rate counts TP and Partial TP. Breakeven and manual closes sit outside both win rate and loss rate, so the two do not add up to 100%.</div>
       </div>
-      <div class="g21">
+
+      <div class="sec">
+        <div class="sh">
+          <div class="sh-title">Track record</div>
+          <div class="sh-line"></div>
+          <div class="sh-tag"><span class="scope-tag all">All accounts ever</span></div>
+        </div>
+        <div class="kpi-strip k5" id="trackKpiStrip"></div>
+      </div>
+
+      <div class="sec">
+        <div class="sh">
+          <div class="sh-title">Outcomes</div>
+          <div class="sh-line"></div>
+          <div class="sh-tag"><span class="scope-tag all">All accounts ever</span></div>
+        </div>
+        <div class="g2">
+          <div class="panel d1" id="resultPanel"></div>
+          <div class="panel d2" id="mistakePanel"></div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sh">
+          <div class="sh-title">Percentage performance</div>
+          <div class="sh-line"></div>
+          <div class="sh-tag">Risk-normalised — % of each account&#39;s own size</div>
+        </div>
+        <div class="kpi-strip k3" id="pctKpiStrip"></div>
+        <div class="g2">
+          <div class="panel d1" id="pctAccountPanel"></div>
+          <div class="panel d2" id="pctPersonPanel"></div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sh">
+          <div class="sh-title">Monthly trend</div>
+          <div class="sh-line"></div>
+          <div class="sh-tag">Edge over time — ignores Period</div>
+        </div>
         <div class="panel d1">
-          <div class="ptitle">Weekly Log</div>
-          <div class="psub">Last 12 weeks</div>
-          <div id="weeklyTable"></div>
-        </div>
-        <div class="panel d2">
-          <div class="ptitle">By Account</div>
-          <div class="psub">Matches current filters — any status</div>
-          <div class="acc-cards" id="accCards"></div>
+          <div class="ptitle">Win rate by month</div>
+          <div class="psub">Green line is win rate (left axis). Grey dashed line is trade count (right axis).</div>
+          <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
         </div>
       </div>
     </div>
 
-    <div class="sec">
-      <div class="sh">
-        <div class="sh-num">07</div>
-        <div class="sh-title">Payouts</div>
-        <div class="sh-line"></div>
-        <div class="sh-tag">All-time — survives blown accounts</div>
+    <!-- ═══════════ BEHAVIOUR ═══════════ -->
+    <div class="group">
+      <div class="group-header">
+        <div class="group-title">Behaviour</div>
+        <div class="group-line"></div>
+        <div class="group-sub">When and how you trade, and where it goes wrong</div>
       </div>
-      <div class="kpi-strip k3" id="payoutMiniKpi"></div>
-    </div>
 
-    <div class="sec">
-      <div class="sh">
-        <div class="sh-num">08</div>
-        <div class="sh-title">Raw Trade Log</div>
-        <div class="sh-line"></div>
-        <div class="sh-tag" id="rawLogMeta">— entries</div>
+      <div class="sec">
+        <div class="sh">
+          <div class="sh-title">Setups</div>
+          <div class="sh-line"></div>
+          <div class="sh-tag"><span class="scope-tag all">All accounts ever</span></div>
+        </div>
+        <div class="panel d1" id="setupPanel"></div>
       </div>
-      <div class="panel d1">
-        <div class="ptitle">Every Trade</div>
-        <div class="psub">All accounts, all statuses — unfiltered history. Hover a ✗ for the exact rule it broke.</div>
-        <div class="jgrid" style="grid-template-columns:1fr 1fr;margin-bottom:20px;">
-          <div class="jfield">
-            <label class="jlabel">Person</label>
-            <select class="jselect" id="rawPersonSel" onchange="onRawFilterChange()"></select>
+
+      <div class="sec">
+        <div class="sh">
+          <div class="sh-title">Timing &amp; streaks</div>
+          <div class="sh-line"></div>
+          <div class="sh-tag"><span class="scope-tag all">All accounts ever</span></div>
+        </div>
+        <div class="g2">
+          <div class="panel d1">
+            <div class="ptitle">Day of week</div>
+            <div class="psub">Win rate and P&amp;L by weekday — best day is the most profitable, not the busiest</div>
+            <div class="daygrid" id="dayGrid"></div>
           </div>
-          <div class="jfield">
-            <label class="jlabel">Account</label>
-            <select class="jselect" id="rawAccountSel" onchange="onRawFilterChange()"></select>
+          <div class="panel d2" id="streakPanel"></div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sh">
+          <div class="sh-title">Discipline</div>
+          <div class="sh-line"></div>
+          <div class="sh-tag"><span class="scope-tag all">All accounts ever</span></div>
+        </div>
+        <div class="g2">
+          <div class="panel d1">
+            <div class="ptitle">Risk / reward</div>
+            <div class="psub">Average planned ratio across the filtered trades</div>
+            <div class="rr-hero" id="rrHero"></div>
           </div>
-          <div class="jfield">
-            <label class="jlabel">Scope</label>
-            <button class="fb-preset on" id="rawInheritBtn" onclick="toggleRawInherit()" style="margin-top:4px;">Follow page filters</button>
+          <div class="panel d2">
+            <div class="ptitle">Rule compliance</div>
+            <div class="psub">Share of trades that followed the fixed rules</div>
+            <div class="gauge-wrap" id="gaugeWrap"></div>
           </div>
         </div>
-        <div class="wtable-wrap" id="rawLogTable"></div>
-        <div style="text-align:center;margin-top:16px;">
-          <button class="jbtn-sm add" id="rawLoadMoreBtn" onclick="loadMoreRaw(this)">Show more</button>
+      </div>
+    </div>
+
+    <!-- ═══════════ DETAIL ═══════════ -->
+    <div class="group">
+      <div class="group-header">
+        <div class="group-title">Detail</div>
+        <div class="group-line"></div>
+        <div class="group-sub">The underlying rows, unaggregated</div>
+      </div>
+
+      <div class="sec">
+        <div class="sh">
+          <div class="sh-title">Weekly &amp; per-account</div>
+          <div class="sh-line"></div>
+          <div class="sh-tag">Matches the current filters</div>
+        </div>
+        <div class="g21">
+          <div class="panel d1">
+            <div class="ptitle">Weekly log</div>
+            <div class="psub">Last 12 weeks</div>
+            <div class="wtable-wrap" id="weeklyTable"></div>
+          </div>
+          <div class="panel d2">
+            <div class="ptitle">By account</div>
+            <div class="psub">Any status</div>
+            <div class="acc-cards" id="accCards"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sh">
+          <div class="sh-title">Raw trade log</div>
+          <div class="sh-line"></div>
+          <div class="sh-tag" id="rawLogMeta">— entries</div>
+        </div>
+        <div class="panel d1">
+          <div class="ptitle">Every trade</div>
+          <div class="psub">Hover a ✗ for the exact rule it broke</div>
+          <div class="jgrid" style="margin-bottom:var(--sp-4)">
+            <div class="jfield">
+              <label class="jlabel">Person</label>
+              <select class="jselect" id="rawPersonSel" onchange="onRawFilterChange()"></select>
+            </div>
+            <div class="jfield">
+              <label class="jlabel">Account</label>
+              <select class="jselect" id="rawAccountSel" onchange="onRawFilterChange()"></select>
+            </div>
+            <div class="jfield">
+              <label class="jlabel">Scope</label>
+              <button class="fb-preset on" id="rawInheritBtn" onclick="toggleRawInherit()" style="margin-top:var(--sp-1);">Follow page filters</button>
+            </div>
+          </div>
+          <div class="wtable-wrap" id="rawLogTable"></div>
+          <div style="text-align:center;margin-top:var(--sp-4);">
+            <button class="jbtn-sm add" id="rawLoadMoreBtn" onclick="loadMoreRaw(this)">Show more</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1501,12 +1710,12 @@ body::after {
 
     <div class="g21">
       <div class="panel d1">
-        <div class="ptitle">Payout Log</div>
+        <div class="ptitle">Payout log</div>
         <div class="psub">All-time, newest first</div>
         <div class="wtable-wrap" id="payoutTable"></div>
       </div>
       <div class="panel d2">
-        <div class="ptitle">Log a Payout</div>
+        <div class="ptitle">Log a payout</div>
         <div class="psub">Master accounts only — Active, Passed, or Blown</div>
         <div class="jfield">
           <label class="jlabel">Person</label>
@@ -1541,7 +1750,7 @@ body::after {
   <div class="page" id="addAccountPage" style="display:none">
     <div class="journal-wrap">
       <div class="panel d1">
-        <div class="ptitle">Add Account</div>
+        <div class="ptitle">Add account</div>
         <div class="psub">New accounts start Active — mark them Passed / Blown later from Manage Accounts</div>
 
         <div class="jgrid">
@@ -1604,7 +1813,7 @@ body::after {
   <div class="page" id="journalPage" style="display:none">
     <div class="journal-wrap">
       <div class="panel d1">
-        <div class="ptitle">Journal a Trade</div>
+        <div class="ptitle">Journal a trade</div>
         <div class="psub">Writes straight to the sheet — one entry per account per day</div>
 
         <div class="jgrid">
@@ -1757,6 +1966,7 @@ var _maccView = "cards";               // "cards" | "table"
 var _maccSort = { key:"name", dir:1 }; // table view sort
 var _equityUnit = "abs";               // "abs" ($) | "pct" (% of account size)
 var _equityIncludeClosed = false;      // active accounts only by default
+var _setupDim = "pair";                // Setup Performance dimension
 
 var PHASE_BADGE_CLASS  = { PHASE_1:"p1", PHASE_2:"p2", MASTER:"master" };
 var STATUS_BADGE_CLASS = { ACTIVE:"active", PASSED:"passed", BLOWN:"blown", REMOVED:"removed" };
@@ -1877,6 +2087,8 @@ function loadViewPrefs(){
     var u = localStorage.getItem("tj_equityUnit");
     if(u === "abs" || u === "pct") _equityUnit = u;
     _equityIncludeClosed = localStorage.getItem("tj_equityClosed") === "1";
+    var sd = localStorage.getItem("tj_setupDim");
+    if(sd) _setupDim = sd;
   } catch(e){}
 }
 
@@ -2233,10 +2445,11 @@ function renderDashboard(){
   var trades = getFiltered();
   var s = stats(trades);
   document.getElementById("tradeMeta").textContent = s.total + " trades";
-  renderCapital();
+  renderHero(s); renderCapital();
   renderKPI(s); renderResults(s); renderMistakes(s);
   renderPctKpi(s); renderPctPerformance();
-  renderDays(s); renderRR(s); renderCompliance(s);
+  renderDays(trades); renderStreaks(trades); renderSetups();
+  renderRR(s); renderCompliance(s);
   renderTrend(); renderWeekly(); renderAccounts(); renderEquity();
   renderPayoutMiniKpi();
   onRawFilterChange();
@@ -2294,14 +2507,223 @@ function stats(trades){
 }
 
 /* ── KPI ── */
+/* ── HERO ──
+   Three numbers, one step louder than everything else: what you have
+   actually made, what is actually live, and whether the trading works.
+   The page used to open with 19 tiles of identical weight. ── */
+function renderHero(s){
+  var accs = (_data.accounts || []).filter(function(a){
+    return _filters.person === "all" || a.person === _filters.person;
+  });
+  var net = accs.reduce(function(t,a){ return t + (a.paidOut||0) - (a.cost||0); }, 0);
+  var liveEq = accs.reduce(function(t,a){
+    return t + (a.status === "ACTIVE" ? (a.currentBalance||0) : 0);
+  }, 0);
+  var nLive = accs.filter(function(a){ return a.status === "ACTIVE"; }).length;
+
+  document.getElementById("heroKpiStrip").innerHTML =
+    kp("Real net profit",
+       (net>=0?"+":"−")+fmtMoney(Math.abs(net)),
+       net>0?"g":net<0?"r":"a",
+       "payouts received − challenge fees", "d1 hero") +
+    kp("Live equity", fmtMoney(liveEq), "b",
+       nLive + " active account" + (nLive===1?"":"s"), "d2 hero") +
+    kp("Win rate", s.total ? s.winRate+"%" : "—",
+       s.total ? (s.winRate>=50?"g":"a") : "a",
+       s.total ? s.total+" trades in view" : "no trades in view", "d3 hero");
+}
+
 function renderKPI(s){
   var pctCls = s.avgPnlPercent>0 ? "g" : s.avgPnlPercent<0 ? "r" : "a";
-  document.getElementById("kpiStrip").innerHTML =
-    kp("Win Rate",   s.winRate+"%",   "g", s.wins+" wins · "+s.total+" trades", "d1") +
-    kp("Loss Rate",  s.lossRate+"%",  "r", s.losses+" stop-outs",               "d2") +
-    kp("Compliance", s.compliance+"%","a", s.ruleOk+" on-rule",                 "d3") +
-    kp("Avg R:R",    "1:"+s.avgRR,    "b", "risk to reward",                    "d4") +
-    kp("Avg P&amp;L %", (s.avgPnlPercent>0?"+":"")+s.avgPnlPercent+"%", pctCls, "per trade, of starting balance", "d5");
+  var el = document.getElementById("kpiStrip");
+  if(!s.total){
+    el.innerHTML = '<div class="empty" style="grid-column:1/-1">No trades match these filters — nothing to measure yet.</div>';
+    return;
+  }
+  // Spelling out the buckets is the fix for the oldest confusion on this
+  // page: win rate and loss rate never sum to 100, because breakeven and
+  // manual closes belong to neither.
+  var manual = (s.breakdown && s.breakdown["MANUAL CLOSE"]) || 0;
+  var mix = s.wins+"W · "+s.losses+"L · "+s.be+"BE"+(manual?" · "+manual+" manual":"")+" of "+s.total;
+
+  el.innerHTML =
+    kp("Win rate",   s.winRate+"%",   "g", mix, "d1") +
+    kp("Loss rate",  s.lossRate+"%",  "r", s.losses+" stop-outs of "+s.total, "d2") +
+    kp("Compliance", s.compliance+"%","a", s.ruleOk+" of "+s.total+" followed the rules", "d3") +
+    kp("Avg R:R",    "1:"+s.avgRR,    "b", "average planned ratio", "d4") +
+    kp("Avg P&amp;L %", (s.avgPnlPercent>0?"+":"")+s.avgPnlPercent+"%", pctCls,
+       "per trade, of account size", "d5");
+}
+
+/* ── STREAKS ──
+   Nothing in the app showed sequencing before. The interesting number
+   here is the last one: how you trade immediately after a loss. ── */
+function computeStreaks(trades){
+  var seq = (trades||[]).slice().sort(function(a,b){
+    return String(a.dateKey||"") < String(b.dateKey||"") ? -1 : 1;
+  });
+  // Outcome by P&L sign, which is the only sequencing definition that
+  // makes sense — a breakeven neither continues nor breaks a run.
+  var out = seq.map(function(t){
+    var p = t.pnl || 0;
+    return p > 0 ? "W" : p < 0 ? "L" : "F";
+  }).filter(function(o){ return o !== "F"; });
+
+  var curKind = null, curLen = 0, bestW = 0, bestL = 0, run = 0, runKind = null;
+  out.forEach(function(o){
+    if(o === runKind){ run++; } else { runKind = o; run = 1; }
+    if(runKind === "W" && run > bestW) bestW = run;
+    if(runKind === "L" && run > bestL) bestL = run;
+  });
+  curKind = runKind; curLen = run;
+
+  // Win rate on the trade immediately following a win vs a loss.
+  var afterW = {w:0,n:0}, afterL = {w:0,n:0};
+  for(var i=1;i<out.length;i++){
+    var prev = out[i-1], now = out[i];
+    var b = prev === "W" ? afterW : afterL;
+    b.n++; if(now === "W") b.w++;
+  }
+  function rate(b){ return b.n ? parseFloat(((b.w/b.n)*100).toFixed(1)) : null; }
+
+  return {
+    total: out.length,
+    currentKind: out.length ? curKind : null,
+    currentLen:  out.length ? curLen : 0,
+    longestWin:  bestW,
+    longestLoss: bestL,
+    afterWin:    rate(afterW),
+    afterLoss:   rate(afterL),
+    afterWinN:   afterW.n,
+    afterLossN:  afterL.n,
+  };
+}
+
+function renderStreaks(trades){
+  var st = computeStreaks(trades);
+  var host = document.getElementById("streakPanel");
+  if(!host) return;
+  var head = '<div class="ptitle">Streaks</div>'+
+             '<div class="psub">Consecutive winners and losers, by P&amp;L. Breakeven trades are skipped.</div>';
+  if(!st.total){
+    host.innerHTML = head + '<div class="empty">No winning or losing trades in view yet</div>';
+    return;
+  }
+
+  var curCls = st.currentKind === "W" ? "pos" : "neg";
+  var curTxt = st.currentLen + " " + (st.currentKind === "W" ? "win" : "loss") + (st.currentLen===1?"":"es");
+  if(st.currentKind === "W") curTxt = st.currentLen + " win" + (st.currentLen===1?"":"s");
+
+  function row(label, value, cls, note){
+    return '<div class="brow">'+
+      '<div class="blabel">'+esc(label)+'</div>'+
+      '<div class="btrack"></div>'+
+      '<div class="bnum '+(cls||"")+'">'+value+'</div>'+
+      '<div class="bpct">'+esc(note||"")+'</div>'+
+    '</div>';
+  }
+
+  var tiltCls = "", tiltNote = "";
+  if(st.afterWin !== null && st.afterLoss !== null){
+    var gap = st.afterLoss - st.afterWin;
+    tiltCls  = gap <= -10 ? "neg" : gap >= 10 ? "pos" : "";
+    tiltNote = gap <= -10 ? "drops after a loss" : gap >= 10 ? "recovers well" : "steady";
+  }
+
+  host.innerHTML = head +
+    '<div class="streak-now '+curCls+'">'+
+      '<div class="streak-now-val">'+esc(curTxt)+'</div>'+
+      '<div class="streak-now-lbl">Current run</div>'+
+    '</div>'+
+    row("Longest win",  st.longestWin,  "pos", "in a row") +
+    row("Longest loss", st.longestLoss, "neg", "in a row") +
+    row("After a win",  st.afterWin  === null ? "—" : st.afterWin+"%",  "", st.afterWinN  ? st.afterWinN+" trades"  : "") +
+    row("After a loss", st.afterLoss === null ? "—" : st.afterLoss+"%", tiltCls, st.afterLossN ? st.afterLossN+" trades" : "") +
+    (tiltNote ? '<div class="meter-note" style="margin-top:var(--sp-3)">Win rate '+esc(tiltNote)+' — the gap between these two is where tilt shows up.</div>' : '');
+}
+
+/* ── SETUP PERFORMANCE ──
+   pair / session / timeframe / tradeType / bias are logged on every
+   trade and were analysed nowhere. Same shape as the percentage panels:
+   group, run stats() per group, sort. ── */
+var SETUP_DIMS = [
+  { key:"pair",      label:"Pair" },
+  { key:"session",   label:"Session" },
+  { key:"timeframe", label:"Timeframe" },
+  { key:"tradeType", label:"Type" },
+  { key:"bias",      label:"Bias" },
+];
+var SETUP_MIN_SAMPLE = 5;
+
+function groupTradesBy(trades, key){
+  var map = {};
+  (trades||[]).forEach(function(t){
+    var v = String(t[key] || "").trim();
+    if(!v) return;
+    (map[v] = map[v] || []).push(t);
+  });
+  return Object.keys(map).map(function(v){
+    var s = stats(map[v]);
+    return { label:v, total:s.total, winRate:s.winRate, pnl:s.totalPnL, ranked:s.total >= SETUP_MIN_SAMPLE };
+  }).sort(function(a,b){
+    // Ranked groups first, then by P&L. A single 100% trade must not
+    // sit at the top pretending to be an edge.
+    if(a.ranked !== b.ranked) return a.ranked ? -1 : 1;
+    return b.pnl - a.pnl;
+  });
+}
+
+function setSetupDim(k){
+  _setupDim = k;
+  try { localStorage.setItem("tj_setupDim", k); } catch(e){}
+  renderSetups();
+}
+
+function renderSetups(){
+  var host = document.getElementById("setupPanel");
+  if(!host) return;
+  var dim = SETUP_DIMS.filter(function(d){ return d.key === _setupDim; })[0] || SETUP_DIMS[0];
+  var rows = groupTradesBy(getFiltered(), dim.key);
+
+  var seg = '<div class="seg">' + SETUP_DIMS.map(function(d){
+    return '<button class="'+(d.key===dim.key?"active":"")+'" onclick="setSetupDim(\'' + d.key + '\')">'+esc(d.label)+'</button>';
+  }).join("") + '</div>';
+
+  var head = '<div class="panel-head">'+
+    '<div><div class="ptitle">Setup performance</div>'+
+    '<div class="psub">Which of your setups actually make money</div></div>'+
+    seg+'</div>';
+
+  if(!rows.length){
+    host.innerHTML = head + '<div class="empty">No trades with a '+esc(dim.label.toLowerCase())+' recorded in this view</div>';
+    return;
+  }
+
+  var maxAbs = Math.max.apply(null, rows.map(function(r){ return Math.abs(r.pnl); })) || 1;
+  var body = '<div class="setup-head">'+
+    '<div class="setup-name">'+esc(dim.label)+'</div>'+
+    '<div class="setup-n">Trades</div>'+
+    '<div class="setup-wr">Win %</div>'+
+    '<div class="setup-bar"></div>'+
+    '<div class="setup-pnl">P&amp;L</div>'+
+  '</div>';
+
+  rows.forEach(function(r){
+    var pos = r.pnl >= 0;
+    var w = (Math.abs(r.pnl) / maxAbs) * 100;
+    var wrCls = r.winRate >= 60 ? "pos" : r.winRate >= 40 ? "" : "neg";
+    body += '<div class="setup-row'+(r.ranked?"":" thin")+'">'+
+      '<div class="setup-name">'+esc(r.label)+
+        (r.ranked ? "" : '<span class="setup-flag">low sample</span>')+'</div>'+
+      '<div class="setup-n">'+r.total+'</div>'+
+      '<div class="setup-wr '+wrCls+'">'+r.winRate+'%</div>'+
+      '<div class="setup-bar"><div class="setup-fill '+(pos?"pos":"neg")+'" style="width:'+w.toFixed(1)+'%"></div></div>'+
+      '<div class="setup-pnl '+(pos?"pos":"neg")+'">'+(pos?"+":"−")+esc(fmtMoney(Math.abs(r.pnl)))+'</div>'+
+    '</div>';
+  });
+
+  host.innerHTML = head + '<div class="setup-table">'+body+'</div>'+
+    '<div class="meter-note" style="margin-top:var(--sp-3)">Sorted by P&amp;L. Setups with fewer than '+SETUP_MIN_SAMPLE+' trades are dimmed — too small to read anything into.</div>';
 }
 function kp(label,val,cls,sub,d){
   return '<div class="kpi '+cls+' '+d+'">'+
@@ -2378,39 +2800,39 @@ function renderCapital(){
   /* ── 00 Live Capital ── */
   var opCls = openProfit > 0 ? "g" : openProfit < 0 ? "r" : "a";
   document.getElementById("liveKpiStrip").innerHTML =
-    kp("Live Equity", fmtMoney(liveEq), "b",
+    kp("Live equity", fmtMoney(liveEq), "b",
        live.length + " active · " + fmtMoney(liveStart) + " allocated", "d1") +
-    kp("Open Profit", (openProfit>=0?"+":"−")+fmtMoney(Math.abs(openProfit)), opCls,
+    kp("Open profit", (openProfit>=0?"+":"−")+fmtMoney(Math.abs(openProfit)), opCls,
        "unrealised, prop currency", "d2") +
-    kp("Undrawn Profit", fmtMoney(undrawn), undrawn>0?"g":"a",
+    kp("Undrawn profit", fmtMoney(undrawn), undrawn>0?"g":"a",
        "withdrawable from Masters", "d3") +
-    kp("Drawdown Room", worstRoom===null ? "—" : (worstRoom*100).toFixed(0)+"%",
+    kp("Drawdown room", worstRoom===null ? "—" : (worstRoom*100).toFixed(0)+"%",
        worstRoom===null ? "a" : worstRoom<0.25 ? "r" : worstRoom<0.5 ? "a" : "g",
        worstRoom===null ? "no limits set" : "tightest active account", "d4") +
-    kp("Nearest Target", nearestTarget===null ? "—" : (nearestTarget*100).toFixed(0)+"%",
+    kp("Nearest target", nearestTarget===null ? "—" : (nearestTarget*100).toFixed(0)+"%",
        nearestTarget===null ? "a" : "g",
        nearestTarget===null ? "no targets set" : "best evaluation progress", "d5");
 
   /* ── 00 Real Money ── */
   var netCls = net > 0 ? "g" : net < 0 ? "r" : "a";
   document.getElementById("realKpiStrip").innerHTML =
-    kp("Total Payouts", fmtMoney(payouts), "g", "cash withdrawn, all time", "d1") +
-    kp("Fees Paid", fmtMoney(fees), "r",
+    kp("Total payouts", fmtMoney(payouts), "g", "cash withdrawn, all time", "d1") +
+    kp("Fees paid", fmtMoney(fees), "r",
        accs.length + " account" + (accs.length===1?"":"s") + " bought", "d2") +
-    kp("Real Net Profit", (net>=0?"+":"−")+fmtMoney(Math.abs(net)), netCls,
+    kp("Real net profit", (net>=0?"+":"−")+fmtMoney(Math.abs(net)), netCls,
        "payouts − fees", "d3") +
-    kp("This Month", fmtMoney(scoped ? payoutsThisMonth() : ((_data.payouts&&_data.payouts.totalMonth)||0)), "b",
+    kp("This month", fmtMoney(scoped ? payoutsThisMonth() : ((_data.payouts&&_data.payouts.totalMonth)||0)), "b",
        "payouts received", "d4");
 
   /* ── 00 Track Record ── */
   document.getElementById("trackKpiStrip").innerHTML =
-    kp("Accounts Traded", accs.length, "b", "all time", "d1") +
+    kp("Accounts traded", accs.length, "b", "all time", "d1") +
     kp("Passed", nPassed, "g", "evaluations cleared", "d2") +
     kp("Blown", nBlown, "r", "accounts lost", "d3") +
-    kp("Pass Rate", passRate===null ? "—" : passRate+"%",
+    kp("Pass rate", passRate===null ? "—" : passRate+"%",
        passRate===null ? "a" : parseFloat(passRate)>=50 ? "g" : "r",
        attempts ? nPassed+" of "+attempts+" settled" : "none settled yet", "d4") +
-    kp("Sunk Fees", fmtMoney(sunk), "r", "spent on blown accounts", "d5");
+    kp("Sunk fees", fmtMoney(sunk), "r", "spent on blown accounts", "d5");
 }
 
 // Payouts in the current calendar month, respecting the Person filter.
@@ -2432,12 +2854,17 @@ function renderResults(s){
     {l:"Partial TP",   k:"PARTIAL TP",   c:"#5B9CF6"},
     {l:"Manual",       k:"MANUAL CLOSE", c:"#6A6660"},
   ];
-  var maxV = Math.max.apply(null, items.map(function(i){ return s.breakdown[i.k]||0; }))||1;
-  var h = '<div class="ptitle">Result Breakdown</div><div class="psub">Outcome distribution</div>';
+  var h = '<div class="ptitle">Result breakdown</div><div class="psub">Share of every trade in view</div>';
+  if(!s.total){
+    document.getElementById("resultPanel").innerHTML =
+      h + '<div class="empty">No trades match these filters</div>';
+    return;
+  }
   items.forEach(function(it){
     var v   = s.breakdown[it.k]||0;
-    var pct = s.total ? ((v/s.total)*100).toFixed(0) : 0;
-    var w   = ((v/maxV)*100).toFixed(0);
+    var pct = ((v/s.total)*100).toFixed(0);
+    // Bar and percentage share one denominator, so the bar IS the share.
+    var w   = pct;
     h += '<div class="brow">'+
       '<div class="blabel">'+it.l+'</div>'+
       '<div class="btrack"><div class="bfill" style="width:'+w+'%;background:'+it.c+'"></div></div>'+
@@ -2452,7 +2879,7 @@ function renderResults(s){
 function renderMistakes(s){
   var entries = Object.entries(s.mkMap).sort(function(a,b){ return b[1]-a[1]; });
   var maxV    = entries.length ? entries[0][1] : 1;
-  var h = '<div class="ptitle">Mistake Tracker</div><div class="psub">Frequency analysis</div>';
+  var h = '<div class="ptitle">Mistake tracker</div><div class="psub">Most common mistakes in this view</div>';
   if(!entries.length){
     h += '<div class="empty">No mistakes logged ✓</div>';
   } else {
@@ -2475,15 +2902,15 @@ function renderMistakes(s){
 function renderPctKpi(s){
   var overallCls = s.avgPnlPercent>0 ? "g" : s.avgPnlPercent<0 ? "r" : "a";
   document.getElementById("pctKpiStrip").innerHTML =
-    kp("Avg P&amp;L % / Trade", (s.avgPnlPercent>0?"+":"")+s.avgPnlPercent+"%", overallCls, "mean of every trade's %", "d1") +
-    kp("Avg Win %",  "+"+s.avgWinPercent+"%", "g", "average size of a winning trade", "d2") +
-    kp("Avg Loss %", s.avgLossPercent+"%",    "r", "average size of a losing trade",  "d3");
+    kp("Avg P&amp;L % per trade", (s.avgPnlPercent>0?"+":"")+s.avgPnlPercent+"%", overallCls, "mean of every trade's %", "d1") +
+    kp("Avg win %",  "+"+s.avgWinPercent+"%", "g", "average size of a winning trade", "d2") +
+    kp("Avg loss %", s.avgLossPercent+"%",    "r", "average size of a losing trade",  "d3");
 }
 
 function renderPctPerformance(){
   var trades = getFiltered();
-  renderPctGroupPanel("pctAccountPanel", "Avg % by Account", groupTradesByAccount(trades));
-  renderPctGroupPanel("pctPersonPanel",  "Avg % by Person",  groupTradesByPerson(trades));
+  renderPctGroupPanel("pctAccountPanel", "Avg % by account", groupTradesByAccount(trades));
+  renderPctGroupPanel("pctPersonPanel",  "Avg % by person",  groupTradesByPerson(trades));
 }
 
 function groupTradesByAccount(trades){
@@ -2531,29 +2958,70 @@ function renderPctGroupPanel(elId, title, groups){
 }
 
 /* ── DAY GRID ── */
-function renderDays(s){
+/* ── DAY OF WEEK ──
+   Was a raw trade COUNT, with "best" awarded to the busiest day — which
+   reads as "my best day" but only means "the day I traded most". Now the
+   headline is win rate, the bar is P&L, and best means most profitable.
+   Takes the trade array rather than a stats object so it can compute
+   P&L per weekday, which stats().dCount never carried. ── */
+function renderDays(trades){
   var days = ["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY"];
   var lbls = ["Mon","Tue","Wed","Thu","Fri"];
-  var vals = days.map(function(d){ return s.dCount[d]||0; });
-  var maxV = Math.max.apply(null,vals)||1;
-  document.getElementById("dayGrid").innerHTML = days.map(function(d,i){
-    var v = vals[i];
-    var best = v===maxV && v>0;
-    var pips = Array.from({length:Math.min(v,10)}).map(function(){ return '<div class="pip on"></div>'; }).join("");
-    return '<div class="daycell'+(best?" best":"")+'">'+
+
+  var by = {};
+  days.forEach(function(d){ by[d] = { n:0, wins:0, pnl:0 }; });
+  (trades||[]).forEach(function(t){
+    var b = by[t.day];
+    if(!b) return;
+    b.n++;
+    if(t.result === "TP" || t.result === "PARTIAL TP") b.wins++;
+    b.pnl += (t.pnl || 0);
+  });
+
+  var host = document.getElementById("dayGrid");
+  var anyTrades = days.some(function(d){ return by[d].n > 0; });
+  if(!anyTrades){
+    host.innerHTML = '<div class="empty" style="grid-column:1/-1">No trades in view — nothing to compare across weekdays.</div>';
+    return;
+  }
+
+  // Best = most profitable, and only among days with enough trades to
+  // mean anything. Thin days are shown but never crowned.
+  var MIN = 3;
+  var ranked = days.filter(function(d){ return by[d].n >= MIN; });
+  var bestPnl = ranked.length ? Math.max.apply(null, ranked.map(function(d){ return by[d].pnl; })) : null;
+  var maxAbs = Math.max.apply(null, days.map(function(d){ return Math.abs(by[d].pnl); })) || 1;
+
+  host.innerHTML = days.map(function(d,i){
+    var b = by[d];
+    var thin = b.n > 0 && b.n < MIN;
+    var best = bestPnl !== null && b.n >= MIN && b.pnl === bestPnl && b.pnl > 0;
+    var wr = b.n ? Math.round((b.wins / b.n) * 100) : null;
+    var w = (Math.abs(b.pnl) / maxAbs) * 100;
+    var pos = b.pnl >= 0;
+
+    return '<div class="daycell'+(best?" best":"")+(thin?" thin":"")+(b.n?"":" muted")+'"'+
+      ' title="'+esc(lbls[i]+": "+b.n+" trades, "+(wr===null?"—":wr+"% win rate")+", "+fmtMoney(b.pnl))+'">'+
       '<div class="dname">'+lbls[i]+'</div>'+
-      '<div class="dcount">'+v+'</div>'+
-      '<div class="dpips">'+pips+'</div>'+
+      '<div class="dcount">'+(wr===null ? "—" : wr+"%")+'</div>'+
+      '<div class="dbar"><div class="dfill '+(pos?"pos":"neg")+'" style="width:'+w.toFixed(1)+'%"></div></div>'+
+      '<div class="dpnl '+(b.pnl>0?"pos":b.pnl<0?"neg":"")+'">'+(b.pnl>=0?"+":"−")+esc(fmtMoney(Math.abs(b.pnl)))+'</div>'+
+      '<div class="dn">'+b.n+' trade'+(b.n===1?"":"s")+'</div>'+
     '</div>';
   }).join("");
 }
 
 /* ── RR HERO ── */
 function renderRR(s){
-  document.getElementById("rrHero").innerHTML =
+  var host = document.getElementById("rrHero");
+  if(!s.total || !s.avgRR){
+    host.innerHTML = '<div class="empty">No trades with an R:R recorded in this view</div>';
+    return;
+  }
+  host.innerHTML =
     '<div class="rr-pre">1 :</div>'+
     '<div class="rr-num">'+s.avgRR+'</div>'+
-    '<div class="rr-cap">Risk / Reward</div>';
+    '<div class="rr-cap">'+s.total+' trades</div>';
 }
 
 /* ── EQUITY ── */
@@ -2675,6 +3143,27 @@ function fmtMoney(v){
   return sign + "$" + Math.abs(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
 }
 
+/* Shows or clears an empty-state message over a chart WITHOUT removing
+   the <canvas>. Replacing the wrapper's innerHTML (as this used to do)
+   destroyed the canvas permanently — filter down to an account with no
+   trades, filter back, and the chart was gone until you reloaded. */
+function setChartEmpty(canvas, msg){
+  var wrap = canvas.parentNode;
+  var note = wrap.querySelector(".chart-empty");
+  if(msg){
+    if(!note){
+      note = document.createElement("div");
+      note.className = "chart-empty";
+      wrap.appendChild(note);
+    }
+    note.textContent = msg;
+    canvas.style.visibility = "hidden";
+  } else {
+    if(note) note.remove();
+    canvas.style.visibility = "";
+  }
+}
+
 function renderEquity(){
   var eq = computeEquity();
   var pct = eq.pct;
@@ -2700,23 +3189,24 @@ function renderEquity(){
   document.getElementById("equityKpiStrip").innerHTML =
     kp("Total P&amp;L", pct ? (eq.totalPnL>=0?"+":"")+eq.totalPnL.toFixed(2) : fmtMoney(eq.totalPnL), pnlCls,
        pct ? "dollars traded (curve is %)" : "trading result, payouts excluded", "d1") +
-    kp(pct ? "Cumulative %" : "Current Balance",
+    kp(pct ? "Cumulative %" : "Current balance",
        pct ? (eq.currentBalance>=0?"+":"")+eq.currentBalance.toFixed(2)+"%" : fmtMoney(eq.currentBalance), "b",
        pct ? "of each account's own size" : "baseline "+fmtMoney(eq.baseline), "d2") +
-    kp("Max Drawdown",
+    kp("Max drawdown",
        pct ? "−"+eq.maxDrawdown.toFixed(2)+"%" : fmtMoney(-eq.maxDrawdown), "r",
        pct ? "peak to trough" : "peak to trough · "+eq.maxDrawdownPct.toFixed(1)+"% of capital", "d3") +
-    kp("Profit Factor", pfLabel, "a", "gross profit / gross loss", "d4");
+    kp("Profit factor", pfLabel, "a", "gross profit / gross loss", "d4");
 
   var canvas = document.getElementById("equityChart");
   if(!canvas) return;
   if(!eq.hasAny){
     if(_equityChart){ try{_equityChart.destroy();}catch(e){} _equityChart=null; }
-    canvas.parentNode.innerHTML = '<div class="empty" style="height:210px;display:flex;align-items:center;justify-content:center;">'+
-      (eq.accountCount ? 'No trades with P&amp;L logged on these accounts yet'
-                       : 'No accounts in scope — widen the filters or enable “Include closed”')+'</div>';
+    setChartEmpty(canvas, eq.accountCount
+      ? "No trades with P&L logged on these accounts yet"
+      : "No accounts in scope — widen the filters or enable “Include closed”");
     return;
   }
+  setChartEmpty(canvas, null);
   if(_equityChart){ try{_equityChart.destroy();}catch(e){} _equityChart=null; }
   var lineColor = eq.currentBalance>=eq.baseline ? "#3ECFB5" : "#E05252";
   _equityChart = new Chart(canvas, {
@@ -2776,14 +3266,31 @@ function renderEquity(){
 /* ── PAYOUTS mini-panel on Analytics page ── */
 function renderPayoutMiniKpi(){
   var p = (_data && _data.payouts) || {totalAll:0,totalMonth:0,list:[]};
+  // Scoped by Person exactly like the Real Money strip — before v13 this
+  // read the unscoped server totals, so with a Person filter on the page
+  // showed two different values for "This Month".
+  var list = (p.list||[]).filter(function(x){
+    return _filters.person === "all" || x.person === _filters.person;
+  });
+  var totalAll = list.reduce(function(t,x){ return t + (x.amount||0); }, 0);
+  var scoped = _filters.person !== "all";
+  var avg = list.length ? totalAll / list.length : 0;
+
   document.getElementById("payoutMiniKpi").innerHTML =
-    kp("Total Received", fmtMoney(p.totalAll), "g", "all-time, all accounts", "d1") +
-    kp("This Month",     fmtMoney(p.totalMonth), "a", "current calendar month", "d2") +
-    kp("Payout Count",   String((p.list||[]).length), "b", "individual withdrawals", "d3");
+    kp("Total received", fmtMoney(totalAll), "g",
+       scoped ? "all time, " + _filters.person : "all time, every account", "d1") +
+    kp("This month", fmtMoney(payoutsThisMonth()), "a", "current calendar month", "d2") +
+    kp("Withdrawals", String(list.length), "b",
+       list.length ? "averaging " + fmtMoney(avg) : "none logged yet", "d3");
 }
 
 /* ── GAUGE ── */
 function renderCompliance(s){
+  if(!s.total){
+    document.getElementById("gaugeWrap").innerHTML =
+      '<div class="empty">No trades to check against the rules yet</div>';
+    return;
+  }
   var p   = s.compliance;
   var col = p>=75 ? "#3ECFB5" : p>=50 ? "#C8A84B" : "#E05252";
   var r   = 64, cx=80, cy=76;
@@ -2822,9 +3329,10 @@ function renderTrend(){
   if(!canvas) return;
   if(keys.length<1){
     if(_chart){ try{_chart.destroy();}catch(e){} _chart=null; }
-    canvas.parentNode.innerHTML='<div class="empty" style="height:210px;display:flex;align-items:center;justify-content:center;">Insufficient data</div>';
+    setChartEmpty(canvas, "No trades yet — the trend needs at least one month of history.");
     return;
   }
+  setChartEmpty(canvas, null);
   var mn       = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   var labels   = keys.map(function(k){ var p=k.split("-"); return mn[parseInt(p[1])-1]+" '"+p[0].slice(2); });
   var winRates = keys.map(function(k){ var m=mMap[k]; return m.total?parseFloat(((m.wins/m.total)*100).toFixed(1)):0; });
@@ -2858,7 +3366,13 @@ function renderTrend(){
     options:{
       responsive:true, maintainAspectRatio:false,
       plugins:{
-        legend:{display:false},
+        legend:{
+          display:true, position:"top", align:"end",
+          labels:{
+            color:"#AEAAA4", boxWidth:10, boxHeight:2, usePointStyle:false,
+            padding:16, font:{family:"'Sora',sans-serif", size:11},
+          }
+        },
         tooltip:{
           backgroundColor:"#111115",
           borderColor:"rgba(255,255,255,0.08)", borderWidth:1,
@@ -2879,7 +3393,7 @@ function renderTrend(){
         },
         y2:{
           position:"right", grid:{display:false}, border:{color:"transparent"},
-          ticks:{color:"rgba(62,60,56,0.7)", font:{family:"'JetBrains Mono',monospace",size:9}}
+          ticks:{color:"#6A6660", font:{family:"'JetBrains Mono',monospace",size:9}}
         },
         x:{
           grid:{display:false}, border:{color:"rgba(255,255,255,0.05)"},
@@ -2942,6 +3456,7 @@ function renderAccounts(){
     h += '<div class="acc-card">'+
       '<div class="acc-name">'+esc(a.displayLabel)+phaseBadge(a.phase)+statusBadge(a.status)+'</div>'+
       '<div class="acc-wr" style="color:'+col+'">'+(s.total ? s.winRate+"%" : "—")+'</div>'+
+      '<div class="acc-sl acc-wr-lbl">Win rate</div>'+
       '<div class="acc-grid">'+
         '<div><div class="acc-sv">'+s.total+'</div><div class="acc-sl">Trades</div></div>'+
         '<div><div class="acc-sv" style="color:var(--gold)">'+s.compliance+'%</div><div class="acc-sl">Compliance</div></div>'+
@@ -2969,7 +3484,8 @@ function populateRawFilters(){
   personSel.value = curPerson && [...personSel.options].some(o=>o.value===curPerson) ? curPerson : "all";
 
   var curAcc = accSel.value || "all";
-  var accs = (_data.accounts||[]).filter(function(a){ return curPerson==="all" || a.person===curPerson; });
+  var person = personSel.value;   // resolved value, not the pre-rebuild one
+  var accs = (_data.accounts||[]).filter(function(a){ return person==="all" || a.person===person; });
   accSel.innerHTML = '<option value="all">All Accounts</option>' +
     accs.map(function(a){
       var lbl = a.displayLabel + " — " + ((_config&&_config.phaseLabels&&_config.phaseLabels[a.phase])||a.phase) + " · " + ((_config&&_config.statusLabels&&_config.statusLabels[a.status])||a.status);
@@ -3089,9 +3605,9 @@ function onPayoutPersonChange(){
 function renderPayoutsKPI(){
   var p = (_data && _data.payouts) || {totalAll:0,totalMonth:0,list:[]};
   document.getElementById("payoutKpiStrip").innerHTML =
-    kp("Total Received", fmtMoney(p.totalAll), "g", "all-time, all accounts", "d1") +
-    kp("This Month",     fmtMoney(p.totalMonth), "a", "current calendar month", "d2") +
-    kp("Payout Count",   String((p.list||[]).length), "b", "individual withdrawals", "d3");
+    kp("Total received", fmtMoney(p.totalAll), "g", "all-time, all accounts", "d1") +
+    kp("This month",     fmtMoney(p.totalMonth), "a", "current calendar month", "d2") +
+    kp("Payout count",   String((p.list||[]).length), "b", "individual withdrawals", "d3");
 }
 
 function renderPayoutTable(){
