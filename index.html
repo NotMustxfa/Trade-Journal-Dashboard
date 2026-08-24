@@ -1066,6 +1066,10 @@ body::after {
   font-weight: 600; color: var(--txt2);
 }
 .stage-step.cur .stage-name { color: var(--txt); }
+.stage-rules {
+  display: block; font-family: var(--font-mono); font-size: var(--fs-0);
+  font-weight: 400; color: var(--txt4); margin-top: 1px;
+}
 .stage-when { color: var(--txt4); }
 .stage-pnl  { text-align: right; }
 .stage-pnl.pos { color: var(--green); }
@@ -1838,6 +1842,7 @@ body::after {
             <label class="jlabel">Profit Target (%)</label>
             <input class="jinput" type="number" id="aaTarget" min="0" max="1000" step="0.1" placeholder="e.g. 8" oninput="updateAaDerived()">
             <div class="meter-note" id="aaTargetDerived">—</div>
+            <div class="meter-note">For this phase only — you'll enter the next phase's target when you pass.</div>
           </div>
           <div class="jfield" id="aaTargetNote" style="display:none">
             <label class="jlabel">Profit Target</label>
@@ -4303,7 +4308,7 @@ function maccCardHTML(a){
   if(a.status==="ACTIVE"){
     if(nextPhase){
       var nextLbl = (_config.phaseLabels && _config.phaseLabels[nextPhase]) || nextPhase;
-      quickBtns += '<button class="jbtn-sm add" onclick="promoteAccount(\'' + a.accountId + '\', this)">Passed → '+esc(nextLbl)+'</button>';
+      quickBtns += '<button class="jbtn-sm add" id="promoteBtn_'+a.accountId+'" onclick="togglePromote(\'' + a.accountId + '\')">Passed → '+esc(nextLbl)+'</button>';
     } else {
       quickBtns += '<button class="jbtn-sm gold" onclick="quickAccountStatus(\'' + a.accountId + '\',\'PASSED\', this)">Mark Finished</button>';
     }
@@ -4377,6 +4382,7 @@ function maccCardHTML(a){
     '</div>'+
     '<div class="macc-detail-grid">'+cells+'</div>'+
     meters+
+    (a.status==="ACTIVE" && nextPhase ? promoteFormHTML(a, nextPhase) : "")+
     maccEditHTML(a, editing)+
   '</div>';
 }
@@ -4397,9 +4403,13 @@ function stageTimelineHTML(a){
     var when = st.current
       ? "since " + isoToDMY(st.startedAt)
       : (st.endedAt ? isoToDMY(st.endedAt) : isoToDMY(st.startedAt));
+    var rules = [];
+    if(st.targetPct) rules.push(st.targetPct+"% target");
+    if(st.maxDDPct)  rules.push(st.maxDDPct+"% DD");
     return '<div class="stage-step '+cls+'">'+
       '<span class="stage-mark">'+mark+'</span>'+
-      '<span class="stage-name">'+esc(lbl)+'</span>'+
+      '<span class="stage-name">'+esc(lbl)+
+        (rules.length ? '<span class="stage-rules">'+esc(rules.join(" · "))+'</span>' : '')+'</span>'+
       '<span class="stage-when">'+esc(when)+'</span>'+
       '<span class="stage-pnl '+(pnl>0?"pos":pnl<0?"neg":"")+'">'+(pnl>=0?"+":"−")+esc(fmtMoney(Math.abs(pnl)))+'</span>'+
       '<span class="stage-n">'+st.trades+'t</span>'+
@@ -4414,30 +4424,98 @@ function stageTimelineHTML(a){
   '</div>';
 }
 
-/* Moves an account to its next phase. The balance resets to the account
-   size for the new stage — that is what the firm gives you — while every
-   statistic keeps counting the earlier phases. */
-function promoteAccount(accountId, btn){
+/* Opens the promote form on a card. The rules for the next phase have
+   to be entered here rather than carried forward: a firm that asks 8%
+   to clear Phase 1 typically asks 6% for Phase 2, and the drawdown
+   limit often changes on the way to funded. */
+function togglePromote(accountId){
+  var panel = document.getElementById("promote_"+accountId);
+  if(!panel) return;
+  var open = !panel.classList.contains("show");
+  panel.classList.toggle("show", open);
+  var btn = document.getElementById("promoteBtn_"+accountId);
+  if(btn && open) btn.textContent = "Cancel";
+  else if(btn){
+    var a = _accountsById[accountId];
+    var order = (_config.phases||["PHASE_1","PHASE_2","MASTER"]);
+    var nx = a ? order[order.indexOf(a.phase)+1] : null;
+    btn.textContent = "Passed → " + ((_config.phaseLabels && _config.phaseLabels[nx]) || nx);
+  }
+}
+
+function promoteFormHTML(a, nextPhase){
+  var id = a.accountId;
+  var nextLbl = (_config.phaseLabels && _config.phaseLabels[nextPhase]) || nextPhase;
+  var toMaster = nextPhase === "MASTER";
+  var ddOpts = ((_config.ddTypes)||["STATIC","TRAILING"]).map(function(dt){
+    var lbl = (_config.ddTypeLabels && _config.ddTypeLabels[dt]) || dt;
+    return '<option value="'+dt+'"'+(dt===(a.ddType||"STATIC")?" selected":"")+'>'+esc(lbl)+'</option>';
+  }).join("");
+
+  return '<div class="macc-edit" id="promote_'+id+'">'+
+    '<div class="psub" style="margin-bottom:var(--sp-3)">Moving to '+esc(nextLbl)+
+      ' — the balance resets to '+esc(fmtMoney(a.startingBalance||0))+
+      ' and every trade so far keeps counting toward your stats.</div>'+
+    '<div class="jgrid">'+
+      '<div class="jfield"><label class="jlabel">Date passed</label>'+
+        '<input class="jinput" type="text" id="promoDate_'+id+'" readonly placeholder="dd/mm/yyyy" '+
+          'onclick="openDatePicker(\'promoDate_'+id+'\')"></div>'+
+      (toMaster
+        ? '<div class="jfield"><label class="jlabel">Profit target</label>'+
+            '<div class="jstatus">Not applicable</div>'+
+            '<div class="meter-note">Funded — you withdraw what you make.</div></div>'
+        : '<div class="jfield"><label class="jlabel">'+esc(nextLbl)+' profit target (%)</label>'+
+            '<input class="jinput" type="number" id="promoTarget_'+id+'" value="" min="0" max="1000" step="0.1" placeholder="e.g. 6">'+
+            '<div class="meter-note">The target for the NEW phase</div></div>')+
+    '</div>'+
+    '<div class="jgrid" style="margin-top:var(--sp-3)">'+
+      '<div class="jfield"><label class="jlabel">'+esc(nextLbl)+' max drawdown (%)</label>'+
+        '<input class="jinput" type="number" id="promoMaxDD_'+id+'" value="'+(a.maxDDPct||0)+'" min="0" max="100" step="0.1">'+
+        '<div class="meter-note">0 = not tracked</div></div>'+
+      '<div class="jfield"><label class="jlabel">Drawdown type</label>'+
+        '<select class="jselect" id="promoDDType_'+id+'">'+ddOpts+'</select></div>'+
+      '<div class="jfield"></div>'+
+    '</div>'+
+    '<div class="jactions" style="margin-top:var(--sp-4)">'+
+      '<button class="jsubmit-btn" onclick="submitPromote(\'' + id + '\', this)">Move to '+esc(nextLbl)+'</button></div>'+
+    '<div class="jerr" id="promoErr_'+id+'"></div>'+
+  '</div>';
+}
+
+function submitPromote(accountId, btn){
   var a = _accountsById[accountId];
   if(!a) return;
-  var order = (_config.phases || ["PHASE_1","PHASE_2","MASTER"]);
-  var next  = order[order.indexOf(a.phase) + 1];
+  var order = (_config.phases||["PHASE_1","PHASE_2","MASTER"]);
+  var next  = order[order.indexOf(a.phase)+1];
   if(!next) return;
-  var nextLbl = (_config.phaseLabels && _config.phaseLabels[next]) || next;
+  var toMaster = next === "MASTER";
 
-  var msg = "Move \"" + (a.accountName||"this account") + "\" forward to " + nextLbl + "?\n\n" +
-    "• The balance resets to " + fmtMoney(a.startingBalance) + " for the new stage — that's what the firm gives you.\n" +
-    "• Every trade you've already logged still counts toward win rate, R:R and compliance.\n" +
-    "• No new account is created, so the fee is still counted once.\n\n" +
-    "Trades dated on or after today will belong to " + nextLbl + ".";
-  if(!confirm(msg)) return;
+  var v = function(pre){ var el = document.getElementById(pre+"_"+accountId); return el ? el.value : null; };
+  var err = document.getElementById("promoErr_"+accountId);
+  err.textContent = "";
+
+  var iso = getDateISO("promoDate_"+accountId) || todayISO();
+  var size   = a.startingBalance || 0;   // unchanged — see the Edit panel to resize
+  var target = toMaster ? "0" : (v("promoTarget") || "0");
+  var maxDD  = v("promoMaxDD") || "0";
+  var ddType = v("promoDDType") || "STATIC";
+
+  if(parseFloat(target) < 0 || parseFloat(target) > 1000){
+    err.textContent = "Profit target must be between 0 and 1000%."; return;
+  }
+  if(parseFloat(maxDD) < 0 || parseFloat(maxDD) > 100){
+    err.textContent = "Max drawdown must be between 0 and 100%."; return;
+  }
 
   var done = btnLoading(btn, "Moving");
   jsonp(APPS_SCRIPT_URL + "?action=promoteAccount&token=" + encodeURIComponent(_tok) +
         "&accountId=" + encodeURIComponent(accountId) +
-        "&date=" + encodeURIComponent(todayISO()) +
-        "&size=" + encodeURIComponent(a.startingBalance || 0), function(d){
-    if(!d || !d.success){ done(); alert((d&&d.error)||"Could not move the account forward."); return; }
+        "&date="      + encodeURIComponent(iso) +
+        "&size="      + encodeURIComponent(size) +
+        "&targetPct=" + encodeURIComponent(target) +
+        "&maxDDPct="  + encodeURIComponent(maxDD) +
+        "&ddType="    + encodeURIComponent(ddType), function(d){
+    if(!d || !d.success){ done(); err.textContent = (d && d.error) || "Could not move the account forward."; return; }
     refreshAccountsList();
     refreshDashboardQuietly(function(){ renderManageAccounts(); });
   });
