@@ -1044,6 +1044,27 @@ body::after {
 .meter-fill.gold { background: linear-gradient(90deg, var(--gold-dk, var(--gold)), var(--gold)); }
 .meter-note { font-family: var(--font-mono); font-size: var(--fs-0); color: var(--txt4); margin-top: 5px; }
 
+/* ── Analytics sub-tabs ──
+   The four groups used to stack into one long scroll. Same visual
+   language as .navtab so it reads as one level down, not a new idea. ── */
+.subnav {
+  display: flex; gap: var(--sp-1); flex-wrap: wrap;
+  margin-bottom: var(--sp-5); padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--border2);
+}
+.subtab {
+  font-family: var(--font-display); font-size: var(--fs-2); font-weight: 600;
+  letter-spacing: var(--tr-label);
+  padding: var(--sp-2) var(--sp-4); border-radius: var(--r-pill);
+  background: none; border: 1px solid transparent; color: var(--txt3);
+  cursor: pointer; transition: all 0.16s var(--ease);
+}
+.subtab:hover { color: var(--txt); background: var(--bg3); }
+.subtab.active {
+  background: var(--gold-bg); color: var(--gold);
+  border-color: var(--gold-rim); font-weight: 700;
+}
+
 /* ── Stage timeline on the account card ── */
 .stage-timeline {
   margin-top: var(--sp-4); padding-top: var(--sp-3);
@@ -1512,8 +1533,15 @@ body::after {
          steps down from here, instead of 19 equally loud tiles. -->
     <div class="kpi-strip k3 hero-strip" id="heroKpiStrip"></div>
 
+    <div class="subnav" id="analyticsSubnav">
+      <button class="subtab" data-t="money"       onclick="showAnalyticsTab('money')">Money</button>
+      <button class="subtab" data-t="performance" onclick="showAnalyticsTab('performance')">Performance</button>
+      <button class="subtab" data-t="behaviour"   onclick="showAnalyticsTab('behaviour')">Behaviour</button>
+      <button class="subtab" data-t="detail"      onclick="showAnalyticsTab('detail')">Detail</button>
+    </div>
+
     <!-- ═══════════ MONEY ═══════════ -->
-    <div class="group">
+    <div class="group" id="agroup-money">
       <div class="group-header">
         <div class="group-title">Money</div>
         <div class="group-line"></div>
@@ -1579,7 +1607,7 @@ body::after {
     </div>
 
     <!-- ═══════════ PERFORMANCE ═══════════ -->
-    <div class="group">
+    <div class="group" id="agroup-performance">
       <div class="group-header">
         <div class="group-title">Performance</div>
         <div class="group-line"></div>
@@ -1646,7 +1674,7 @@ body::after {
     </div>
 
     <!-- ═══════════ BEHAVIOUR ═══════════ -->
-    <div class="group">
+    <div class="group" id="agroup-behaviour">
       <div class="group-header">
         <div class="group-title">Behaviour</div>
         <div class="group-line"></div>
@@ -1712,7 +1740,7 @@ body::after {
     </div>
 
     <!-- ═══════════ DETAIL ═══════════ -->
-    <div class="group">
+    <div class="group" id="agroup-detail">
       <div class="group-header">
         <div class="group-title">Detail</div>
         <div class="group-line"></div>
@@ -1794,16 +1822,32 @@ body::after {
         </div>
         <div class="jfield">
           <label class="jlabel">Master Account</label>
-          <select class="jselect" id="poAccount"></select>
+          <select class="jselect" id="poAccount" onchange="onPayoutAccountChange()"></select>
         </div>
         <div class="jgrid" style="grid-template-columns:1fr 1fr;">
-          <div class="jfield"><label class="jlabel">Amount ($)</label><input class="jinput" type="number" id="poAmount" min="0.01" step="0.01" placeholder="0.00"></div>
+          <div class="jfield">
+            <label class="jlabel">Amount withdrawn ($)</label>
+            <input class="jinput" type="number" id="poAmount" min="0.01" step="0.01" placeholder="0.00" oninput="updatePayoutSplit()">
+            <div class="meter-note">Gross — the full amount leaving the account</div>
+          </div>
           <div class="jfield">
             <label class="jlabel">Date</label>
             <div class="datepicker-wrap">
               <input class="jinput" type="text" id="poDate" readonly placeholder="dd/mm/yyyy" onclick="openDatePicker('poDate')">
               <span class="dp-icon">📅</span>
             </div>
+          </div>
+        </div>
+        <div class="jgrid" style="grid-template-columns:1fr 1fr;">
+          <div class="jfield">
+            <label class="jlabel">Your split (%)</label>
+            <input class="jinput" type="number" id="poSplit" min="0" max="100" step="0.1" placeholder="e.g. 80" oninput="updatePayoutSplit()">
+            <div class="meter-note">Blank or 0 = you keep it all</div>
+          </div>
+          <div class="jfield">
+            <label class="jlabel">You keep</label>
+            <div class="jstatus" id="poNet">—</div>
+            <div class="meter-note" id="poNetNote">After the firm's cut</div>
           </div>
         </div>
         <div class="jfield"><label class="jlabel">Notes</label><input class="jinput" type="text" id="poNotes" placeholder="optional"></div>
@@ -1848,6 +1892,11 @@ body::after {
             <label class="jlabel">Profit Target</label>
             <div class="jstatus">Not applicable</div>
             <div class="meter-note">A funded account has no target — you withdraw whatever you make.</div>
+          </div>
+          <div class="jfield" id="aaSplitField" style="display:none">
+            <label class="jlabel">Profit Split (%)</label>
+            <input class="jinput" type="number" id="aaSplit" min="0" max="100" step="0.1" placeholder="e.g. 80">
+            <div class="meter-note">Your share of each payout. 0 = you keep it all.</div>
           </div>
           <div class="jfield">
             <label class="jlabel">Max Drawdown (%)</label>
@@ -2049,6 +2098,7 @@ var _equityUnit = "abs";               // "abs" ($) | "pct" (% of account size)
 var _equityIncludeClosed = false;      // active accounts only by default
 var _setupDim = "pair";                // Setup Performance dimension
 var _maccShowRemoved = false;          // soft-deleted accounts are hidden by default
+var _analyticsTab = "money";           // which analytics group is showing
 
 var PHASE_BADGE_CLASS  = { PHASE_1:"p1", PHASE_2:"p2", MASTER:"master" };
 var STATUS_BADGE_CLASS = { ACTIVE:"active", PASSED:"passed", BLOWN:"blown", REMOVED:"removed" };
@@ -2172,6 +2222,8 @@ function loadViewPrefs(){
     var sd = localStorage.getItem("tj_setupDim");
     if(sd) _setupDim = sd;
     _maccShowRemoved = localStorage.getItem("tj_maccRemoved") === "1";
+    var at = localStorage.getItem("tj_analyticsTab");
+    if(at) _analyticsTab = at;
   } catch(e){}
 }
 
@@ -2209,7 +2261,7 @@ function buildTicker(){
   if(cap){
     items.push({k:"Real Net Profit", v:(cap.realNetProfit>=0?"+":"−")+fmtMoney(Math.abs(cap.realNetProfit)),
                 cls:cap.realNetProfit>=0?"up":"dn"});
-    items.push({k:"Live Equity", v:fmtMoney(cap.liveEquity), cls:""});
+    items.push({k:"Live Equity", v:fmtMoney(cap.masterEquity !== undefined ? cap.masterEquity : cap.liveEquity), cls:""});
     items.push({k:"Undrawn", v:fmtMoney(cap.liveUndrawnProfit), cls:cap.liveUndrawnProfit>0?"up":""});
     if(cap.passRate !== null && cap.passRate !== undefined){
       items.push({k:"Pass Rate", v:cap.passRate+"%", cls:cap.passRate>=50?"up":"dn"});
@@ -2529,6 +2581,40 @@ function fbFromPicked(iso){ setCustomDate("from", iso); }
 function fbToPicked(iso){ setCustomDate("to", iso); }
 
 /* ── RENDER DASHBOARD ── */
+/* ── ANALYTICS SUB-TABS ──
+   Shows one group at a time. Everything still renders on every pass —
+   it is fast and keeps switching instant — only visibility changes.
+
+   ⚠️ Chart.js measures its canvas when it draws, and a canvas inside a
+   display:none container measures ZERO. The equity chart lives in Money
+   and the trend chart in Performance, so whichever chart just became
+   visible has to be resized or it renders as a sliver. ── */
+var ANALYTICS_TABS = ["money","performance","behaviour","detail"];
+
+function showAnalyticsTab(name){
+  if(ANALYTICS_TABS.indexOf(name) === -1) name = "money";
+  _analyticsTab = name;
+  try { localStorage.setItem("tj_analyticsTab", name); } catch(e){}
+  syncAnalyticsTab();
+}
+
+function syncAnalyticsTab(){
+  ANALYTICS_TABS.forEach(function(t){
+    var el = document.getElementById("agroup-"+t);
+    if(el) el.style.display = (t === _analyticsTab) ? "" : "none";
+  });
+  document.querySelectorAll("#analyticsSubnav .subtab").forEach(function(b){
+    b.classList.toggle("active", b.dataset.t === _analyticsTab);
+  });
+  // The newly-visible chart now has real width; make it use it.
+  if(_analyticsTab === "money" && _equityChart){
+    try { _equityChart.resize(); } catch(e){}
+  }
+  if(_analyticsTab === "performance" && _chart){
+    try { _chart.resize(); } catch(e){}
+  }
+}
+
 function renderDashboard(){
   var trades = getFiltered();
   var s = stats(trades);
@@ -2542,6 +2628,7 @@ function renderDashboard(){
   renderTrend(); renderWeekly(); renderAccounts(); renderEquity();
   renderPayoutMiniKpi();
   onRawFilterChange();
+  syncAnalyticsTab();
 }
 
 /* ── STATS ──
@@ -2604,11 +2691,21 @@ function renderHero(s){
   var accs = (_data.accounts || []).filter(function(a){
     return _filters.person === "all" || a.person === _filters.person;
   });
-  var net = accs.reduce(function(t,a){ return t + (a.paidOut||0) - (a.cost||0); }, 0);
-  var liveEq = accs.reduce(function(t,a){
-    return t + (a.status === "ACTIVE" ? (a.currentBalance||0) : 0);
+  // REMOVED rows are merged-away or deleted; they contribute to nothing.
+  var real = accs.filter(function(a){ return a.status !== "REMOVED"; });
+  // netPaidOut is what you actually kept after the firm's cut; paidOut is
+  // the gross that left the account and drives its balance.
+  var net = real.reduce(function(t,a){
+    var kept = a.netPaidOut !== undefined ? a.netPaidOut : (a.paidOut||0);
+    return t + kept - (a.cost||0);
   }, 0);
-  var nLive = accs.filter(function(a){ return a.status === "ACTIVE"; }).length;
+
+  // Live equity is MASTER accounts only — an evaluation balance can never
+  // become money. This tile used to sum every active account, so it
+  // disagreed with Money → Live capital by the size of every open eval.
+  var live = real.filter(function(a){ return a.status === "ACTIVE" && a.phase === "MASTER"; });
+  var liveEq = live.reduce(function(t,a){ return t + (a.currentBalance||0); }, 0);
+  var nLive = live.length;
 
   document.getElementById("heroKpiStrip").innerHTML =
     kp("Real net profit",
@@ -2616,7 +2713,7 @@ function renderHero(s){
        net>0?"g":net<0?"r":"a",
        "payouts received − challenge fees", "d1 hero") +
     kp("Live equity", fmtMoney(liveEq), "b",
-       nLive + " active account" + (nLive===1?"":"s"), "d2 hero") +
+       nLive + " funded account" + (nLive===1?"":"s") + " · payout-capable", "d2 hero") +
     kp("Win rate", s.total ? s.winRate+"%" : "—",
        s.total ? (s.winRate>=50?"g":"a") : "a",
        s.total ? s.total+" trades in view" : "no trades in view", "d3 hero");
@@ -3031,14 +3128,17 @@ function renderCapital(){
   // can never turn into money. Only a funded (Master) account pays out,
   // so the two are never summed into one "equity" figure.
   var totalEq = 0, masterEq = 0, evalEq = 0;
-  var nMaster = 0, nEval = 0;
+  var nMaster = 0, nEval = 0, nUnderwater = 0;
   var undrawn = 0, worstRoom = null;
   live.forEach(function(a){
     totalEq += a.currentBalance || 0;
     if(a.phase === "MASTER"){
       masterEq += a.currentBalance || 0;
       nMaster++;
-      undrawn  += a.undrawnProfit || 0;
+      // Floored at zero per account: you cannot withdraw a loss. Summing
+      // raw undrawnProfit produced a negative "withdrawable right now".
+      undrawn  += Math.max(a.undrawnProfit || 0, 0);
+      if((a.undrawnProfit || 0) < 0) nUnderwater++;
     } else {
       evalEq += a.currentBalance || 0;
       nEval++;
@@ -3049,7 +3149,7 @@ function renderCapital(){
     }
   });
 
-  var payouts = 0, fees = 0, sunk = 0;
+  var payouts = 0, grossPayouts = 0, fees = 0, sunk = 0;
   // Evaluations and funded accounts are counted apart: blowing a funded
   // account is not the same event as failing an evaluation, and mixing
   // them is what made the old pass rate wrong.
@@ -3065,8 +3165,9 @@ function renderCapital(){
     if(a.status === "REMOVED") return;
     everTraded++;
 
-    payouts += a.paidOut || 0;
-    fees    += a.cost    || 0;
+    payouts     += (a.netPaidOut !== undefined ? a.netPaidOut : (a.paidOut||0));
+    grossPayouts += a.paidOut || 0;
+    fees        += a.cost    || 0;
     if(a.status === "BLOWN") sunk += a.cost || 0;
 
     // With v15 stages an account carries its own journey, so a Master
@@ -3117,7 +3218,9 @@ function renderCapital(){
     kp("Live equity", fmtMoney(masterEq), nMaster ? "g" : "a",
        nMaster ? "payout-capable capital" : "no funded accounts yet", "d2") +
     kp("Undrawn profit", fmtMoney(undrawn), undrawn>0?"g":"a",
-       "withdrawable right now", "d3") +
+       nUnderwater
+         ? "withdrawable now · " + nUnderwater + " Master" + (nUnderwater===1?"":"s") + " below funded size"
+         : "withdrawable right now", "d3") +
     kp("Open profit", (openProfit>=0?"+":"−")+fmtMoney(Math.abs(openProfit)), opCls,
        "unrealised, prop currency", "d4") +
     kp("Drawdown room", worstRoom===null ? "—" : (worstRoom*100).toFixed(0)+"%",
@@ -3127,7 +3230,10 @@ function renderCapital(){
   /* ── Real money ── */
   var netCls = net > 0 ? "g" : net < 0 ? "r" : "a";
   document.getElementById("realKpiStrip").innerHTML =
-    kp("Total payouts", fmtMoney(payouts), "g", "cash withdrawn, all time", "d1") +
+    kp("Total payouts", fmtMoney(payouts), "g",
+       grossPayouts > payouts
+         ? "kept, after the firm's cut · " + fmtMoney(grossPayouts) + " withdrawn"
+         : "cash withdrawn, all time", "d1") +
     kp("Fees paid", fmtMoney(fees), "r",
        everTraded + " account" + (everTraded===1?"":"s") + " bought", "d2") +
     kp("Real net profit", (net>=0?"+":"−")+fmtMoney(Math.abs(net)), netCls,
@@ -3212,7 +3318,7 @@ function payoutsThisMonth(){
   return ((_data.payouts && _data.payouts.list) || []).reduce(function(sum, p){
     if(String(p.date).slice(0,7) !== mk) return sum;
     if(_filters.person !== "all" && p.person !== _filters.person) return sum;
-    return sum + (p.amount || 0);
+    return sum + (p.netAmount !== undefined ? p.netAmount : (p.amount || 0));
   }, 0);
 }
 
@@ -3562,9 +3668,10 @@ function renderEquity(){
   document.getElementById("equityKpiStrip").innerHTML =
     kp("Total P&amp;L", pct ? (eq.totalPnL>=0?"+":"")+eq.totalPnL.toFixed(2) : fmtMoney(eq.totalPnL), pnlCls,
        pct ? "dollars traded (curve is %)" : "trading result, payouts excluded", "d1") +
-    kp(pct ? "Cumulative %" : "Current balance",
+    kp(pct ? "Cumulative %" : "Curve end",
        pct ? (eq.currentBalance>=0?"+":"")+eq.currentBalance.toFixed(2)+"%" : fmtMoney(eq.currentBalance), "b",
-       pct ? "of each account's own size" : "baseline "+fmtMoney(eq.baseline), "d2") +
+       pct ? "of each account's own size"
+           : "baseline "+fmtMoney(eq.baseline)+" · lifetime, not your live balance", "d2") +
     kp("Max drawdown",
        pct ? "−"+eq.maxDrawdown.toFixed(2)+"%" : fmtMoney(-eq.maxDrawdown), "r",
        pct ? "peak to trough" : "peak to trough · "+eq.maxDrawdownPct.toFixed(1)+"% of capital", "d3") +
@@ -3645,13 +3752,18 @@ function renderPayoutMiniKpi(){
   var list = (p.list||[]).filter(function(x){
     return _filters.person === "all" || x.person === _filters.person;
   });
-  var totalAll = list.reduce(function(t,x){ return t + (x.amount||0); }, 0);
+  var totalAll = list.reduce(function(t,x){
+    return t + (x.netAmount !== undefined ? x.netAmount : (x.amount||0));
+  }, 0);
+  var grossAll = list.reduce(function(t,x){ return t + (x.amount||0); }, 0);
   var scoped = _filters.person !== "all";
   var avg = list.length ? totalAll / list.length : 0;
 
   document.getElementById("payoutMiniKpi").innerHTML =
     kp("Total received", fmtMoney(totalAll), "g",
-       scoped ? "all time, " + _filters.person : "all time, every account", "d1") +
+       grossAll > totalAll
+         ? "net of the firm's cut · " + fmtMoney(grossAll) + " withdrawn"
+         : (scoped ? "all time, " + _filters.person : "all time, every account"), "d1") +
     kp("This month", fmtMoney(payoutsThisMonth()), "a", "current calendar month", "d2") +
     kp("Withdrawals", String(list.length), "b",
        list.length ? "averaging " + fmtMoney(avg) : "none logged yet", "d3");
@@ -3966,6 +4078,7 @@ function onPayoutPersonChange(){
   if(!masters.length){
     sel.innerHTML = '<option value="">— no Master accounts yet —</option>';
     sel.disabled = true;
+    updatePayoutSplit();
     return;
   }
   sel.disabled = false;
@@ -3973,14 +4086,46 @@ function onPayoutPersonChange(){
     var lbl = a.name + " (" + ((_config&&_config.statusLabels&&_config.statusLabels[a.status])||a.status) + ")";
     return '<option value="'+esc(a.id)+'">'+esc(lbl)+'</option>';
   }).join("");
+  onPayoutAccountChange();
+}
+
+/* The split is a firm rule stored on the Master account, so picking the
+   account pre-fills it. It stays editable for a one-off. */
+function onPayoutAccountChange(){
+  var accId = document.getElementById("poAccount").value;
+  var p     = document.getElementById("poPerson").value;
+  var acc   = (_accountsByPerson[p]||[]).filter(function(a){ return a.id === accId; })[0];
+  var el    = document.getElementById("poSplit");
+  if(el && acc && acc.splitPct) el.value = acc.splitPct;
+  updatePayoutSplit();
+}
+
+function updatePayoutSplit(){
+  var amt   = parseFloat(document.getElementById("poAmount").value) || 0;
+  var split = parseFloat(document.getElementById("poSplit").value);
+  var net   = document.getElementById("poNet");
+  var note  = document.getElementById("poNetNote");
+  if(!net) return;
+
+  // 0 / blank means no split recorded, which is treated as keeping it all.
+  var effective = (isNaN(split) || split <= 0 || split > 100) ? 100 : split;
+  if(!amt){ net.textContent = "—"; note.textContent = "Enter an amount"; return; }
+
+  var keep = amt * (effective / 100);
+  net.textContent = fmtMoney(keep);
+  note.textContent = effective === 100
+    ? "No split — you keep the full amount"
+    : "Firm takes " + fmtMoney(amt - keep) + " (" + (100 - effective).toFixed(0) + "%)";
 }
 
 function renderPayoutsKPI(){
-  var p = (_data && _data.payouts) || {totalAll:0,totalMonth:0,list:[]};
+  var p = (_data && _data.payouts) || {totalAll:0,totalMonth:0,grossAll:0,list:[]};
+  var gross = p.grossAll !== undefined ? p.grossAll : p.totalAll;
   document.getElementById("payoutKpiStrip").innerHTML =
-    kp("Total received", fmtMoney(p.totalAll), "g", "all-time, all accounts", "d1") +
-    kp("This month",     fmtMoney(p.totalMonth), "a", "current calendar month", "d2") +
-    kp("Payout count",   String((p.list||[]).length), "b", "individual withdrawals", "d3");
+    kp("Total received", fmtMoney(p.totalAll), "g",
+       gross > p.totalAll ? "net of the firm's cut · " + fmtMoney(gross) + " withdrawn" : "all-time, all accounts", "d1") +
+    kp("This month", fmtMoney(p.totalMonth), "a", "current calendar month, net", "d2") +
+    kp("Payout count", String((p.list||[]).length), "b", "individual withdrawals", "d3");
 }
 
 function renderPayoutTable(){
@@ -3989,17 +4134,22 @@ function renderPayoutTable(){
     document.getElementById("payoutTable").innerHTML = '<div class="empty">No payouts logged yet</div>';
     return;
   }
+  // Gross is what left the prop account; net is what reached you.
   var h = '<table class="wtable"><thead><tr>'+
-    '<th>Date</th><th>Person</th><th>Account</th><th>Amount</th><th>Notes</th><th></th>'+
+    '<th>Date</th><th>Person</th><th>Account</th><th>Withdrawn</th><th>Split</th><th>You kept</th><th>Notes</th><th></th>'+
     '</tr></thead><tbody>';
   list.forEach(function(p){
     var acc = _accountsById[p.accountId];
     var statusTag = acc ? statusBadge(acc.status) : "";
+    var split = p.splitPct || 100;
+    var net   = p.netAmount !== undefined ? p.netAmount : p.amount;
     h += '<tr>'+
       '<td>'+esc(isoToDMY(p.date))+'</td>'+
       '<td>'+esc(p.person)+'</td>'+
       '<td>'+esc(p.accountName)+' '+statusTag+'</td>'+
-      '<td style="color:var(--green);font-weight:700;">'+fmtMoney(p.amount)+'</td>'+
+      '<td style="color:var(--txt2)">'+fmtMoney(p.amount)+'</td>'+
+      '<td style="color:'+(split===100?"var(--txt4)":"var(--gold)")+'">'+(split===100?"—":split+"%")+'</td>'+
+      '<td style="color:var(--green);font-weight:700;">'+fmtMoney(net)+'</td>'+
       '<td style="color:var(--txt3)">'+esc(p.notes||"—")+'</td>'+
       '<td><button class="jbtn-sm remove" onclick="removePayout(\''+p.id+'\', this)">Delete</button></td>'+
     '</tr>';
@@ -4021,6 +4171,7 @@ function submitPayout(btn){
   var person    = document.getElementById("poPerson").value;
   var accountId = document.getElementById("poAccount").value;
   var amount    = document.getElementById("poAmount").value;
+  var split     = document.getElementById("poSplit").value;
   var date      = getDateISO("poDate");
   var notes     = document.getElementById("poNotes").value;
 
@@ -4034,6 +4185,7 @@ function submitPayout(btn){
     "&person=" + encodeURIComponent(person) +
     "&accountId=" + encodeURIComponent(accountId) +
     "&amount=" + encodeURIComponent(amount) +
+    "&splitPct=" + encodeURIComponent(split || "0") +
     "&date=" + encodeURIComponent(date) +
     "&notes=" + encodeURIComponent(notes);
 
@@ -4047,6 +4199,7 @@ function submitPayout(btn){
     document.getElementById("poOk").textContent = "Payout saved ✓";
     document.getElementById("poAmount").value = "";
     document.getElementById("poNotes").value = "";
+    updatePayoutSplit();   // split stays — same firm, same rule
     refreshDashboardQuietly(function(){
       renderPayoutsKPI(); renderPayoutTable(); renderPayoutByPerson();
     });
@@ -4105,6 +4258,9 @@ function updateAaDerived(){
   var n = document.getElementById("aaTargetNote");
   if(f) f.style.display = isMaster ? "none" : "";
   if(n) n.style.display = isMaster ? "" : "none";
+  // Only a funded account ever pays out, so only it needs a split.
+  var sp = document.getElementById("aaSplitField");
+  if(sp) sp.style.display = isMaster ? "" : "none";
 }
 
 function submitAddAccount(btn){
@@ -4116,6 +4272,8 @@ function submitAddAccount(btn){
   var target  = phase === "MASTER" ? "0" : document.getElementById("aaTarget").value;
   var maxDD   = document.getElementById("aaMaxDD").value;
   var ddType  = document.getElementById("aaDDType").value;
+  var splitEl = document.getElementById("aaSplit");
+  var split   = (phase === "MASTER" && splitEl) ? (splitEl.value || "0") : "0";
 
   document.getElementById("aaErr").textContent = "";
   document.getElementById("aaOk").textContent = "";
@@ -4130,7 +4288,8 @@ function submitAddAccount(btn){
     "&cost=" + encodeURIComponent(cost || "0") +
     "&targetPct=" + encodeURIComponent(target || "0") +
     "&maxDDPct=" + encodeURIComponent(maxDD || "0") +
-    "&ddType=" + encodeURIComponent(ddType || "STATIC");
+    "&ddType=" + encodeURIComponent(ddType || "STATIC") +
+    "&splitPct=" + encodeURIComponent(split);
 
   var done = btnLoading(btn, "Adding");
   jsonp(APPS_SCRIPT_URL + "?action=addAccount&" + params, function(d){
@@ -4267,9 +4426,14 @@ function renderMaccSummary(){
 
   var liveEq = live.reduce(function(s,a){ return s + (a.currentBalance||0); }, 0);
   var undrawn = live.reduce(function(s,a){ return s + (a.phase==="MASTER" ? (a.undrawnProfit||0) : 0); }, 0);
-  var paid = accs.reduce(function(s,a){ return s + (a.paidOut||0); }, 0);
+  // Gross left the accounts; net is what you kept. The tiles below need
+  // both — "Paid Out" is the account ledger, "Real Net Profit" is money.
+  var paid    = accs.reduce(function(s,a){ return s + (a.paidOut||0); }, 0);
+  var paidNet = accs.reduce(function(s,a){
+    return s + (a.netPaidOut !== undefined ? a.netPaidOut : (a.paidOut||0));
+  }, 0);
   var fees = accs.reduce(function(s,a){ return s + (a.cost||0); }, 0);
-  var net  = paid - fees;
+  var net  = paidNet - fees;
 
   var nActive = live.length;
   var nPassed = accs.filter(function(a){ return a.status==="PASSED"; }).length;
@@ -4608,6 +4772,10 @@ function maccEditHTML(a, editing){
         '<label class="jlabel">Profit Target</label>'+
         '<div class="jstatus">Not applicable</div>'+
         '<div class="meter-note">Funded accounts have no target — profit is withdrawn.</div></div>'+
+      '<div class="jfield" id="edtSplitField_'+id+'"'+(a.phase==="MASTER"?'':' style="display:none"')+'>'+
+        '<label class="jlabel">Profit Split (%)</label>'+
+        '<input class="jinput" type="number" id="edtSplit_'+id+'" value="'+(a.splitPct||0)+'" min="0" max="100" step="0.1">'+
+        '<div class="meter-note">Your share of each payout. 0 = keep it all.</div></div>'+
       '<div class="jfield"><label class="jlabel">Max Drawdown (%)</label>'+
         '<input class="jinput" type="number" id="edtMaxDD_'+id+'" value="'+(a.maxDDPct||0)+'" min="0" max="100" step="0.1">'+
         '<div class="meter-note">0 = not tracked</div></div>'+
@@ -4751,6 +4919,9 @@ function onEditPhaseChange(accountId){
   var n = document.getElementById("edtTargetNote_"+accountId);
   if(f) f.style.display = isMaster ? "none" : "";
   if(n) n.style.display = isMaster ? "" : "none";
+  // Only a funded account pays out, so only it carries a split.
+  var sp = document.getElementById("edtSplitField_"+accountId);
+  if(sp) sp.style.display = isMaster ? "" : "none";
 }
 
 function saveAccountEdit(accountId, btn){
@@ -4767,6 +4938,7 @@ function saveAccountEdit(accountId, btn){
   var target  = phase === "MASTER" ? "0" : v("edtTarget");
   var maxDD   = v("edtMaxDD");
   var ddType  = v("edtDDType");
+  var split   = phase === "MASTER" ? (v("edtSplit") || "0") : "0";
   var errEl = document.getElementById("edtErr_"+accountId);
   var okEl  = document.getElementById("edtOk_"+accountId);
   errEl.textContent = ""; okEl.textContent = "";
@@ -4788,7 +4960,8 @@ function saveAccountEdit(accountId, btn){
     "&cost=" + encodeURIComponent(cost || "0") +
     "&targetPct=" + encodeURIComponent(target || "0") +
     "&maxDDPct=" + encodeURIComponent(maxDD || "0") +
-    "&ddType=" + encodeURIComponent(ddType || "STATIC");
+    "&ddType=" + encodeURIComponent(ddType || "STATIC") +
+    "&splitPct=" + encodeURIComponent(split);
 
   var done = btnLoading(btn, "Saving");
   jsonp(APPS_SCRIPT_URL + "?action=updateAccount&" + params, function(d){
