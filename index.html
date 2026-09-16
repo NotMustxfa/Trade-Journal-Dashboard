@@ -958,7 +958,7 @@ body::after {
 
 .macc-card {
   background: var(--bg3); border: 1px solid var(--border); border-radius: var(--r3);
-  padding: 20px 22px; margin-bottom: 12px; transition: border-color 0.18s, box-shadow 0.18s;
+  padding: 14px 16px; margin-bottom: 8px; transition: border-color 0.18s, box-shadow 0.18s;
   position: relative; overflow: hidden;
 }
 .macc-card::before {
@@ -971,47 +971,50 @@ body::after {
 .macc-card.st-removed::before { background: var(--txt4); }
 .macc-card:hover { border-color: var(--border2); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
 
-.macc-top { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 14px; margin-bottom: 16px; }
+.macc-top { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
 
 .macc-identity { min-width: 0; }
 .macc-eyebrow {
   font-family: var(--font-display); font-size: var(--fs-0); font-weight: 700;
   letter-spacing: var(--tr-label); text-transform: none; color: var(--txt4);
-  margin-bottom: 6px;
+  margin-bottom: 3px;
 }
 .macc-name-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .macc-name {
-  font-family: var(--font-display); font-size: var(--fs-5); font-weight: 800;
+  font-family: var(--font-display); font-size: var(--fs-4); font-weight: 800;
   color: var(--txt); letter-spacing: var(--tr-tight); line-height: 1.15;
 }
 .macc-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .macc-id {
-  font-family: var(--font-mono); font-size: var(--fs-1); color: var(--txt4);
-  margin-top: 6px; letter-spacing: var(--tr-label);
+  font-family: var(--font-mono); font-size: var(--fs-0); color: var(--txt4);
+  margin-top: 3px; letter-spacing: var(--tr-label);
 }
-.macc-actions { display: flex; gap: 8px; flex-wrap: wrap; flex-shrink: 0; }
+.macc-actions { display: flex; gap: 6px; flex-wrap: wrap; flex-shrink: 0; }
+.macc-actions .jbtn-sm { padding: 6px 11px; }
 
+/* Tiles auto-fit so a Master's seven stats sit on one row on a
+   desktop instead of wrapping to two. */
 .macc-detail-grid {
-  display: grid; grid-template-columns: repeat(5,1fr); gap: 10px;
-  padding-top: 14px; border-top: 1px solid var(--border);
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: 6px;
+  padding-top: 10px; border-top: 1px solid var(--border);
 }
 .macc-detail {
   background: var(--bg4); border: 1px solid var(--border); border-radius: var(--r);
-  padding: 10px 12px;
+  padding: 6px 10px;
 }
 .macc-detail-lbl {
   font-family: var(--font-display); font-size: var(--fs-0); font-weight: 700;
-  color: var(--txt4); letter-spacing: var(--tr-label); text-transform: none; margin-bottom: 6px;
+  color: var(--txt4); letter-spacing: var(--tr-label); text-transform: none; margin-bottom: 2px;
 }
 .macc-detail-val {
-  font-family: var(--font-display); font-size: var(--fs-4); font-weight: 700;
+  font-family: var(--font-display); font-size: var(--fs-3); font-weight: 700;
   color: var(--txt2); letter-spacing: var(--tr-tight); line-height: 1.2;
 }
 .macc-detail-val.pos { color: var(--green); }
 .macc-detail-val.neg { color: var(--red); }
 .macc-detail-val.gold { color: var(--gold); }
 
-.macc-edit { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); display: none; }
+.macc-edit { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); display: none; }
 .macc-edit.show { display: block; animation: fadeUp 0.2s ease; }
 .macc-trades-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
 .macc-trades-title { font-family: var(--font-display); font-size: var(--fs-2); font-weight: 700; color: var(--txt); letter-spacing: var(--tr-label); }
@@ -1045,7 +1048,7 @@ body::after {
 .macc-trades-table td.act { text-align: right; padding-top: 2px; padding-bottom: 2px; }
 .jbtn-sm.mini { padding: 3px 8px; font-size: var(--fs-1); border-radius: var(--r); line-height: 1.3; }
 
-/* Trade editor popup */
+/* Manage Accounts popup — trade editor, account settings, promote */
 .mt-modal-backdrop {
   position: fixed; inset: 0; z-index: 10000; display: none;
   align-items: center; justify-content: center; padding: 16px;
@@ -1067,6 +1070,13 @@ body::after {
 .mt-grid .jfield { margin-bottom: 0; gap: 3px; }
 .mt-grid .jfield.span2 { grid-column: span 2; }
 .mt-modal .jselect, .mt-modal .jinput { padding: 7px 9px; font-size: var(--fs-2); border-radius: var(--r); }
+.mt-modal .macc-edit { margin: 0; padding: 0; border-top: none; animation: none; }
+.mt-modal .jgrid { gap: 8px 10px; margin-bottom: 0; }
+.mt-modal .jgrid + .jgrid { margin-top: 8px !important; }
+.mt-modal .jfield { gap: 3px; }
+.mt-modal .jstatus { padding: 7px 9px; margin-bottom: 0; font-size: var(--fs-1); }
+.mt-modal .meter-note { margin-top: 2px; }
+.mt-modal .psub { font-size: var(--fs-1); }
 .mt-modal .jlabel { font-size: var(--fs-0); }
 .mt-recalc { color: var(--txt4); cursor: pointer; text-decoration: underline; margin-left: 4px; }
 .mt-modal .jrules { margin-top: 10px; }
@@ -1083,11 +1093,11 @@ body::after {
    Both are a labelled track with a fill. The drawdown meter is
    coloured by how much room is LEFT, not by how much is used, so
    green always means "safe" in both meters. ── */
-.meter { margin-top: 14px; }
-.meter + .meter { margin-top: 10px; }
+.meter { margin-top: 8px; }
+.meter + .meter { margin-top: 6px; }
 .meter-head {
   display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 .meter-lbl {
   font-family: var(--font-display); font-size: var(--fs-0); font-weight: 700;
@@ -1132,14 +1142,14 @@ body::after {
 
 /* ── Stage timeline on the account card ── */
 .stage-timeline {
-  margin-top: var(--sp-4); padding-top: var(--sp-3);
+  margin-top: var(--sp-3); padding-top: var(--sp-2);
   border-top: 1px solid var(--border);
 }
 .stage-step {
   display: grid;
   grid-template-columns: 16px minmax(64px,1fr) 88px 96px 40px;
   align-items: center; gap: var(--sp-2);
-  padding: var(--sp-2) 0;
+  padding: 3px 0;
   font-family: var(--font-mono); font-size: var(--fs-0); color: var(--txt3);
 }
 .stage-step + .stage-step { border-top: 1px dashed var(--border); }
@@ -2077,7 +2087,7 @@ body::after {
 
 <!-- Trade editor popup for Manage Accounts → Trades. One shared
      instance; openTradeEdit() fills #mtModalBody per trade. -->
-<div class="mt-modal-backdrop" id="mtModal" onclick="if(event.target===this)closeTradeEdit()">
+<div class="mt-modal-backdrop" id="mtModal" onclick="if(event.target===this)closeMaccModal()">
   <div class="mt-modal" id="mtModalBody"></div>
 </div>
 
@@ -2162,7 +2172,6 @@ var _accountsByPerson = {};   // from getAccounts — every status, per person
 var _accountsById = {};       // from getDashboardData accounts list
 
 var _rawPerson="all", _rawAccount="all", _rawLimit=50, _rawInherit=true;
-var _maccOpen = {}; // accountId -> bool, tracks which edit forms are open
 var _maccTrades = {};    // accountId -> bool, per-account trade list expanded
 var _maccTradeEdit = {}; // accountId -> dateKey of the trade being edited inline, or null
 var _maccView = "cards";               // "cards" | "table"
@@ -4530,7 +4539,6 @@ function renderMaccSummary(){
 }
 
 function maccCardHTML(a){
-  var editing = !!_maccOpen[a.accountId];
   var isMaster = a.phase === "MASTER";
   var statusClass = STATUS_BADGE_CLASS[a.status] || "active";
 
@@ -4558,7 +4566,7 @@ function maccCardHTML(a){
   }
   var nTrades = accountTrades(a.accountId).length;
   quickBtns += '<button class="jbtn-sm'+(_maccTrades[a.accountId]?" on":"")+'" id="maccTradesBtn_'+a.accountId+'" onclick="toggleAccountTrades(\'' + a.accountId + '\')">Trades ('+nTrades+')</button>';
-  quickBtns += '<button class="jbtn-sm" id="maccEditBtn_'+a.accountId+'" onclick="toggleAccountEdit(\'' + a.accountId + '\')">'+(editing?"Close":"Edit")+'</button>';
+  quickBtns += '<button class="jbtn-sm" onclick="openAccountEdit(\'' + a.accountId + '\')">Edit</button>';
 
   var st = (_data.accountStats && _data.accountStats[a.accountId]) || null;
   var pnl = a.grossPnL || 0;
@@ -4621,8 +4629,6 @@ function maccCardHTML(a){
     '</div>'+
     '<div class="macc-detail-grid">'+cells+'</div>'+
     meters+
-    (a.status==="ACTIVE" && nextPhase ? promoteFormHTML(a, nextPhase) : "")+
-    maccEditHTML(a, editing)+
     maccTradesHTML(a)+
   '</div>';
 }
@@ -4669,20 +4675,17 @@ function stageTimelineHTML(a){
    to clear Phase 1 typically asks 6% for Phase 2, and the drawdown
    limit often changes on the way to funded. */
 function togglePromote(accountId){
-  var panel = document.getElementById("promote_"+accountId);
-  if(!panel) return;
-  var open = !panel.classList.contains("show");
-  panel.classList.toggle("show", open);
-  var btn = document.getElementById("promoteBtn_"+accountId);
-  if(btn && open) btn.textContent = "Cancel";
-  else if(btn){
-    var a = _accountsById[accountId];
-    var order = (_config.phases||["PHASE_1","PHASE_2","MASTER"]);
-    var nx = a ? order[order.indexOf(a.phase)+1] : null;
-    btn.textContent = "Passed → " + ((_config.phaseLabels && _config.phaseLabels[nx]) || nx);
-  }
+  var a = _accountsById[accountId];
+  if(!a) return;
+  var order = (_config.phases||["PHASE_1","PHASE_2","MASTER"]);
+  var next  = order[order.indexOf(a.phase)+1];
+  if(!next) return;
+  var nextLbl = (_config.phaseLabels && _config.phaseLabels[next]) || next;
+  openMaccModal(
+    _maccModalHeader('Passed → '+esc(nextLbl), esc(a.person)+' · '+esc(a.accountName||"(unnamed)")) +
+    promoteFormHTML(a, next)
+  );
 }
-
 function promoteFormHTML(a, nextPhase){
   var id = a.accountId;
   var nextLbl = (_config.phaseLabels && _config.phaseLabels[nextPhase]) || nextPhase;
@@ -4692,7 +4695,7 @@ function promoteFormHTML(a, nextPhase){
     return '<option value="'+dt+'"'+(dt===(a.ddType||"STATIC")?" selected":"")+'>'+esc(lbl)+'</option>';
   }).join("");
 
-  return '<div class="macc-edit" id="promote_'+id+'">'+
+  return '<div class="macc-edit show" id="promote_'+id+'">'+
     '<div class="psub" style="margin-bottom:var(--sp-3)">Moving to '+esc(nextLbl)+
       ' — the balance resets to '+esc(fmtMoney(a.startingBalance||0))+
       ' and every trade so far keeps counting toward your stats.</div>'+
@@ -4716,12 +4719,13 @@ function promoteFormHTML(a, nextPhase){
         '<select class="jselect" id="promoDDType_'+id+'">'+ddOpts+'</select></div>'+
       '<div class="jfield"></div>'+
     '</div>'+
-    '<div class="jactions" style="margin-top:var(--sp-4)">'+
-      '<button class="jsubmit-btn" onclick="submitPromote(\'' + id + '\', this)">Move to '+esc(nextLbl)+'</button></div>'+
-    '<div class="jerr" id="promoErr_'+id+'"></div>'+
+    '<div class="mt-modal-foot">'+
+      '<span class="mt-modal-msgs"><span class="jerr" id="promoErr_'+id+'"></span></span>'+
+      '<button class="jbtn-sm" onclick="closeMaccModal()">Cancel</button>'+
+      '<button class="jsubmit-btn" onclick="submitPromote(\'' + id + '\', this)">Move to '+esc(nextLbl)+'</button>'+
+    '</div>'+
   '</div>';
 }
-
 function submitPromote(accountId, btn){
   var a = _accountsById[accountId];
   if(!a) return;
@@ -4756,6 +4760,7 @@ function submitPromote(accountId, btn){
         "&maxDDPct="  + encodeURIComponent(maxDD) +
         "&ddType="    + encodeURIComponent(ddType), function(d){
     if(!d || !d.success){ done(); err.textContent = (d && d.error) || "Could not move the account forward."; return; }
+    closeMaccModal();
     refreshAccountsList();
     refreshDashboardQuietly(function(){ renderManageAccounts(); });
   });
@@ -4821,7 +4826,7 @@ function maccEditHTML(a, editing){
   }).join("");
   var id = a.accountId;
 
-  return '<div class="macc-edit'+(editing?" show":"")+'" id="maccEdit_'+id+'">'+
+  return '<div class="macc-edit show" id="maccEdit_'+id+'">'+
     '<div class="jgrid">'+
       '<div class="jfield"><label class="jlabel">Name</label>'+
         '<input class="jinput" type="text" id="edtName_'+id+'" value="'+esc(a.accountName||"")+'" maxlength="40"></div>'+
@@ -4857,9 +4862,11 @@ function maccEditHTML(a, editing){
         '<div class="meter-note">0 = not tracked</div></div>'+
       '<div class="jfield"></div>'+
     '</div>'+
-    '<div class="jactions" style="margin-top:14px;"><button class="jsubmit-btn" onclick="saveAccountEdit(\'' + id + '\', this)">Save Changes</button></div>'+
-    '<div class="jerr" id="edtErr_'+id+'"></div>'+
-    '<div class="jok" id="edtOk_'+id+'"></div>'+
+    '<div class="mt-modal-foot">'+
+      '<span class="mt-modal-msgs"><span class="jerr" id="edtErr_'+id+'"></span><span class="jok" id="edtOk_'+id+'"></span></span>'+
+      '<button class="jbtn-sm" onclick="closeMaccModal()">Cancel</button>'+
+      '<button class="jsubmit-btn" onclick="saveAccountEdit(\'' + id + '\', this)">Save Changes</button>'+
+    '</div>'+
   '</div>';
 }
 
@@ -4940,18 +4947,15 @@ function maccTableHTML(accs){
       (isMaster ? money(a.undrawnProfit, (a.undrawnProfit||0)>0?"pos":"") : dash)+
       (isMaster ? money(a.paidOut, (a.paidOut||0)>0?"gold":"muted")       : dash)+
       money(a.cost, (a.cost||0)?"":"muted")+
-      '<td>'+(st?st.total:0)+'</td>'+
+      '<td><button class="jbtn-sm mini'+(_maccTrades[a.accountId]?" on":"")+'" id="maccTradesBtn_'+a.accountId+'" title="Show trades" onclick="event.stopPropagation(); toggleAccountTrades(\'' + a.accountId + '\')">'+(st?st.total:0)+' ▾</button></td>'+
       '<td class="gold">'+(st && st.total ? st.winRate+"%" : '—')+'</td>'+
       (a.ddRoom === null || a.ddRoom === undefined
         ? dash
         : '<td class="'+(a.ddUsedPct>=0.75?"neg":a.ddUsedPct>=0.5?"":"pos")+'">'+esc(fmtMoney(a.ddRoom))+'</td>')+
     '</tr>';
 
-    if(_maccOpen[a.accountId]){
-      var nTr = accountTrades(a.accountId).length;
-      body += '<tr class="editrow"><td colspan="'+MACC_COLS.length+'">'+maccEditHTML(a, true)+
-        '<div class="jactions" style="margin-top:14px;"><button class="jbtn-sm'+(_maccTrades[a.accountId]?" on":"")+'" id="maccTradesBtn_'+a.accountId+'" onclick="toggleAccountTrades(\'' + a.accountId + '\')">Trades ('+nTr+')</button></div>'+
-        maccTradesHTML(a)+'</td></tr>';
+    if(_maccTrades[a.accountId]){
+      body += '<tr class="editrow"><td colspan="'+MACC_COLS.length+'">'+maccTradesHTML(a)+'</td></tr>';
     }
   });
 
@@ -5088,10 +5092,10 @@ function toggleAccountTrades(accountId){
   var open = !_maccTrades[accountId];
   _maccTrades[accountId] = open;
 
-  // Toggle in place when the panel is already on the page (card view,
-  // or an expanded table row) so nothing typed elsewhere is lost.
+  // Card view toggles in place; the table view re-renders because the
+  // panel lives in its own <tr> that only exists while open.
   var panel = document.getElementById("maccTrades_"+accountId);
-  if(panel){
+  if(_maccView === "cards" && panel){
     panel.classList.toggle("show", open);
     var btn = document.getElementById("maccTradesBtn_"+accountId);
     if(btn) btn.classList.toggle("on", open);
@@ -5108,17 +5112,11 @@ function openTradeEdit(accountId, dateKey){
   if(!a || !t) return;
   _maccTradeEdit[accountId] = dateKey;
   rerenderAccountTrades(accountId);
-  document.getElementById("mtModalBody").innerHTML = tradeEditFormHTML(a, t);
-  document.getElementById("mtModal").classList.add("show");
+  openMaccModal(tradeEditFormHTML(a, t));
   updateRulesPreview(_mtPrefix(accountId));
 }
 
-function closeTradeEdit(){
-  document.getElementById("mtModal").classList.remove("show");
-  Object.keys(_maccTradeEdit).forEach(function(id){
-    if(_maccTradeEdit[id]){ _maccTradeEdit[id] = null; rerenderAccountTrades(id); }
-  });
-}
+function closeTradeEdit(){ closeMaccModal(); }
 
 function rerenderAccountTrades(accountId){
   var a = _accountsById[accountId];
@@ -5195,23 +5193,37 @@ function _dateKeyFromAny(v){
   return d.getFullYear()+"-"+mm+"-"+dd;
 }
 
-function toggleAccountEdit(accountId){
-  var open = !_maccOpen[accountId];
-  _maccOpen[accountId] = open;
-
-  // In card view, toggle in place rather than re-rendering the whole
-  // list — a full re-render wipes anything typed into another open
-  // card. The table view has to re-render because the edit form
-  // lives in its own <tr>.
-  var panel = document.getElementById("maccEdit_"+accountId);
-  if(_maccView === "cards" && panel){
-    panel.classList.toggle("show", open);
-    var btn = document.getElementById("maccEditBtn_"+accountId);
-    if(btn) btn.textContent = open ? "Close" : "Edit";
-    return;
-  }
-  renderManageAccounts();
+// Account settings and the promote form open in the shared popup
+// (#mtModal) rather than expanding inside the card — an inline form
+// with eight full-width fields filled the screen and pushed every
+// other account out of view.
+function _maccModalHeader(title, sub){
+  return '<div class="mt-modal-head">'+
+    '<div><div class="mt-modal-title">'+title+'</div><div class="mt-modal-sub">'+sub+'</div></div>'+
+    '<button class="mt-modal-x" title="Close (Esc)" onclick="closeMaccModal()">×</button>'+
+  '</div>';
 }
+function openMaccModal(html){
+  document.getElementById("mtModalBody").innerHTML = html;
+  document.getElementById("mtModal").classList.add("show");
+}
+function closeMaccModal(){
+  document.getElementById("mtModal").classList.remove("show");
+  document.getElementById("mtModalBody").innerHTML = "";
+  Object.keys(_maccTradeEdit).forEach(function(id){
+    if(_maccTradeEdit[id]){ _maccTradeEdit[id] = null; rerenderAccountTrades(id); }
+  });
+}
+function openAccountEdit(accountId){
+  var a = _accountsById[accountId];
+  if(!a) return;
+  openMaccModal(
+    _maccModalHeader('Edit account', esc(a.person)+' · '+esc(a.accountName||"(unnamed)")) +
+    maccEditHTML(a, true)
+  );
+}
+function toggleAccountEdit(accountId){ openAccountEdit(accountId); }   // legacy name (table rows)
+
 // A Master has no profit target, so the field disappears the moment
 // the phase is switched rather than only when the panel is reopened.
 function onEditPhaseChange(accountId){
@@ -5270,7 +5282,7 @@ function saveAccountEdit(accountId, btn){
   jsonp(APPS_SCRIPT_URL + "?action=updateAccount&" + params, function(d){
     if(!d || !d.success){ done(); errEl.textContent = (d && d.error) || "Could not save changes."; return; }
     okEl.textContent = "Saved ✓";
-    _maccOpen[accountId] = false;
+    closeMaccModal();
     refreshAccountsList();
     refreshDashboardQuietly(function(){ renderManageAccounts(); });
     // page re-renders on success, so no explicit done() restore needed
@@ -5828,7 +5840,7 @@ function jsonp(url, cb){
 
 document.addEventListener("keydown", function(e){
   if(e.key==="Enter" && document.getElementById("login").style.display!=="none") doLogin();
-  if(e.key==="Escape" && document.getElementById("mtModal").classList.contains("show")) closeTradeEdit();
+  if(e.key==="Escape" && document.getElementById("mtModal").classList.contains("show")) closeMaccModal();
 });
 </script>
 </body>
