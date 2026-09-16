@@ -5328,6 +5328,8 @@ function tradeEditFormHTML(a, t){
       '<button class="mt-modal-x" title="Close (Esc)" onclick="closeTradeEdit()">×</button>'+
     '</div>'+
     '<div class="mt-grid" data-enter-scope>'+
+      '<div class="jfield"><label class="jlabel">Date</label>'+
+        '<input class="jinput" type="text" id="'+p+'Date" readonly placeholder="dd/mm/yyyy" onclick="openDatePicker(\''+p+'Date\')"></div>'+
       '<div class="jfield"><label class="jlabel">Pair</label>'+sel("Pair", _config.pairs, t.pair, ' onchange="updateRulesPreview(\'' + p + '\')"')+'</div>'+
       '<div class="jfield"><label class="jlabel">Timeframe</label>'+sel("Timeframe", _config.timeframes, t.timeframe, ' onchange="updateRulesPreview(\'' + p + '\')"')+'</div>'+
       '<div class="jfield"><label class="jlabel">RR</label>'+sel("RR", _config.rrOptions, t.rr, ' onchange="updateRulesPreview(\'' + p + '\'); suggestPnl(false,\'' + p + '\');"')+'</div>'+
@@ -5338,7 +5340,7 @@ function tradeEditFormHTML(a, t){
         '<input class="jinput" type="number" id="'+p+'Risk" min="0" step="0.01" value="'+esc(t.riskAmount||"")+'" oninput="suggestPnl(false,\'' + p + '\')"></div>'+
       '<div class="jfield"><label class="jlabel">P&amp;L ($) <span class="mt-recalc" onclick="suggestPnl(true,\'' + p + '\')">↺</span></label>'+
         '<input class="jinput" type="number" id="'+p+'Pnl" step="0.01" value="'+esc(t.pnl===0?"0":(t.pnl||""))+'" data-touched="1" oninput="this.dataset.touched=\'1\'"></div>'+
-      '<div class="jfield span2"><label class="jlabel">Per strategy?</label><select class="jselect" id="'+p+'Strategy">'+strategyOpts+'</select></div>'+
+      '<div class="jfield"><label class="jlabel">Per strategy?</label><select class="jselect" id="'+p+'Strategy">'+strategyOpts+'</select></div>'+
       '<div class="jfield span2"><label class="jlabel">Mistake</label>'+
         sel("Mistake", _config.mistakes, t.mistake||"", "", '<option value=""'+(!t.mistake?" selected":"")+'>— none —</option>')+'</div>'+
     '</div>'+
@@ -5376,6 +5378,7 @@ function openTradeEdit(accountId, dateKey){
   _maccTradeEdit[accountId] = dateKey;
   rerenderAccountTrades(accountId);
   openMaccModal(tradeEditFormHTML(a, t));
+  setDateISO(_mtPrefix(accountId)+"Date", t.dateKey);
   updateRulesPreview(_mtPrefix(accountId));
 }
 
@@ -5392,6 +5395,7 @@ function _tradeInlineParams(accountId, dateKey){
   var a = _accountsById[accountId];
   var t = accountTrades(accountId).filter(function(x){ return x.dateKey === dateKey; })[0];
   var v = function(n){ var el = document.getElementById(p+n); return el ? el.value : ""; };
+  var newDate = getDateISO(p+"Date");
   return {
     person: t ? t.person : (a ? a.person : ""),
     query: "token=" + encodeURIComponent(_tok) +
@@ -5407,7 +5411,11 @@ function _tradeInlineParams(accountId, dateKey){
       "&strategy="  + encodeURIComponent(v("Strategy")) +
       "&mistakes="  + encodeURIComponent(v("Mistake")) +
       "&riskAmount="+ encodeURIComponent(v("Risk") || "0") +
-      "&pnl="       + encodeURIComponent(v("Pnl") || "0")
+      "&pnl="       + encodeURIComponent(v("Pnl") || "0") +
+      // v19: the date is the key, so a changed date travels separately
+      // and the server re-keys the row (weekday + collision checked).
+      (newDate && newDate !== dateKey ? "&newDate=" + encodeURIComponent(newDate) : ""),
+    newDate: newDate
   };
 }
 
@@ -5416,6 +5424,10 @@ function saveTradeInline(accountId, dateKey, btn){
   var errEl = document.getElementById(p+"Err"), okEl = document.getElementById(p+"Ok");
   if(errEl) errEl.textContent = ""; if(okEl) okEl.textContent = "";
   var params = _tradeInlineParams(accountId, dateKey);
+  if(params.newDate && params.newDate !== dateKey && isWeekendISO(params.newDate)){
+    if(errEl) errEl.textContent = "Markets are closed on weekends — pick a weekday.";
+    return;
+  }
   var done = btnLoading(btn, "Updating");
   jsonp(APPS_SCRIPT_URL + "?action=updateTrade&" + params.query, function(d){
     if(!d || !d.success){ done(); if(errEl) errEl.textContent = (d && d.error) || "Something went wrong."; return; }
