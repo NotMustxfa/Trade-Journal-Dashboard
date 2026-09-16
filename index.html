@@ -650,6 +650,33 @@ body::after {
 
 .daygrid { display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; }
 
+/* ── Daily P&L calendar ── */
+.cal-head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--sp-3); margin-bottom: var(--sp-3); flex-wrap: wrap; }
+.cal-head .psub { margin-bottom: 0; }
+.cal-nav { display: flex; align-items: center; gap: var(--sp-2); flex-shrink: 0; }
+.cal-title { font-family: var(--font-display); font-size: var(--fs-2); font-weight: 700; color: var(--txt); min-width: 96px; text-align: center; }
+.calgrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--sp-1); }
+.cal-dow { font-family: var(--font-display); font-size: var(--fs-0); font-weight: 700; letter-spacing: var(--tr-label); color: var(--txt4); text-align: center; padding-bottom: var(--sp-1); }
+.cal-cell {
+  border: 1px solid var(--border); border-radius: var(--r); background: var(--bg3);
+  padding: var(--sp-2); min-height: 56px; display: flex; flex-direction: column; gap: 2px;
+  transition: border-color 0.15s;
+}
+.cal-cell:hover { border-color: var(--border2); }
+.cal-cell.blank { visibility: hidden; }
+.cal-cell.none { opacity: 0.45; }
+.cal-cell.today { border-color: var(--gold-rim); }
+.cal-day { font-family: var(--font-mono); font-size: var(--fs-0); color: var(--txt4); }
+.cal-pnl { font-family: var(--font-mono); font-size: var(--fs-1); font-weight: 600; color: var(--txt2); }
+.cal-cell.pos .cal-pnl { color: var(--green); }
+.cal-cell.neg .cal-pnl { color: var(--red); }
+.cal-n { font-family: var(--font-display); font-size: var(--fs-0); color: var(--txt4); }
+.cal-legend { display: flex; align-items: center; gap: var(--sp-2); margin-top: var(--sp-3); font-family: var(--font-mono); font-size: var(--fs-1); color: var(--txt4); flex-wrap: wrap; }
+.cal-swatch { width: 72px; height: 6px; border-radius: var(--r-pill); background: linear-gradient(90deg, var(--red), var(--bg3), var(--green)); border: 1px solid var(--border); }
+.cal-sum { margin-left: auto; }
+.cal-sum b.pos { color: var(--green); }
+.cal-sum b.neg { color: var(--red); }
+
 .daycell {
   border: 1px solid var(--border); border-radius: var(--r2);
   padding: 16px 6px 14px; text-align: center;
@@ -1791,6 +1818,20 @@ body::after {
           </div>
           <div class="panel d2" id="streakPanel"></div>
         </div>
+        <div class="panel d3" style="margin-top:var(--sp-3)">
+          <div class="cal-head">
+            <div>
+              <div class="ptitle">Daily P&amp;L calendar</div>
+              <div class="psub">Each weekday coloured by that day's net result across the filtered trades</div>
+            </div>
+            <div class="cal-nav">
+              <button class="jbtn-sm mini" id="calPrev" onclick="calShift(-1)" title="Previous month">‹</button>
+              <span class="cal-title" id="calTitle"></span>
+              <button class="jbtn-sm mini" id="calNext" onclick="calShift(1)" title="Next month">›</button>
+            </div>
+          </div>
+          <div id="calPanel"></div>
+        </div>
       </div>
 
       <div class="sec">
@@ -2179,6 +2220,7 @@ var _maccSort = { key:"name", dir:1 }; // table view sort
 var _equityUnit = "abs";               // "abs" ($) | "pct" (% of account size)
 var _equityIncludeClosed = false;      // active accounts only by default
 var _setupDim = "pair";                // Setup Performance dimension
+var _calMonth = null;                  // Daily P&L calendar: yyyy-MM in view (null = latest)
 var _maccShowRemoved = false;          // soft-deleted accounts are hidden by default
 var _analyticsTab = "money";           // which analytics group is showing
 
@@ -2704,7 +2746,7 @@ function renderDashboard(){
   renderHero(s); renderCapital();
   renderKPI(s); renderResults(s); renderMistakes(s);
   renderPctKpi(s); renderPctPerformance();
-  renderDays(trades); renderStreaks(trades); renderSetups();
+  renderDays(trades); renderCalendar(trades); renderStreaks(trades); renderSetups();
   renderTrendAlignment(trades); renderRMetrics(trades, s);
   renderRR(s); renderCompliance(s);
   renderTrend(); renderWeekly(); renderAccounts(); renderEquity();
@@ -2865,6 +2907,105 @@ function computeStreaks(trades){
     afterWinN:   afterW.n,
     afterLossN:  afterL.n,
   };
+}
+
+/* ── DAILY P&L CALENDAR ──
+   One month at a time, Mon–Fri only (weekends are refused on write and
+   never appear), each day tinted by its net result relative to the
+   biggest day in that month. Follows the global filters like every
+   other panel; the month in view is the latest one with trades unless
+   you have paged away from it. ── */
+function computeCalendar(trades){
+  var days = {}, months = {};
+  (trades||[]).forEach(function(t){
+    var k = t.dateKey; if(!k) return;
+    var d = days[k] || (days[k] = { pnl:0, n:0, wins:0 });
+    d.n++; d.pnl += (t.pnl || 0);
+    if(t.result === "TP" || t.result === "PARTIAL TP") d.wins++;
+    months[k.slice(0,7)] = true;
+  });
+  return { months: Object.keys(months).sort(), days: days };
+}
+
+function renderCalendar(trades){
+  var host = document.getElementById("calPanel");
+  var title = document.getElementById("calTitle");
+  var prev = document.getElementById("calPrev"), next = document.getElementById("calNext");
+  var c = computeCalendar(trades);
+
+  if(!c.months.length){
+    host.innerHTML = '<div class="empty">No trades in view — nothing to put on the calendar.</div>';
+    title.textContent = "—";
+    prev.disabled = true; next.disabled = true;
+    return;
+  }
+  if(c.months.indexOf(_calMonth) === -1) _calMonth = c.months[c.months.length - 1];
+  var mi = c.months.indexOf(_calMonth);
+  prev.disabled = mi <= 0;
+  next.disabled = mi >= c.months.length - 1;
+  title.textContent = niceMonth(_calMonth);
+
+  var y = parseInt(_calMonth.slice(0,4), 10), m = parseInt(_calMonth.slice(5,7), 10);
+  var daysInMonth = new Date(y, m, 0).getDate();
+  var today = todayISO();
+
+  // Scale tints to the month's biggest day so a quiet month still reads.
+  var maxAbs = 1, mN = 0, mPnl = 0, green = 0, red = 0;
+  for(var d = 1; d <= daysInMonth; d++){
+    var iso = _calMonth + "-" + String(d).padStart(2,"0");
+    var rec = c.days[iso]; if(!rec) continue;
+    maxAbs = Math.max(maxAbs, Math.abs(rec.pnl));
+    mN += rec.n; mPnl += rec.pnl;
+    if(rec.pnl > 0) green++; else if(rec.pnl < 0) red++;
+  }
+
+  var h = '<div class="calgrid">' + ["Mon","Tue","Wed","Thu","Fri"].map(function(l){
+    return '<div class="cal-dow">'+l+'</div>';
+  }).join("");
+  // Pad to the weekday column of the 1st (Mon = 0 … Fri = 4).
+  var firstDow = new Date(y, m - 1, 1).getDay();          // 0 = Sun
+  var firstCol = firstDow === 0 ? 5 : firstDow - 1;        // Sat/Sun roll to the next row
+  if(firstCol < 5) for(var b = 0; b < firstCol; b++) h += '<div class="cal-cell blank"></div>';
+
+  for(var day = 1; day <= daysInMonth; day++){
+    var dow = new Date(y, m - 1, day).getDay();
+    if(dow === 0 || dow === 6) continue;
+    var key = _calMonth + "-" + String(day).padStart(2,"0");
+    var r = c.days[key];
+    var cls = "cal-cell" + (key === today ? " today" : "");
+    if(!r){
+      h += '<div class="'+cls+' none"><span class="cal-day">'+day+'</span></div>';
+      continue;
+    }
+    var pos = r.pnl > 0, neg = r.pnl < 0;
+    var pct = Math.round(10 + 60 * Math.abs(r.pnl) / maxAbs);
+    var tint = pos ? 'background:color-mix(in srgb, var(--green) '+pct+'%, var(--bg3));'
+             : neg ? 'background:color-mix(in srgb, var(--red) '+pct+'%, var(--bg3));' : '';
+    var sign = r.pnl > 0 ? "+" : r.pnl < 0 ? "−" : "";
+    h += '<div class="'+cls+(pos?" pos":neg?" neg":" flat")+'" style="'+tint+'" '+
+         'title="'+esc(isoToDMY(key))+': '+r.n+' trade'+(r.n===1?"":"s")+', '+sign+esc(fmtMoney(Math.abs(r.pnl)))+'">'+
+      '<span class="cal-day">'+day+'</span>'+
+      '<span class="cal-pnl">'+sign+esc(fmtMoney(Math.abs(r.pnl)))+'</span>'+
+      '<span class="cal-n">'+r.n+'t</span>'+
+    '</div>';
+  }
+  h += '</div>';
+
+  var netSign = mPnl > 0 ? "+" : mPnl < 0 ? "−" : "";
+  h += '<div class="cal-legend"><span class="cal-swatch"></span><span>loss · flat · gain</span>'+
+       '<span class="cal-sum">'+mN+' trade'+(mN===1?"":"s")+' · '+green+' green day'+(green===1?"":"s")+' · '+red+' red · net '+
+       '<b class="'+(mPnl>0?"pos":mPnl<0?"neg":"")+'">'+netSign+esc(fmtMoney(Math.abs(mPnl)))+'</b></span></div>';
+  host.innerHTML = h;
+}
+
+function calShift(delta){
+  var months = computeCalendar(getFiltered()).months;
+  if(!months.length) return;
+  var i = months.indexOf(_calMonth);
+  if(i === -1) i = months.length - 1;
+  i = Math.max(0, Math.min(months.length - 1, i + delta));
+  _calMonth = months[i];
+  renderCalendar(getFiltered());
 }
 
 function renderStreaks(trades){
