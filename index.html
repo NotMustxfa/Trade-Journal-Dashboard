@@ -1044,6 +1044,7 @@ body::after {
 .macc-edit { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); display: none; }
 .macc-edit.show { display: block; animation: fadeUp 0.2s ease; }
 .macc-trades-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+.macc-trades-head .macc-trades-log { margin-left: auto; }
 .macc-trades-title { font-family: var(--font-display); font-size: var(--fs-2); font-weight: 700; color: var(--txt); letter-spacing: var(--tr-label); }
 .macc-trades-sub { font-size: var(--fs-1); color: var(--txt4); }
 /* Scrolls inside a fixed height so a long history never pushes the
@@ -2209,6 +2210,7 @@ var _filters = Object.assign({}, FILTER_DEFAULTS);
 var FILTER_STORE_KEY = "tj_filters";
 
 var _journalState = { editing:false };
+var _journalPreselect = null;          // { person, accountId } set by gotoLogTrade, consumed by onPersonChange
 var _accountsByPerson = {};   // from getAccounts — every status, per person
 var _accountsById = {};       // from getDashboardData accounts list
 
@@ -5141,6 +5143,9 @@ function maccTradesBodyHTML(a){
   var h = '<div class="macc-trades-head">'+
     '<span class="macc-trades-title">Trades</span>'+
     '<span class="macc-trades-sub">'+trades.length+' entr'+(trades.length===1?"y":"ies")+' · newest first · click ✎ to edit</span>'+
+    (a.status === "ACTIVE"
+      ? '<button class="jbtn-sm mini add macc-trades-log" onclick="gotoLogTrade(\'' + id + '\')">+ Log trade</button>'
+      : '')+
   '</div>';
 
   if(!trades.length){
@@ -5449,6 +5454,17 @@ function quickAccountStatus(accountId, status, btn){
   });
 }
 
+// "+ Log trade" on an account's trades panel: open the Journal with the
+// person and account already chosen, so the existing/new-entry check
+// runs for today straight away.
+function gotoLogTrade(accountId){
+  var acc = _accountsById[accountId];
+  if(!acc) return;
+  _journalPreselect = { person: acc.person, accountId: accountId };
+  showTab("journal");
+  window.scrollTo(0, 0);
+}
+
 function gotoPayout(accountId){
   var acc = _accountsById[accountId];
   showTab("payouts");
@@ -5708,6 +5724,7 @@ function initJournal(){
   document.getElementById("jResult").innerHTML     = optHTML(_config.results);
   document.getElementById("jBias").innerHTML       = optHTML(_config.biases);
   document.getElementById("jMistake").innerHTML    = '<option value="">— none —</option>' + optHTML(_config.mistakes);
+  if(_journalPreselect) document.getElementById("jPerson").value = _journalPreselect.person;
   if(!getDateISO("jDate")) setDateISO("jDate", todayISO());
   refreshAccountsList();
 }
@@ -5730,11 +5747,19 @@ function onPersonChange(){
     sel.disabled = true;
     document.getElementById("jTradeFields").style.display = "none";
     document.getElementById("jStatusBanner").innerHTML = 'No active accounts for <b>'+esc(p)+'</b> — add one from the Add Account tab';
+    _journalPreselect = null;
     return;
   }
 
   sel.disabled = false;
   sel.innerHTML = accounts.map(function(a){ return '<option value="'+esc(a.id)+'">'+esc(a.name)+' — '+esc((_config&&_config.phaseLabels&&_config.phaseLabels[a.phase])||a.phase)+'</option>'; }).join("");
+  // Arrived via "+ Log trade" on an account card: land on that account.
+  // Consumed here, after the list is built, so there is no race with
+  // the getAccounts round-trip.
+  if(_journalPreselect && _journalPreselect.person === p){
+    sel.value = _journalPreselect.accountId;
+    _journalPreselect = null;
+  }
   onKeyFieldChange();
 }
 
