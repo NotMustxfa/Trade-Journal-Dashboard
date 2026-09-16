@@ -1107,6 +1107,18 @@ body::after {
 .mt-modal .jstatus { padding: 7px 9px; margin-bottom: 0; font-size: var(--fs-1); }
 .mt-modal .meter-note { margin-top: 2px; }
 .mt-modal .psub { font-size: var(--fs-1); }
+/* Stage rows inside the account popup */
+.mt-stages { margin-top: var(--sp-4); }
+.mt-stage { padding: var(--sp-2) 0; }
+.mt-stage + .mt-stage { border-top: 1px dashed var(--border); }
+.mt-stage-lbl { display: flex; align-items: center; gap: var(--sp-2); font-family: var(--font-mono); font-size: var(--fs-1); color: var(--txt3); margin-bottom: var(--sp-1); }
+.mt-stage-lbl b.pos { color: var(--green); }
+.mt-stage-lbl b.neg { color: var(--red); }
+.mt-stage-cur { font-family: var(--font-display); font-size: var(--fs-0); font-weight: 700; letter-spacing: var(--tr-label); color: var(--gold); }
+.mt-stage-act .jbtn-sm { width: 100%; padding: 7px 9px; }
+.mt-stage-msgs { min-height: 0; }
+.mt-stage-msgs .jerr, .mt-stage-msgs .jok { margin-top: var(--sp-1); font-size: var(--fs-1); }
+.mt-modal .jinput:disabled, .mt-modal .jselect:disabled { opacity: 0.45; cursor: not-allowed; }
 .mt-modal .jlabel { font-size: var(--fs-0); }
 .mt-recalc { color: var(--txt4); cursor: pointer; text-decoration: underline; margin-left: 4px; }
 .mt-modal .jrules { margin-top: 10px; }
@@ -5012,7 +5024,110 @@ function maccEditHTML(a, editing){
       '<button class="jbtn-sm" onclick="closeMaccModal()">Cancel</button>'+
       '<button class="jsubmit-btn" onclick="saveAccountEdit(\'' + id + '\', this)">Save Changes</button>'+
     '</div>'+
+  '</div>' +
+  stageEditRowsHTML(a);
+}
+
+/* ── STAGE ROWS (v19) ──
+   Every stage of the account, editable in place: dates, size, rules.
+   Each row is its own Enter scope with its own Save, because the
+   account form above has one too. Open/closed is not editable here —
+   the open stage's End and Outcome are disabled — see updateStage. ── */
+function _sid(stageId){ return String(stageId).replace(/-/g, ""); }
+
+function stageEditRowsHTML(a){
+  var hist = (a.stageHistory || []).filter(function(st){ return !!st.id; });
+  if(!hist.length) return "";
+  var ddTypes = (_config.ddTypes) || ["STATIC","TRAILING"];
+
+  var rows = hist.map(function(st){
+    var sid = _sid(st.id);
+    var open = !st.endedAt;
+    var pnl = st.pnl || 0;
+    var ddOpts = ddTypes.map(function(dt){
+      var lbl = (_config.ddTypeLabels && _config.ddTypeLabels[dt]) || dt;
+      return '<option value="'+dt+'"'+(dt===(st.ddType||"STATIC")?" selected":"")+'>'+esc(lbl)+'</option>';
+    }).join("");
+    var outcomeOpts = open
+      ? '<option value="ACTIVE" selected>Active</option>'
+      : ["PASSED","BLOWN"].map(function(o){
+          return '<option value="'+o+'"'+(o===st.outcome?" selected":"")+'>'+(o==="PASSED"?"Passed":"Blown")+'</option>';
+        }).join("");
+    return '<div class="mt-stage" data-enter-scope id="stg_'+sid+'">'+
+      '<div class="mt-stage-lbl">'+phaseBadge(st.phase)+
+        (st.current ? '<span class="mt-stage-cur">current</span>' : '')+
+        '<span>'+st.trades+'t · <b class="'+(pnl>0?"pos":pnl<0?"neg":"")+'">'+(pnl>=0?"+":"−")+esc(fmtMoney(Math.abs(pnl)))+'</b></span>'+
+      '</div>'+
+      '<div class="mt-grid">'+
+        '<div class="jfield"><label class="jlabel">Start</label>'+
+          '<input class="jinput" type="text" id="stgStart_'+sid+'" readonly placeholder="dd/mm/yyyy" onclick="openDatePicker(\'stgStart_'+sid+'\')"></div>'+
+        '<div class="jfield"><label class="jlabel">End</label>'+
+          '<input class="jinput" type="text" id="stgEnd_'+sid+'" readonly placeholder="'+(open?"open":"dd/mm/yyyy")+'"'+
+            (open ? ' disabled' : ' onclick="openDatePicker(\'stgEnd_'+sid+'\')"')+'></div>'+
+        '<div class="jfield"><label class="jlabel">Outcome</label>'+
+          '<select class="jselect" id="stgOutcome_'+sid+'"'+(open?' disabled':'')+'>'+outcomeOpts+'</select></div>'+
+        '<div class="jfield"><label class="jlabel">Size ($)</label>'+
+          '<input class="jinput" type="number" id="stgSize_'+sid+'" value="'+(st.size||0)+'" min="0" step="0.01"></div>'+
+        (st.phase === "MASTER"
+          ? '<div class="jfield"><label class="jlabel">Target</label><div class="jstatus">n/a</div></div>'
+          : '<div class="jfield"><label class="jlabel">Target (%)</label>'+
+              '<input class="jinput" type="number" id="stgTarget_'+sid+'" value="'+(st.targetPct||0)+'" min="0" max="1000" step="0.1"></div>')+
+        '<div class="jfield"><label class="jlabel">Max DD (%)</label>'+
+          '<input class="jinput" type="number" id="stgMaxDD_'+sid+'" value="'+(st.maxDDPct||0)+'" min="0" max="100" step="0.1"></div>'+
+        '<div class="jfield"><label class="jlabel">DD type</label>'+
+          '<select class="jselect" id="stgDDType_'+sid+'">'+ddOpts+'</select></div>'+
+        '<div class="jfield mt-stage-act"><label class="jlabel">&nbsp;</label>'+
+          '<button class="jbtn-sm add" data-enter-target onclick="saveStageEdit(\'' + a.accountId + '\',\'' + st.id + '\', this)">Save stage</button></div>'+
+      '</div>'+
+      '<div class="mt-stage-msgs"><span class="jerr" id="stgErr_'+sid+'"></span><span class="jok" id="stgOk_'+sid+'"></span></div>'+
+    '</div>';
+  }).join("");
+
+  return '<div class="stage-timeline mt-stages">'+
+    '<div class="macc-trades-head">'+
+      '<span class="macc-trades-title">Stages</span>'+
+      '<span class="macc-trades-sub">Moving a start date moves trades between stages and re-bases that stage\'s balance.</span>'+
+    '</div>'+rows+
   '</div>';
+}
+
+function saveStageEdit(accountId, stageId, btn){
+  var sid = _sid(stageId);
+  var v = function(n){ var el = document.getElementById(n+"_"+sid); return el ? el.value : null; };
+  var errEl = document.getElementById("stgErr_"+sid), okEl = document.getElementById("stgOk_"+sid);
+  errEl.textContent = ""; okEl.textContent = "";
+
+  var a  = _accountsById[accountId];
+  var st = ((a && a.stageHistory) || []).filter(function(s){ return s.id === stageId; })[0];
+  if(!st){ errEl.textContent = "Stage not found — reload and try again."; return; }
+
+  var start = getDateISO("stgStart_"+sid);
+  var end   = st.endedAt ? getDateISO("stgEnd_"+sid) : "";
+  if(!start){ errEl.textContent = "Start date is required."; return; }
+  if(st.endedAt && !end){ errEl.textContent = "A closed stage needs an end date."; return; }
+  if(end && end < start){ errEl.textContent = "The end date is before the start date."; return; }
+  var target = v("stgTarget"), maxDD = v("stgMaxDD");
+  if(target !== null && (parseFloat(target) < 0 || parseFloat(target) > 1000)){ errEl.textContent = "Profit target must be between 0 and 1000%."; return; }
+  if(maxDD  !== null && (parseFloat(maxDD)  < 0 || parseFloat(maxDD)  > 100)){  errEl.textContent = "Max drawdown must be between 0 and 100%."; return; }
+
+  var params = "token=" + encodeURIComponent(_tok) +
+    "&stageId="   + encodeURIComponent(stageId) +
+    "&startedAt=" + encodeURIComponent(start) +
+    (st.endedAt ? "&endedAt=" + encodeURIComponent(end) + "&outcome=" + encodeURIComponent(v("stgOutcome") || st.outcome) : "") +
+    "&size="      + encodeURIComponent(v("stgSize") || "0") +
+    (target !== null ? "&targetPct=" + encodeURIComponent(target || "0") : "") +
+    "&maxDDPct="  + encodeURIComponent(maxDD || "0") +
+    "&ddType="    + encodeURIComponent(v("stgDDType") || "STATIC");
+
+  var done = btnLoading(btn, "Saving");
+  jsonp(APPS_SCRIPT_URL + "?action=updateStage&" + params, function(d){
+    done();
+    if(!d || !d.success){ errEl.textContent = (d && d.error) || "Could not save the stage."; return; }
+    okEl.textContent = "Saved ✓" + (d.mirrored ? " · account rules updated" : "");
+    // The popup lives outside the list, so it survives the re-render.
+    refreshAccountsList();
+    refreshDashboardQuietly(function(){ renderManageAccounts(); });
+  });
 }
 
 /* ── Table view ── */
@@ -5369,6 +5484,13 @@ function openAccountEdit(accountId){
     _maccModalHeader('Edit account', esc(a.person)+' · '+esc(a.accountName||"(unnamed)")) +
     maccEditHTML(a, true)
   );
+  // Date inputs are filled after the markup exists (setDateISO formats
+  // for display and stores the ISO on the element).
+  (a.stageHistory || []).forEach(function(st){
+    if(!st.id) return;
+    setDateISO("stgStart_"+_sid(st.id), st.startedAt || "");
+    if(st.endedAt) setDateISO("stgEnd_"+_sid(st.id), st.endedAt);
+  });
 }
 function toggleAccountEdit(accountId){ openAccountEdit(accountId); }   // legacy name (table rows)
 
