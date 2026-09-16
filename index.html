@@ -1013,14 +1013,70 @@ body::after {
 
 .macc-edit { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); display: none; }
 .macc-edit.show { display: block; animation: fadeUp 0.2s ease; }
-.macc-trades-head { margin-bottom: 10px; }
-.macc-trades-title { font-family: var(--font-display); font-size: var(--fs-3); font-weight: 600; color: var(--txt); }
-.macc-trades-sub { font-size: var(--fs-1); color: var(--txt4); margin-top: 2px; }
-.macc-trades-table td { padding: 8px 12px; }
-.macc-trades-table tr.editing { background: var(--bg3); }
-.macc-trades-table tr.macc-trade-editrow:hover { background: none; }
-.macc-trades-table tr.macc-trade-editrow td { white-space: normal; padding: 0; }
-.macc-trade-edit { padding: 16px 14px 18px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--bg2); }
+.macc-trades-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+.macc-trades-title { font-family: var(--font-display); font-size: var(--fs-2); font-weight: 700; color: var(--txt); letter-spacing: var(--tr-label); }
+.macc-trades-sub { font-size: var(--fs-1); color: var(--txt4); }
+/* Scrolls inside a fixed height so a long history never pushes the
+   other cards off screen; the header stays put while scrolling. */
+.macc-trades-wrap { max-height: 280px; overflow: auto; border: 1px solid var(--border); border-radius: var(--r); background: var(--bg); }
+.macc-trades-table { width: 100%; border-collapse: collapse; }
+.macc-trades-table thead th {
+  position: sticky; top: 0; z-index: 1; background: var(--bg3);
+  font-family: var(--font-display); font-size: var(--fs-0); font-weight: 700; color: var(--txt4);
+  letter-spacing: var(--tr-label); text-align: left; padding: 6px 9px; white-space: nowrap;
+  border-bottom: 1px solid var(--border2);
+}
+.macc-trades-table thead th.num { text-align: right; }
+.macc-trades-table td {
+  padding: 4px 9px; font-family: var(--font-display); font-size: var(--fs-1); color: var(--txt2);
+  white-space: nowrap; border-bottom: 1px solid var(--border); line-height: 1.5;
+}
+.macc-trades-table tbody tr:last-child td { border-bottom: none; }
+.macc-trades-table tbody tr:hover td { background: var(--bg3); }
+.macc-trades-table tr.editing td { background: var(--gold-bg); }
+.macc-trades-table td.date { font-family: var(--font-mono); font-weight: 600; color: var(--txt); }
+.macc-trades-table td.num { text-align: right; font-family: var(--font-mono); }
+.macc-trades-table td.pos { color: var(--green); }
+.macc-trades-table td.neg { color: var(--red); }
+.macc-trades-table td.muted, .macc-trades-table .muted { color: var(--txt4); }
+.macc-trades-table .pos { color: var(--green); }
+.macc-trades-table .neg { color: var(--red); cursor: help; }
+.macc-trades-table td.mistake { max-width: 150px; overflow: hidden; text-overflow: ellipsis; color: var(--txt3); }
+.macc-trades-table td.act { text-align: right; padding-top: 2px; padding-bottom: 2px; }
+.jbtn-sm.mini { padding: 3px 8px; font-size: var(--fs-1); border-radius: var(--r); line-height: 1.3; }
+
+/* Trade editor popup */
+.mt-modal-backdrop {
+  position: fixed; inset: 0; z-index: 10000; display: none;
+  align-items: center; justify-content: center; padding: 16px;
+  background: rgba(0,0,0,0.55); backdrop-filter: blur(2px);
+}
+.mt-modal-backdrop.show { display: flex; }
+.mt-modal {
+  width: 100%; max-width: 640px; max-height: calc(100vh - 32px); overflow-y: auto;
+  background: var(--bg3); border: 1px solid var(--border3); border-radius: var(--r2);
+  padding: 16px 18px 14px; box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  animation: fadeUp 0.15s ease both; box-sizing: border-box;
+}
+.mt-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.mt-modal-title { font-family: var(--font-display); font-size: var(--fs-3); font-weight: 700; color: var(--txt); }
+.mt-modal-sub { font-size: var(--fs-1); color: var(--txt4); margin-top: 2px; }
+.mt-modal-x { background: none; border: none; color: var(--txt4); font-size: 22px; line-height: 1; cursor: pointer; padding: 0 2px; }
+.mt-modal-x:hover { color: var(--txt); }
+.mt-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px 10px; }
+.mt-grid .jfield { margin-bottom: 0; gap: 3px; }
+.mt-grid .jfield.span2 { grid-column: span 2; }
+.mt-modal .jselect, .mt-modal .jinput { padding: 7px 9px; font-size: var(--fs-2); border-radius: var(--r); }
+.mt-modal .jlabel { font-size: var(--fs-0); }
+.mt-recalc { color: var(--txt4); cursor: pointer; text-decoration: underline; margin-left: 4px; }
+.mt-modal .jrules { margin-top: 10px; }
+.mt-modal-foot { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.mt-modal-msgs { flex: 1; min-width: 80px; }
+.mt-modal .jerr, .mt-modal .jok { margin-top: 0; }
+.mt-modal .jsubmit-btn, .mt-modal .jdelete-btn { padding: 8px 16px; font-size: var(--fs-1); }
+@media (max-width: 640px) {
+  .mt-grid { grid-template-columns: 1fr 1fr; }
+}
 .jbtn-sm.on { border-color: var(--gold-rim); color: var(--gold); background: var(--gold-bg); }
 
 /* ── Meters: profit target progress + drawdown room ──
@@ -2017,6 +2073,12 @@ body::after {
     </div>
   </div>
 
+</div>
+
+<!-- Trade editor popup for Manage Accounts → Trades. One shared
+     instance; openTradeEdit() fills #mtModalBody per trade. -->
+<div class="mt-modal-backdrop" id="mtModal" onclick="if(event.target===this)closeTradeEdit()">
+  <div class="mt-modal" id="mtModalBody"></div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -4932,54 +4994,53 @@ function maccTradesBodyHTML(a){
   var editingKey = _maccTradeEdit[id] || null;
 
   var h = '<div class="macc-trades-head">'+
-    '<div class="macc-trades-title">Trades on this account</div>'+
-    '<div class="macc-trades-sub">'+trades.length+' entr'+(trades.length===1?"y":"ies")+
-      ' · newest first · one entry per day</div>'+
+    '<span class="macc-trades-title">Trades</span>'+
+    '<span class="macc-trades-sub">'+trades.length+' entr'+(trades.length===1?"y":"ies")+' · newest first · click ✎ to edit</span>'+
   '</div>';
 
   if(!trades.length){
-    return h + '<div class="empty" style="padding:18px 0 4px;">No trades logged on this account yet.</div>';
+    return h + '<div class="empty" style="padding:14px 0 2px;">No trades logged on this account yet.</div>';
   }
 
-  h += '<div class="wtable-wrap"><table class="wtable macc-trades-table"><thead><tr>'+
+  // Dense on purpose: this sits inside a card among other cards, so it
+  // scrolls within a fixed height rather than pushing the page down.
+  h += '<div class="macc-trades-wrap"><table class="macc-trades-table"><thead><tr>'+
     '<th>Date</th><th>TF</th><th>Type</th><th>RR</th><th>Result</th>'+
-    '<th>Risk</th><th>P&amp;L</th><th>%</th><th>Rules</th><th>Mistake</th><th></th>'+
+    '<th class="num">Risk</th><th class="num">P&amp;L</th><th class="num">%</th><th>Rules</th><th>Mistake</th><th></th>'+
     '</tr></thead><tbody>';
 
   trades.forEach(function(t){
     var isEditing = editingKey === t.dateKey;
-    var pnlCol = t.pnl>0?"var(--green)":t.pnl<0?"var(--red)":"var(--txt3)";
-    var rulesCol = t.rules==="TRUE" ? "var(--green)" : "var(--red)";
-    var pctTxt = (t.pnlPercent===null||t.pnlPercent===undefined) ? "—" : ((t.pnlPercent>0?"+":"")+t.pnlPercent.toFixed(2)+"%");
-    var rulesCellHtml = t.rules==="TRUE"
-      ? '✓'
-      : '✗' + (t.ruleReason ? '<span class="rule-reason" title="'+esc(t.ruleReason)+'">'+esc(t.ruleReason)+'</span>' : '');
+    var pnlCls = t.pnl>0?"pos":t.pnl<0?"neg":"muted";
+    var pctTxt = (t.pnlPercent===null||t.pnlPercent===undefined) ? "—" : ((t.pnlPercent>0?"+":"")+t.pnlPercent.toFixed(1)+"%");
+    var rulesCell = t.rules==="TRUE"
+      ? '<span class="pos">✓</span>'
+      : '<span class="neg" title="'+esc(t.ruleReason||"Rules broken")+'">✗</span>';
     h += '<tr class="'+(isEditing?"editing":"")+'">'+
-      '<td>'+esc(isoToDMY(t.dateKey))+'</td>'+
+      '<td class="date">'+esc(isoToDMY(t.dateKey))+'</td>'+
       '<td>'+esc(t.timeframe)+'</td>'+
       '<td>'+esc(t.tradeType)+'</td>'+
       '<td>'+esc(t.rr)+'</td>'+
       '<td>'+esc(t.result)+'</td>'+
-      '<td>'+fmtMoney(t.riskAmount)+'</td>'+
-      '<td style="color:'+pnlCol+'">'+fmtMoney(t.pnl)+'</td>'+
-      '<td style="color:'+pnlCol+'">'+pctTxt+'</td>'+
-      '<td style="color:'+rulesCol+';white-space:normal;">'+rulesCellHtml+'</td>'+
-      '<td>'+esc(t.mistake||"—")+'</td>'+
-      '<td style="text-align:right;"><button class="jbtn-sm'+(isEditing?"":" gold")+'" onclick="toggleTradeEdit(\'' + id + '\',\'' + t.dateKey + '\')">'+(isEditing?"Close":"Edit")+'</button></td>'+
+      '<td class="num">'+fmtMoney(t.riskAmount)+'</td>'+
+      '<td class="num '+pnlCls+'">'+fmtMoney(t.pnl)+'</td>'+
+      '<td class="num '+pnlCls+'">'+pctTxt+'</td>'+
+      '<td>'+rulesCell+'</td>'+
+      '<td class="mistake" title="'+esc(t.mistake||"")+'">'+esc(t.mistake||"—")+'</td>'+
+      '<td class="act"><button class="jbtn-sm mini'+(isEditing?" on":"")+'" title="Edit this trade" onclick="openTradeEdit(\'' + id + '\',\'' + t.dateKey + '\')">✎</button></td>'+
     '</tr>';
-    if(isEditing){
-      h += '<tr class="macc-trade-editrow"><td colspan="11">'+tradeEditFormHTML(a, t)+'</td></tr>';
-    }
   });
   h += '</tbody></table></div>';
   return h;
 }
 
 // The same fields as the Journal form, built from _config so the two
-// can never drift apart. Selects are pre-set to the stored values;
-// the P&L input starts as "touched" so changing RR or Result does
-// not silently overwrite a figure that was typed in deliberately —
-// "↺ recalc" is there when that is what you want.
+// can never drift apart. Rendered into the #mtModal popup rather than
+// inside the card, so opening it never pushes the page around.
+// Selects are pre-set to the stored values; the P&L input starts as
+// "touched" so changing RR or Result does not silently overwrite a
+// figure that was typed in deliberately — "↺ recalc" is there when
+// that is what you want.
 function tradeEditFormHTML(a, t){
   var p  = _mtPrefix(a.accountId);
   var id = a.accountId;
@@ -4994,47 +5055,43 @@ function tradeEditFormHTML(a, t){
     '<option value="YES"'+(t.strategy==="YES"?" selected":"")+'>YES</option>'+
     '<option value="NO"'+(t.strategy==="NO"?" selected":"")+'>NO</option>';
 
-  return '<div class="macc-trade-edit">'+
-    '<div class="jstatus" style="margin-bottom:12px;">✏️ Editing <b>'+esc(isoToDMY(t.dateKey))+'</b> · '+esc(t.person)+' · '+esc(a.accountName||"")+'</div>'+
-    '<div class="jgrid">'+
+  return '<div class="mt-modal-head">'+
+      '<div><div class="mt-modal-title">Edit trade · '+esc(isoToDMY(t.dateKey))+'</div>'+
+      '<div class="mt-modal-sub">'+esc(t.person)+' · '+esc(a.accountName||"")+' · '+esc((_config.phaseLabels&&_config.phaseLabels[a.phase])||a.phase)+'</div></div>'+
+      '<button class="mt-modal-x" title="Close (Esc)" onclick="closeTradeEdit()">×</button>'+
+    '</div>'+
+    '<div class="mt-grid">'+
       '<div class="jfield"><label class="jlabel">Pair</label>'+sel("Pair", _config.pairs, t.pair, ' onchange="updateRulesPreview(\'' + p + '\')"')+'</div>'+
       '<div class="jfield"><label class="jlabel">Timeframe</label>'+sel("Timeframe", _config.timeframes, t.timeframe, ' onchange="updateRulesPreview(\'' + p + '\')"')+'</div>'+
       '<div class="jfield"><label class="jlabel">RR</label>'+sel("RR", _config.rrOptions, t.rr, ' onchange="updateRulesPreview(\'' + p + '\'); suggestPnl(false,\'' + p + '\');"')+'</div>'+
-    '</div>'+
-    '<div class="jgrid" style="margin-top:12px;">'+
-      '<div class="jfield"><label class="jlabel">Trade Type</label>'+sel("TradeType", _config.tradeTypes, t.tradeType)+'</div>'+
+      '<div class="jfield"><label class="jlabel">Type</label>'+sel("TradeType", _config.tradeTypes, t.tradeType)+'</div>'+
       '<div class="jfield"><label class="jlabel">Result</label>'+sel("Result", _config.results, t.result, ' onchange="suggestPnl(false,\'' + p + '\')"')+'</div>'+
       '<div class="jfield"><label class="jlabel">Bias</label>'+sel("Bias", _config.biases, t.bias)+'</div>'+
-    '</div>'+
-    '<div class="jgrid" style="margin-top:12px;">'+
-      '<div class="jfield"><label class="jlabel">Risk Amount ($)</label>'+
+      '<div class="jfield"><label class="jlabel">Risk ($)</label>'+
         '<input class="jinput" type="number" id="'+p+'Risk" min="0" step="0.01" value="'+esc(t.riskAmount||"")+'" oninput="suggestPnl(false,\'' + p + '\')"></div>'+
-      '<div class="jfield"><label class="jlabel">P&amp;L ($) <span style="color:var(--txt4);cursor:pointer;text-decoration:underline;" onclick="suggestPnl(true,\'' + p + '\')">↺ recalc</span></label>'+
+      '<div class="jfield"><label class="jlabel">P&amp;L ($) <span class="mt-recalc" onclick="suggestPnl(true,\'' + p + '\')">↺</span></label>'+
         '<input class="jinput" type="number" id="'+p+'Pnl" step="0.01" value="'+esc(t.pnl===0?"0":(t.pnl||""))+'" data-touched="1" oninput="this.dataset.touched=\'1\'"></div>'+
-      '<div class="jfield"><label class="jlabel">Per strategy?</label><select class="jselect" id="'+p+'Strategy">'+strategyOpts+'</select></div>'+
+      '<div class="jfield span2"><label class="jlabel">Per strategy?</label><select class="jselect" id="'+p+'Strategy">'+strategyOpts+'</select></div>'+
+      '<div class="jfield span2"><label class="jlabel">Mistake</label>'+
+        sel("Mistake", _config.mistakes, t.mistake||"", "", '<option value=""'+(!t.mistake?" selected":"")+'>— none —</option>')+'</div>'+
     '</div>'+
-    '<div class="jfield" style="margin-top:12px;"><label class="jlabel">Mistake (if any)</label>'+
-      sel("Mistake", _config.mistakes, t.mistake||"", "", '<option value=""'+(!t.mistake?" selected":"")+'>— none —</option>')+'</div>'+
     '<div class="jrules" id="'+p+'RulesPreview"></div>'+
-    '<div class="jactions" style="margin-top:14px;">'+
-      '<button class="jsubmit-btn" onclick="saveTradeInline(\'' + id + '\',\'' + t.dateKey + '\', this)">Update Entry</button>'+
-      '<button class="jdelete-btn" onclick="deleteTradeInline(\'' + id + '\',\'' + t.dateKey + '\', this)">Delete Entry</button>'+
-    '</div>'+
-    '<div class="jerr" id="'+p+'Err"></div>'+
-    '<div class="jok" id="'+p+'Ok"></div>'+
-  '</div>';
+    '<div class="mt-modal-foot">'+
+      '<button class="jdelete-btn" onclick="deleteTradeInline(\'' + id + '\',\'' + t.dateKey + '\', this)">Delete</button>'+
+      '<span class="mt-modal-msgs"><span class="jerr" id="'+p+'Err"></span><span class="jok" id="'+p+'Ok"></span></span>'+
+      '<button class="jbtn-sm" onclick="closeTradeEdit()">Cancel</button>'+
+      '<button class="jsubmit-btn" onclick="saveTradeInline(\'' + id + '\',\'' + t.dateKey + '\', this)">Update</button>'+
+    '</div>';
 }
 
 function toggleAccountTrades(accountId){
   var open = !_maccTrades[accountId];
   _maccTrades[accountId] = open;
-  if(!open) _maccTradeEdit[accountId] = null;
 
   // Toggle in place when the panel is already on the page (card view,
   // or an expanded table row) so nothing typed elsewhere is lost.
   var panel = document.getElementById("maccTrades_"+accountId);
   if(panel){
-    if(!open) rerenderAccountTrades(accountId);   // drops the edit form
     panel.classList.toggle("show", open);
     var btn = document.getElementById("maccTradesBtn_"+accountId);
     if(btn) btn.classList.toggle("on", open);
@@ -5043,10 +5100,24 @@ function toggleAccountTrades(accountId){
   renderManageAccounts();
 }
 
-function toggleTradeEdit(accountId, dateKey){
-  _maccTradeEdit[accountId] = (_maccTradeEdit[accountId] === dateKey) ? null : dateKey;
+// The editor is one popup shared by every account: open it for a
+// trade, and the list row it came from is highlighted until it closes.
+function openTradeEdit(accountId, dateKey){
+  var a = _accountsById[accountId];
+  var t = accountTrades(accountId).filter(function(x){ return x.dateKey === dateKey; })[0];
+  if(!a || !t) return;
+  _maccTradeEdit[accountId] = dateKey;
   rerenderAccountTrades(accountId);
-  if(_maccTradeEdit[accountId]) updateRulesPreview(_mtPrefix(accountId));
+  document.getElementById("mtModalBody").innerHTML = tradeEditFormHTML(a, t);
+  document.getElementById("mtModal").classList.add("show");
+  updateRulesPreview(_mtPrefix(accountId));
+}
+
+function closeTradeEdit(){
+  document.getElementById("mtModal").classList.remove("show");
+  Object.keys(_maccTradeEdit).forEach(function(id){
+    if(_maccTradeEdit[id]){ _maccTradeEdit[id] = null; rerenderAccountTrades(id); }
+  });
 }
 
 function rerenderAccountTrades(accountId){
@@ -5088,7 +5159,7 @@ function saveTradeInline(accountId, dateKey, btn){
   jsonp(APPS_SCRIPT_URL + "?action=updateTrade&" + params.query, function(d){
     if(!d || !d.success){ done(); if(errEl) errEl.textContent = (d && d.error) || "Something went wrong."; return; }
     if(okEl) okEl.textContent = "Saved ✓";
-    _maccTradeEdit[accountId] = null;
+    closeTradeEdit();
     // Trades feed every account figure (balance, P&L, drawdown), so
     // the whole dashboard is refetched; the Manage tab re-renders with
     // this panel still open.
@@ -5107,7 +5178,7 @@ function deleteTradeInline(accountId, dateKey, btn){
         "&accountId=" + encodeURIComponent(accountId) +
         "&date="      + encodeURIComponent(dateKey), function(d){
     if(!d || !d.success){ done(); if(errEl) errEl.textContent = (d && d.error) || "Could not delete."; return; }
-    _maccTradeEdit[accountId] = null;
+    closeTradeEdit();
     refreshDashboardQuietly(function(){ renderManageAccounts(); });
   });
 }
@@ -5757,6 +5828,7 @@ function jsonp(url, cb){
 
 document.addEventListener("keydown", function(e){
   if(e.key==="Enter" && document.getElementById("login").style.display!=="none") doLogin();
+  if(e.key==="Escape" && document.getElementById("mtModal").classList.contains("show")) closeTradeEdit();
 });
 </script>
 </body>
