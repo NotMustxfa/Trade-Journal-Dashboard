@@ -1119,6 +1119,7 @@ body::after {
 .mt-stage-msgs { min-height: 0; }
 .mt-stage-msgs .jerr, .mt-stage-msgs .jok { margin-top: var(--sp-1); font-size: var(--fs-1); }
 .mt-modal .jinput:disabled, .mt-modal .jselect:disabled { opacity: 0.45; cursor: not-allowed; }
+.po-act { white-space: nowrap; }
 .mt-modal .jlabel { font-size: var(--fs-0); }
 .mt-recalc { color: var(--txt4); cursor: pointer; text-decoration: underline; margin-left: 4px; }
 .mt-modal .jrules { margin-top: 10px; }
@@ -4390,7 +4391,8 @@ function renderPayoutTable(){
       '<td style="color:'+(split===100?"var(--txt4)":"var(--gold)")+'">'+(split===100?"—":split+"%")+'</td>'+
       '<td style="color:var(--green);font-weight:700;">'+fmtMoney(net)+'</td>'+
       '<td style="color:var(--txt3)">'+esc(p.notes||"—")+'</td>'+
-      '<td><button class="jbtn-sm remove" onclick="removePayout(\''+p.id+'\', this)">Delete</button></td>'+
+      '<td class="po-act"><button class="jbtn-sm mini" onclick="openPayoutEdit(\''+p.id+'\')">Edit</button> '+
+          '<button class="jbtn-sm remove mini" onclick="removePayout(\''+p.id+'\', this)">Delete</button></td>'+
     '</tr>';
   });
   h += '</tbody></table>';
@@ -4442,6 +4444,77 @@ function submitPayout(btn){
     refreshDashboardQuietly(function(){
       renderPayoutsKPI(); renderPayoutTable(); renderPayoutByPerson();
     });
+  });
+}
+
+/* ── EDIT PAYOUT (v19) ──
+   Amount, split, date and notes of a logged payout, in the shared popup
+   (it lives at body level, so it works from this tab too). Person and
+   account are fixed — a payout belongs to the Master it left. ── */
+function openPayoutEdit(payoutId){
+  var list = (_data && _data.payouts && _data.payouts.list) || [];
+  var p = list.filter(function(x){ return x.id === payoutId; })[0];
+  if(!p) return;
+  openMaccModal(
+    _maccModalHeader('Edit payout', esc(p.person)+' · '+esc(p.accountName||"")) +
+    payoutEditFormHTML(p)
+  );
+  setDateISO("pe_Date", p.date);
+  updatePayoutEditNet();
+}
+
+function payoutEditFormHTML(p){
+  var split = p.splitPct || 100;
+  return '<div class="macc-edit show" data-enter-scope>'+
+    '<div class="mt-grid">'+
+      '<div class="jfield"><label class="jlabel">Withdrawn ($)</label>'+
+        '<input class="jinput" type="number" id="pe_Amount" min="0.01" step="0.01" value="'+esc(p.amount)+'" oninput="updatePayoutEditNet()"></div>'+
+      '<div class="jfield"><label class="jlabel">Your split (%)</label>'+
+        '<input class="jinput" type="number" id="pe_Split" min="0" max="100" step="0.1" value="'+esc(split===100?"":split)+'" placeholder="100" oninput="updatePayoutEditNet()"></div>'+
+      '<div class="jfield"><label class="jlabel">Date</label>'+
+        '<input class="jinput" type="text" id="pe_Date" readonly placeholder="dd/mm/yyyy" onclick="openDatePicker(\'pe_Date\')"></div>'+
+      '<div class="jfield"><label class="jlabel">You keep</label><div class="jstatus" id="pe_Net">—</div></div>'+
+      '<div class="jfield span2"><label class="jlabel">Notes</label>'+
+        '<input class="jinput" type="text" id="pe_Notes" maxlength="300" value="'+esc(p.notes||"")+'" placeholder="optional"></div>'+
+    '</div>'+
+    '<div class="mt-modal-foot">'+
+      '<span class="mt-modal-msgs"><span class="jerr" id="pe_Err"></span><span class="jok" id="pe_Ok"></span></span>'+
+      '<button class="jbtn-sm" onclick="closeMaccModal()">Cancel</button>'+
+      '<button class="jsubmit-btn" onclick="savePayoutEdit(\''+p.id+'\', this)">Update</button>'+
+    '</div>'+
+  '</div>';
+}
+
+function updatePayoutEditNet(){
+  var net = document.getElementById("pe_Net");
+  if(!net) return;
+  var amt   = parseFloat(document.getElementById("pe_Amount").value) || 0;
+  var split = parseFloat(document.getElementById("pe_Split").value);
+  var effective = (isNaN(split) || split <= 0 || split > 100) ? 100 : split;   // 0 / blank = keep it all
+  net.textContent = amt ? fmtMoney(amt * (effective / 100)) + (effective === 100 ? "" : " (" + effective + "%)") : "—";
+}
+
+function savePayoutEdit(payoutId, btn){
+  var errEl = document.getElementById("pe_Err"), okEl = document.getElementById("pe_Ok");
+  errEl.textContent = ""; okEl.textContent = "";
+  var amount = parseFloat(document.getElementById("pe_Amount").value);
+  var split  = document.getElementById("pe_Split").value;
+  var date   = getDateISO("pe_Date");
+  var notes  = document.getElementById("pe_Notes").value;
+  if(isNaN(amount) || amount <= 0){ errEl.textContent = "Enter a payout amount greater than 0."; return; }
+  if(split !== "" && (parseFloat(split) < 0 || parseFloat(split) > 100)){ errEl.textContent = "Profit split must be between 0 and 100%."; return; }
+  if(!date){ errEl.textContent = "Pick a date."; return; }
+
+  var done = btnLoading(btn, "Updating");
+  jsonp(APPS_SCRIPT_URL + "?action=updatePayout&token=" + encodeURIComponent(_tok) +
+        "&payoutId=" + encodeURIComponent(payoutId) +
+        "&amount="   + encodeURIComponent(amount) +
+        "&splitPct=" + encodeURIComponent(split || "0") +
+        "&date="     + encodeURIComponent(date) +
+        "&notes="    + encodeURIComponent(notes), function(d){
+    if(!d || !d.success){ done(); errEl.textContent = (d && d.error) || "Could not save the payout."; return; }
+    closeMaccModal();
+    refreshDashboardQuietly(function(){ renderPayoutsKPI(); renderPayoutTable(); renderPayoutByPerson(); });
   });
 }
 
