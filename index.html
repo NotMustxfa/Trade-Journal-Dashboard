@@ -1013,6 +1013,15 @@ body::after {
 
 .macc-edit { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); display: none; }
 .macc-edit.show { display: block; animation: fadeUp 0.2s ease; }
+.macc-trades-head { margin-bottom: 10px; }
+.macc-trades-title { font-family: var(--font-display); font-size: var(--fs-3); font-weight: 600; color: var(--txt); }
+.macc-trades-sub { font-size: var(--fs-1); color: var(--txt4); margin-top: 2px; }
+.macc-trades-table td { padding: 8px 12px; }
+.macc-trades-table tr.editing { background: var(--bg3); }
+.macc-trades-table tr.macc-trade-editrow:hover { background: none; }
+.macc-trades-table tr.macc-trade-editrow td { white-space: normal; padding: 0; }
+.macc-trade-edit { padding: 16px 14px 18px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--bg2); }
+.jbtn-sm.on { border-color: var(--gold-rim); color: var(--gold); background: var(--gold-bg); }
 
 /* ── Meters: profit target progress + drawdown room ──
    Both are a labelled track with a fill. The drawdown meter is
@@ -2092,6 +2101,8 @@ var _accountsById = {};       // from getDashboardData accounts list
 
 var _rawPerson="all", _rawAccount="all", _rawLimit=50, _rawInherit=true;
 var _maccOpen = {}; // accountId -> bool, tracks which edit forms are open
+var _maccTrades = {};    // accountId -> bool, per-account trade list expanded
+var _maccTradeEdit = {}; // accountId -> dateKey of the trade being edited inline, or null
 var _maccView = "cards";               // "cards" | "table"
 var _maccSort = { key:"name", dir:1 }; // table view sort
 var _equityUnit = "abs";               // "abs" ($) | "pct" (% of account size)
@@ -4483,6 +4494,8 @@ function maccCardHTML(a){
   if(isMaster){
     quickBtns += '<button class="jbtn-sm gold" onclick="gotoPayout(\'' + a.accountId + '\')">+ Log Payout</button>';
   }
+  var nTrades = accountTrades(a.accountId).length;
+  quickBtns += '<button class="jbtn-sm'+(_maccTrades[a.accountId]?" on":"")+'" id="maccTradesBtn_'+a.accountId+'" onclick="toggleAccountTrades(\'' + a.accountId + '\')">Trades ('+nTrades+')</button>';
   quickBtns += '<button class="jbtn-sm" id="maccEditBtn_'+a.accountId+'" onclick="toggleAccountEdit(\'' + a.accountId + '\')">'+(editing?"Close":"Edit")+'</button>';
 
   var st = (_data.accountStats && _data.accountStats[a.accountId]) || null;
@@ -4548,6 +4561,7 @@ function maccCardHTML(a){
     meters+
     (a.status==="ACTIVE" && nextPhase ? promoteFormHTML(a, nextPhase) : "")+
     maccEditHTML(a, editing)+
+    maccTradesHTML(a)+
   '</div>';
 }
 
@@ -4872,12 +4886,230 @@ function maccTableHTML(accs){
     '</tr>';
 
     if(_maccOpen[a.accountId]){
-      body += '<tr class="editrow"><td colspan="'+MACC_COLS.length+'">'+maccEditHTML(a, true)+'</td></tr>';
+      var nTr = accountTrades(a.accountId).length;
+      body += '<tr class="editrow"><td colspan="'+MACC_COLS.length+'">'+maccEditHTML(a, true)+
+        '<div class="jactions" style="margin-top:14px;"><button class="jbtn-sm'+(_maccTrades[a.accountId]?" on":"")+'" id="maccTradesBtn_'+a.accountId+'" onclick="toggleAccountTrades(\'' + a.accountId + '\')">Trades ('+nTr+')</button></div>'+
+        maccTradesHTML(a)+'</td></tr>';
     }
   });
 
   return '<div class="macc-table-wrap"><table class="macc-table">'+
     '<thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table></div>';
+}
+
+/* ── PER-ACCOUNT TRADES (Manage Accounts) ──
+   Every trade an account has ever taken, editable in place. Before
+   this the only way to correct a trade was the Journal tab, which
+   means remembering the date and — because its account picker lists
+   ACTIVE accounts only — meant a trade on a blown or passed account
+   could not be edited from the UI at all. The backend never had that
+   restriction: updateTrade / deleteTrade work on any status, and a
+   trade is keyed by (person, accountId, date), which every row in
+   _data.trades already carries. ── */
+
+// Element-id prefix for one account's inline trade form. The Journal
+// form uses prefix "j" (jPair, jRR, …) so the same field helpers
+// serve both — see updateRulesPreview(p) / suggestPnl(force, p).
+function _mtPrefix(accountId){ return "mt" + String(accountId).replace(/-/g, ""); }
+
+function accountTrades(accountId){
+  return (_data && _data.trades || [])
+    .filter(function(t){ return t.accountId === accountId; })
+    .sort(function(a, b){ return a.dateKey < b.dateKey ? 1 : a.dateKey > b.dateKey ? -1 : 0; });
+}
+
+function maccTradesHTML(a){
+  var id   = a.accountId;
+  var open = !!_maccTrades[id];
+  return '<div class="macc-edit macc-trades'+(open?" show":"")+'" id="maccTrades_'+id+'">'+
+    '<div id="maccTradesBody_'+id+'">'+maccTradesBodyHTML(a)+'</div>'+
+  '</div>';
+}
+
+function maccTradesBodyHTML(a){
+  var id     = a.accountId;
+  var trades = accountTrades(id);
+  var editingKey = _maccTradeEdit[id] || null;
+
+  var h = '<div class="macc-trades-head">'+
+    '<div class="macc-trades-title">Trades on this account</div>'+
+    '<div class="macc-trades-sub">'+trades.length+' entr'+(trades.length===1?"y":"ies")+
+      ' · newest first · one entry per day</div>'+
+  '</div>';
+
+  if(!trades.length){
+    return h + '<div class="empty" style="padding:18px 0 4px;">No trades logged on this account yet.</div>';
+  }
+
+  h += '<div class="wtable-wrap"><table class="wtable macc-trades-table"><thead><tr>'+
+    '<th>Date</th><th>TF</th><th>Type</th><th>RR</th><th>Result</th>'+
+    '<th>Risk</th><th>P&amp;L</th><th>%</th><th>Rules</th><th>Mistake</th><th></th>'+
+    '</tr></thead><tbody>';
+
+  trades.forEach(function(t){
+    var isEditing = editingKey === t.dateKey;
+    var pnlCol = t.pnl>0?"var(--green)":t.pnl<0?"var(--red)":"var(--txt3)";
+    var rulesCol = t.rules==="TRUE" ? "var(--green)" : "var(--red)";
+    var pctTxt = (t.pnlPercent===null||t.pnlPercent===undefined) ? "—" : ((t.pnlPercent>0?"+":"")+t.pnlPercent.toFixed(2)+"%");
+    var rulesCellHtml = t.rules==="TRUE"
+      ? '✓'
+      : '✗' + (t.ruleReason ? '<span class="rule-reason" title="'+esc(t.ruleReason)+'">'+esc(t.ruleReason)+'</span>' : '');
+    h += '<tr class="'+(isEditing?"editing":"")+'">'+
+      '<td>'+esc(isoToDMY(t.dateKey))+'</td>'+
+      '<td>'+esc(t.timeframe)+'</td>'+
+      '<td>'+esc(t.tradeType)+'</td>'+
+      '<td>'+esc(t.rr)+'</td>'+
+      '<td>'+esc(t.result)+'</td>'+
+      '<td>'+fmtMoney(t.riskAmount)+'</td>'+
+      '<td style="color:'+pnlCol+'">'+fmtMoney(t.pnl)+'</td>'+
+      '<td style="color:'+pnlCol+'">'+pctTxt+'</td>'+
+      '<td style="color:'+rulesCol+';white-space:normal;">'+rulesCellHtml+'</td>'+
+      '<td>'+esc(t.mistake||"—")+'</td>'+
+      '<td style="text-align:right;"><button class="jbtn-sm'+(isEditing?"":" gold")+'" onclick="toggleTradeEdit(\'' + id + '\',\'' + t.dateKey + '\')">'+(isEditing?"Close":"Edit")+'</button></td>'+
+    '</tr>';
+    if(isEditing){
+      h += '<tr class="macc-trade-editrow"><td colspan="11">'+tradeEditFormHTML(a, t)+'</td></tr>';
+    }
+  });
+  h += '</tbody></table></div>';
+  return h;
+}
+
+// The same fields as the Journal form, built from _config so the two
+// can never drift apart. Selects are pre-set to the stored values;
+// the P&L input starts as "touched" so changing RR or Result does
+// not silently overwrite a figure that was typed in deliberately —
+// "↺ recalc" is there when that is what you want.
+function tradeEditFormHTML(a, t){
+  var p  = _mtPrefix(a.accountId);
+  var id = a.accountId;
+  function sel(name, list, val, extra, firstOpt){
+    var opts = (firstOpt || "") + list.map(function(v){
+      return '<option value="'+esc(v)+'"'+(v===val?" selected":"")+'>'+esc(v)+'</option>';
+    }).join("");
+    return '<select class="jselect" id="'+p+name+'"'+(extra||"")+'>'+opts+'</select>';
+  }
+  var strategyOpts =
+    '<option value=""'+(!t.strategy?" selected":"")+'>— select —</option>'+
+    '<option value="YES"'+(t.strategy==="YES"?" selected":"")+'>YES</option>'+
+    '<option value="NO"'+(t.strategy==="NO"?" selected":"")+'>NO</option>';
+
+  return '<div class="macc-trade-edit">'+
+    '<div class="jstatus" style="margin-bottom:12px;">✏️ Editing <b>'+esc(isoToDMY(t.dateKey))+'</b> · '+esc(t.person)+' · '+esc(a.accountName||"")+'</div>'+
+    '<div class="jgrid">'+
+      '<div class="jfield"><label class="jlabel">Pair</label>'+sel("Pair", _config.pairs, t.pair, ' onchange="updateRulesPreview(\'' + p + '\')"')+'</div>'+
+      '<div class="jfield"><label class="jlabel">Timeframe</label>'+sel("Timeframe", _config.timeframes, t.timeframe, ' onchange="updateRulesPreview(\'' + p + '\')"')+'</div>'+
+      '<div class="jfield"><label class="jlabel">RR</label>'+sel("RR", _config.rrOptions, t.rr, ' onchange="updateRulesPreview(\'' + p + '\'); suggestPnl(false,\'' + p + '\');"')+'</div>'+
+    '</div>'+
+    '<div class="jgrid" style="margin-top:12px;">'+
+      '<div class="jfield"><label class="jlabel">Trade Type</label>'+sel("TradeType", _config.tradeTypes, t.tradeType)+'</div>'+
+      '<div class="jfield"><label class="jlabel">Result</label>'+sel("Result", _config.results, t.result, ' onchange="suggestPnl(false,\'' + p + '\')"')+'</div>'+
+      '<div class="jfield"><label class="jlabel">Bias</label>'+sel("Bias", _config.biases, t.bias)+'</div>'+
+    '</div>'+
+    '<div class="jgrid" style="margin-top:12px;">'+
+      '<div class="jfield"><label class="jlabel">Risk Amount ($)</label>'+
+        '<input class="jinput" type="number" id="'+p+'Risk" min="0" step="0.01" value="'+esc(t.riskAmount||"")+'" oninput="suggestPnl(false,\'' + p + '\')"></div>'+
+      '<div class="jfield"><label class="jlabel">P&amp;L ($) <span style="color:var(--txt4);cursor:pointer;text-decoration:underline;" onclick="suggestPnl(true,\'' + p + '\')">↺ recalc</span></label>'+
+        '<input class="jinput" type="number" id="'+p+'Pnl" step="0.01" value="'+esc(t.pnl===0?"0":(t.pnl||""))+'" data-touched="1" oninput="this.dataset.touched=\'1\'"></div>'+
+      '<div class="jfield"><label class="jlabel">Per strategy?</label><select class="jselect" id="'+p+'Strategy">'+strategyOpts+'</select></div>'+
+    '</div>'+
+    '<div class="jfield" style="margin-top:12px;"><label class="jlabel">Mistake (if any)</label>'+
+      sel("Mistake", _config.mistakes, t.mistake||"", "", '<option value=""'+(!t.mistake?" selected":"")+'>— none —</option>')+'</div>'+
+    '<div class="jrules" id="'+p+'RulesPreview"></div>'+
+    '<div class="jactions" style="margin-top:14px;">'+
+      '<button class="jsubmit-btn" onclick="saveTradeInline(\'' + id + '\',\'' + t.dateKey + '\', this)">Update Entry</button>'+
+      '<button class="jdelete-btn" onclick="deleteTradeInline(\'' + id + '\',\'' + t.dateKey + '\', this)">Delete Entry</button>'+
+    '</div>'+
+    '<div class="jerr" id="'+p+'Err"></div>'+
+    '<div class="jok" id="'+p+'Ok"></div>'+
+  '</div>';
+}
+
+function toggleAccountTrades(accountId){
+  var open = !_maccTrades[accountId];
+  _maccTrades[accountId] = open;
+  if(!open) _maccTradeEdit[accountId] = null;
+
+  // Toggle in place when the panel is already on the page (card view,
+  // or an expanded table row) so nothing typed elsewhere is lost.
+  var panel = document.getElementById("maccTrades_"+accountId);
+  if(panel){
+    if(!open) rerenderAccountTrades(accountId);   // drops the edit form
+    panel.classList.toggle("show", open);
+    var btn = document.getElementById("maccTradesBtn_"+accountId);
+    if(btn) btn.classList.toggle("on", open);
+    return;
+  }
+  renderManageAccounts();
+}
+
+function toggleTradeEdit(accountId, dateKey){
+  _maccTradeEdit[accountId] = (_maccTradeEdit[accountId] === dateKey) ? null : dateKey;
+  rerenderAccountTrades(accountId);
+  if(_maccTradeEdit[accountId]) updateRulesPreview(_mtPrefix(accountId));
+}
+
+function rerenderAccountTrades(accountId){
+  var a = _accountsById[accountId];
+  var body = document.getElementById("maccTradesBody_"+accountId);
+  if(a && body) body.innerHTML = maccTradesBodyHTML(a);
+}
+
+function _tradeInlineParams(accountId, dateKey){
+  var p = _mtPrefix(accountId);
+  var a = _accountsById[accountId];
+  var t = accountTrades(accountId).filter(function(x){ return x.dateKey === dateKey; })[0];
+  var v = function(n){ var el = document.getElementById(p+n); return el ? el.value : ""; };
+  return {
+    person: t ? t.person : (a ? a.person : ""),
+    query: "token=" + encodeURIComponent(_tok) +
+      "&person="    + encodeURIComponent(t ? t.person : (a ? a.person : "")) +
+      "&accountId=" + encodeURIComponent(accountId) +
+      "&date="      + encodeURIComponent(dateKey) +
+      "&pair="      + encodeURIComponent(v("Pair")) +
+      "&timeframe=" + encodeURIComponent(v("Timeframe")) +
+      "&tradeType=" + encodeURIComponent(v("TradeType")) +
+      "&rr="        + encodeURIComponent(v("RR")) +
+      "&result="    + encodeURIComponent(v("Result")) +
+      "&bias="      + encodeURIComponent(v("Bias")) +
+      "&strategy="  + encodeURIComponent(v("Strategy")) +
+      "&mistakes="  + encodeURIComponent(v("Mistake")) +
+      "&riskAmount="+ encodeURIComponent(v("Risk") || "0") +
+      "&pnl="       + encodeURIComponent(v("Pnl") || "0")
+  };
+}
+
+function saveTradeInline(accountId, dateKey, btn){
+  var p = _mtPrefix(accountId);
+  var errEl = document.getElementById(p+"Err"), okEl = document.getElementById(p+"Ok");
+  if(errEl) errEl.textContent = ""; if(okEl) okEl.textContent = "";
+  var params = _tradeInlineParams(accountId, dateKey);
+  var done = btnLoading(btn, "Updating");
+  jsonp(APPS_SCRIPT_URL + "?action=updateTrade&" + params.query, function(d){
+    if(!d || !d.success){ done(); if(errEl) errEl.textContent = (d && d.error) || "Something went wrong."; return; }
+    if(okEl) okEl.textContent = "Saved ✓";
+    _maccTradeEdit[accountId] = null;
+    // Trades feed every account figure (balance, P&L, drawdown), so
+    // the whole dashboard is refetched; the Manage tab re-renders with
+    // this panel still open.
+    refreshDashboardQuietly(function(){ renderManageAccounts(); });
+  });
+}
+
+function deleteTradeInline(accountId, dateKey, btn){
+  if(!confirm("Delete the entry for " + isoToDMY(dateKey) + "? This can't be undone.")) return;
+  var p = _mtPrefix(accountId);
+  var errEl = document.getElementById(p+"Err");
+  var params = _tradeInlineParams(accountId, dateKey);
+  var done = btnLoading(btn, "Deleting");
+  jsonp(APPS_SCRIPT_URL + "?action=deleteTrade&token=" + encodeURIComponent(_tok) +
+        "&person="    + encodeURIComponent(params.person) +
+        "&accountId=" + encodeURIComponent(accountId) +
+        "&date="      + encodeURIComponent(dateKey), function(d){
+    if(!d || !d.success){ done(); if(errEl) errEl.textContent = (d && d.error) || "Could not delete."; return; }
+    _maccTradeEdit[accountId] = null;
+    refreshDashboardQuietly(function(){ renderManageAccounts(); });
+  });
 }
 
 // Accepts either a Date, an ISO string, or a serialized date string
@@ -5381,17 +5613,18 @@ function resetJournalForm(){
 // CONFIG.sharedRules.session) — so this preview only needs to
 // check pair/timeframe/rr, but it explicitly SAYS what the locked
 // session is so it's never a silent assumption.
-function updateRulesPreview(){
+function updateRulesPreview(p){
   if(!_config) return;
-  var pair = document.getElementById("jPair").value;
-  var tf   = document.getElementById("jTimeframe").value;
-  var rr   = document.getElementById("jRR").value;
+  p = p || "j";   // "j" = the Journal form; per-account inline forms pass their own prefix
+  var pair = document.getElementById(p+"Pair").value;
+  var tf   = document.getElementById(p+"Timeframe").value;
+  var rr   = document.getElementById(p+"RR").value;
   var pairOk  = pair === _config.sharedRules.pair;
   var validTf = _config.timeframeRR.hasOwnProperty(tf);
   var allowed = validTf ? _config.timeframeRR[tf] : [];
   var rrOk    = validTf && allowed.indexOf(rr) !== -1;
   var ok      = pairOk && validTf && rrOk;
-  var el = document.getElementById("jRulesPreview");
+  var el = document.getElementById(p+"RulesPreview");
   if(ok){
     el.innerHTML = '<span style="color:var(--green)">✓ Rules followed</span> <span style="color:var(--txt4);font-weight:400;font-size:10px;">(session is always locked to '+esc(_config.sharedRules.session)+')</span>';
   } else {
@@ -5407,12 +5640,13 @@ function updateRulesPreview(){
   }
 }
 
-function suggestPnl(force){
-  var pnlInput = document.getElementById("jPnl");
+function suggestPnl(force, p){
+  p = p || "j";
+  var pnlInput = document.getElementById(p+"Pnl");
   if(!force && pnlInput.dataset.touched === "1") return;
-  var risk = parseFloat(document.getElementById("jRisk").value);
-  var rr   = document.getElementById("jRR").value;
-  var result = document.getElementById("jResult").value;
+  var risk = parseFloat(document.getElementById(p+"Risk").value);
+  var rr   = document.getElementById(p+"RR").value;
+  var result = document.getElementById(p+"Result").value;
   if(isNaN(risk) || !rr) return;
   var rrMult = parseFloat(rr.split(":")[1]);
   if(isNaN(rrMult)) return;
