@@ -888,6 +888,8 @@ body::after {
   display: inline-flex; align-items: center; justify-content: center;
 }
 .jsubmit-btn:hover { background: var(--gold-lt); box-shadow: 0 0 30px rgba(200,168,75,0.3); }
+.jsubmit-btn.danger { background: var(--red); }
+.jsubmit-btn.danger:hover { background: var(--red-lt); box-shadow: 0 0 30px var(--red-rim); }
 .jsubmit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .jdelete-btn {
@@ -5435,19 +5437,66 @@ function saveAccountEdit(accountId, btn){
   });
 }
 
-function quickAccountStatus(accountId, status, btn){
-  var msgs = {
-    PASSED: "Mark this account as Passed? It will stop appearing for new trades. Its history keeps counting toward analytics — use the Status filter to include/exclude it.",
-    BLOWN:  "Mark this account as Blown? It will stop appearing for new trades. Its history keeps counting toward analytics — use the Status filter to include/exclude it. If this is a Master account, any payouts already logged against it are untouched.",
-    ACTIVE: "Reactivate this account? It'll be selectable again for new trades.",
-  };
-  if(msgs[status] && !confirm(msgs[status])) return;
+var STATUS_MSGS = {
+  PASSED: "It will stop appearing for new trades. Its history keeps counting toward analytics — use the Status filter to include/exclude it.",
+  BLOWN:  "It will stop appearing for new trades. Its history keeps counting toward analytics — use the Status filter to include/exclude it. If this is a Master account, any payouts already logged against it are untouched.",
+  ACTIVE: "Reactivate this account? It'll be selectable again for new trades.",
+};
 
+// Blown / Finished ask for the date it happened (the stage closes on
+// that day — see updateAccount's statusDate). Reactivating needs no
+// date, so it keeps the plain confirm.
+function quickAccountStatus(accountId, status, btn){
+  if(status === "BLOWN" || status === "PASSED"){
+    var a = _accountsById[accountId];
+    if(!a) return;
+    openMaccModal(
+      _maccModalHeader(status === "BLOWN" ? "Mark blown" : "Mark finished",
+                       esc(a.person)+' · '+esc(a.accountName||"(unnamed)")) +
+      statusDateFormHTML(a, status)
+    );
+    setDateISO("stDate_"+accountId, todayISO());
+    return;
+  }
+  if(!confirm(STATUS_MSGS[status])) return;
   var done = btnLoading(btn, "Updating");
+  _sendStatus(accountId, status, "", function(err){ done(); alert(err); });
+}
+
+function statusDateFormHTML(a, status){
+  var id = a.accountId;
+  var isBlown = status === "BLOWN";
+  return '<div class="macc-edit show" data-enter-scope>'+
+    '<div class="psub" style="margin-bottom:var(--sp-3)">'+esc(STATUS_MSGS[status])+'</div>'+
+    '<div class="jgrid">'+
+      '<div class="jfield"><label class="jlabel">Date it happened</label>'+
+        '<input class="jinput" type="text" id="stDate_'+id+'" readonly placeholder="dd/mm/yyyy" onclick="openDatePicker(\'stDate_'+id+'\')">'+
+        '<div class="meter-note">The current stage closes on this date. Defaults to today.</div></div>'+
+    '</div>'+
+    '<div class="mt-modal-foot">'+
+      '<span class="mt-modal-msgs"><span class="jerr" id="stErr_'+id+'"></span></span>'+
+      '<button class="jbtn-sm" onclick="closeMaccModal()">Cancel</button>'+
+      '<button class="jsubmit-btn'+(isBlown?' danger':'')+'" onclick="submitQuickStatus(\'' + id + '\',\'' + status + '\', this)">'+(isBlown?"Mark blown":"Mark finished")+'</button>'+
+    '</div>'+
+  '</div>';
+}
+
+function submitQuickStatus(accountId, status, btn){
+  var errEl = document.getElementById("stErr_"+accountId);
+  errEl.textContent = "";
+  var iso = getDateISO("stDate_"+accountId) || todayISO();
+  if(iso > todayISO()){ errEl.textContent = "The date cannot be in the future."; return; }
+  var done = btnLoading(btn, "Updating");
+  _sendStatus(accountId, status, iso, function(err){ done(); errEl.textContent = err; });
+}
+
+function _sendStatus(accountId, status, statusDate, onErr){
   jsonp(APPS_SCRIPT_URL + "?action=updateAccount&token=" + encodeURIComponent(_tok) +
         "&accountId=" + encodeURIComponent(accountId) +
-        "&status=" + encodeURIComponent(status), function(d){
-    if(!d || !d.success){ done(); alert((d&&d.error)||"Could not update account."); return; }
+        "&status="    + encodeURIComponent(status) +
+        (statusDate ? "&statusDate=" + encodeURIComponent(statusDate) : ""), function(d){
+    if(!d || !d.success){ onErr((d&&d.error)||"Could not update account."); return; }
+    closeMaccModal();
     refreshAccountsList();
     refreshDashboardQuietly(function(){ renderManageAccounts(); });
     // page re-renders on success, so no explicit done() restore needed
