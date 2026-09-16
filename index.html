@@ -4838,7 +4838,7 @@ function promoteFormHTML(a, nextPhase){
     return '<option value="'+dt+'"'+(dt===(a.ddType||"STATIC")?" selected":"")+'>'+esc(lbl)+'</option>';
   }).join("");
 
-  return '<div class="macc-edit show" id="promote_'+id+'">'+
+  return '<div class="macc-edit show" id="promote_'+id+'" data-enter-scope>'+
     '<div class="psub" style="margin-bottom:var(--sp-3)">Moving to '+esc(nextLbl)+
       ' — the balance resets to '+esc(fmtMoney(a.startingBalance||0))+
       ' and every trade so far keeps counting toward your stats.</div>'+
@@ -4969,7 +4969,7 @@ function maccEditHTML(a, editing){
   }).join("");
   var id = a.accountId;
 
-  return '<div class="macc-edit show" id="maccEdit_'+id+'">'+
+  return '<div class="macc-edit show" id="maccEdit_'+id+'" data-enter-scope>'+
     '<div class="jgrid">'+
       '<div class="jfield"><label class="jlabel">Name</label>'+
         '<input class="jinput" type="text" id="edtName_'+id+'" value="'+esc(a.accountName||"")+'" maxlength="40"></div>'+
@@ -5210,7 +5210,7 @@ function tradeEditFormHTML(a, t){
       '<div class="mt-modal-sub">'+esc(t.person)+' · '+esc(a.accountName||"")+' · '+esc((_config.phaseLabels&&_config.phaseLabels[a.phase])||a.phase)+'</div></div>'+
       '<button class="mt-modal-x" title="Close (Esc)" onclick="closeTradeEdit()">×</button>'+
     '</div>'+
-    '<div class="mt-grid">'+
+    '<div class="mt-grid" data-enter-scope>'+
       '<div class="jfield"><label class="jlabel">Pair</label>'+sel("Pair", _config.pairs, t.pair, ' onchange="updateRulesPreview(\'' + p + '\')"')+'</div>'+
       '<div class="jfield"><label class="jlabel">Timeframe</label>'+sel("Timeframe", _config.timeframes, t.timeframe, ' onchange="updateRulesPreview(\'' + p + '\')"')+'</div>'+
       '<div class="jfield"><label class="jlabel">RR</label>'+sel("RR", _config.rrOptions, t.rr, ' onchange="updateRulesPreview(\'' + p + '\'); suggestPnl(false,\'' + p + '\');"')+'</div>'+
@@ -6005,8 +6005,29 @@ function jsonp(url, cb){
 }
 
 document.addEventListener("keydown", function(e){
-  if(e.key==="Enter" && document.getElementById("login").style.display!=="none") doLogin();
-  if(e.key==="Escape" && document.getElementById("mtModal").classList.contains("show")) closeMaccModal();
+  if(e.key==="Enter" && document.getElementById("login").style.display!=="none"){ doLogin(); return; }
+
+  var modal = document.getElementById("mtModal");
+  var open  = modal && modal.classList.contains("show");
+  if(e.key==="Escape" && open){ closeMaccModal(); return; }
+
+  // Enter inside a popup submits the form you are typing in. Forms mark
+  // themselves with data-enter-scope; a scope's own submit is either a
+  // button tagged data-enter-target or its .jsubmit-btn. The account
+  // popup holds one main form plus a form per stage row, which is why
+  // the nearest scope wins rather than the popup's first button.
+  if(e.key==="Enter" && open){
+    var t = e.target, tag = t && t.tagName;
+    if(tag !== "INPUT" && tag !== "SELECT") return;           // textareas and buttons keep Enter
+    if(document.getElementById("dpPop")){ closeDatePicker(); e.preventDefault(); return; }
+    if(!modal.contains(t)) return;
+    var scope = t.closest ? t.closest("[data-enter-scope]") : null;
+    var btn = (scope && (scope.querySelector("[data-enter-target]") || scope.querySelector(".jsubmit-btn")))
+           || modal.querySelector("#mtModalBody .jsubmit-btn");
+    // btnLoading disables the button on the first click, so a held key
+    // cannot submit twice.
+    if(btn && !btn.disabled && btn.dataset.loading !== "1"){ e.preventDefault(); btn.click(); }
+  }
 });
 </script>
 </body>
