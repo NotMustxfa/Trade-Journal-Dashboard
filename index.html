@@ -1151,19 +1151,50 @@ body::after {
 /* ── Stat drill-down ── */
 .kpi.drillable { cursor: pointer; }
 .kpi.drillable .kpi-sub::after { content: " ›"; color: var(--txt4); }
-.mt-modal.wide { max-width: 1080px; }
-.drill-val { font-family: var(--font-mono); font-weight: 700; color: var(--gold); margin-left: 8px; }
-.drill-bds { display: flex; gap: var(--sp-3); flex-wrap: wrap; margin-bottom: var(--sp-3); }
-.drill-bd { flex: 1 1 220px; min-width: 0; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r); padding: var(--sp-2) var(--sp-3); }
-.drill-bd-title { font-family: var(--font-display); font-size: var(--fs-0); font-weight: 700; letter-spacing: var(--tr-label); color: var(--txt4); margin-bottom: var(--sp-1); }
-.drill-bd-table { width: 100%; border-collapse: collapse; }
-.drill-bd-table td { padding: 3px 0; font-size: var(--fs-1); border-bottom: 1px dashed var(--border); }
-.drill-bd-table tr:last-child td { border-bottom: none; }
-.drill-bd-table td.k { color: var(--txt2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
-.drill-bd-table td.n { color: var(--txt4); font-family: var(--font-mono); text-align: right; padding: 3px 8px; white-space: nowrap; }
-.drill-bd-table td.v { color: var(--txt); font-family: var(--font-mono); font-weight: 600; text-align: right; white-space: nowrap; }
-.drill-rows-title { font-family: var(--font-display); font-size: var(--fs-0); font-weight: 700; letter-spacing: var(--tr-label); color: var(--txt4); margin: var(--sp-3) 0 var(--sp-1); }
-.drill-rows { max-height: 360px; }
+.mt-modal.wide { max-width: 860px; padding: 0 0 18px; overflow: hidden; }
+.drill-head { position: relative; padding: 26px 28px 18px; background: linear-gradient(180deg, var(--bg4), var(--bg3)); border-bottom: 1px solid var(--border); }
+.drill-head .mt-modal-x { position: absolute; top: 14px; right: 16px; }
+.drill-kicker { font-family: var(--font-display); font-size: var(--fs-0); font-weight: 700; letter-spacing: var(--tr-label); color: var(--txt4); text-transform: uppercase; }
+.drill-hero { font-family: var(--font-display); font-size: 44px; font-weight: 800; letter-spacing: var(--tr-tight); line-height: 1.1; margin: 6px 0 10px; color: var(--txt); }
+.drill-hero.pos { color: var(--green); } .drill-hero.neg { color: var(--red); }
+.drill-explain { font-family: var(--font-display); font-size: var(--fs-3); color: var(--txt2); max-width: 640px; line-height: 1.5; }
+.drill-scope { font-family: var(--font-mono); font-size: var(--fs-1); color: var(--txt4); margin-top: 6px; }
+.drill-visual { padding: 18px 28px 4px; }
+.drill-strip { display: flex; height: 10px; border-radius: var(--r-pill); overflow: hidden; background: var(--bg5); border: 1px solid var(--border); }
+.drill-strip > div { height: 100%; }
+.seg-pos { background: var(--green); } .seg-neg { background: var(--red); } .seg-flat { background: var(--gold); } .seg-muted { background: var(--txt4); }
+.drill-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 8px; font-family: var(--font-mono); font-size: var(--fs-1); color: var(--txt3); }
+.drill-legend .right { margin-left: auto; }
+.drill-legend i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+.drill-legend b { color: var(--txt); font-weight: 600; }
+.drill-legend b.neg { color: var(--red); }
+.drill-spark { display: block; width: 100%; height: 120px; }
+.drill-spark .line { fill: none; stroke: var(--green); stroke-width: 2; vector-effect: non-scaling-stroke; }
+.drill-spark .area { fill: var(--green); opacity: 0.10; }
+.drill-spark.neg .line { stroke: var(--red); } .drill-spark.neg .area { fill: var(--red); }
+.drill-spark .dot { fill: var(--gold); }
+.drill-spark .dd { fill: var(--red); opacity: 0.10; }
+.drill-spark .zero { stroke: var(--border3); stroke-dasharray: 3 4; vector-effect: non-scaling-stroke; }
+.drill-section { padding: 18px 28px 0; }
+.drill-section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+.drill-section-title { font-family: var(--font-display); font-size: var(--fs-0); font-weight: 700; letter-spacing: var(--tr-label); color: var(--txt4); text-transform: uppercase; }
+.drill-seg button { padding: 5px 12px; }
+.drill-bars { display: flex; flex-direction: column; gap: 7px; }
+.drill-bar-row { display: grid; grid-template-columns: minmax(120px, 200px) 1fr 96px; align-items: center; gap: 12px; }
+.drill-bar-k { font-family: var(--font-display); font-size: var(--fs-2); font-weight: 600; color: var(--txt2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.drill-bar-k .muted { color: var(--txt4); font-weight: 400; font-family: var(--font-mono); font-size: var(--fs-0); margin-left: 4px; }
+.drill-bar { height: 8px; border-radius: var(--r-pill); background: var(--bg5); border: 1px solid var(--border); overflow: hidden; }
+.drill-bar-fill { height: 100%; border-radius: var(--r-pill); transition: width 0.4s ease; }
+.drill-bar-fill.pos { background: linear-gradient(90deg, var(--green-dk, var(--green)), var(--green)); }
+.drill-bar-fill.neg { background: linear-gradient(90deg, var(--red), var(--orange)); }
+.drill-bar-fill.flat { background: var(--txt4); }
+.drill-bar-v { font-family: var(--font-mono); font-size: var(--fs-2); font-weight: 600; text-align: right; color: var(--txt); }
+.drill-bar-v.pos { color: var(--green); } .drill-bar-v.neg { color: var(--red); }
+.drill-rows-toggle { width: 100%; padding: 9px 12px; background: none; border: 1px dashed var(--border2); border-radius: var(--r); color: var(--txt3); font-family: var(--font-display); font-size: var(--fs-1); font-weight: 600; letter-spacing: var(--tr-label); cursor: pointer; display: flex; justify-content: space-between; margin-bottom: 8px; }
+.drill-rows-toggle:hover, .drill-rows-toggle.on { border-color: var(--border3); color: var(--txt); }
+.drill-rows-title { font-family: var(--font-display); font-size: var(--fs-0); font-weight: 700; letter-spacing: var(--tr-label); color: var(--txt4); margin: 12px 0 6px; }
+.drill-rows { max-height: 320px; }
+@media (max-width: 640px) { .drill-hero { font-size: 32px; } .drill-bar-row { grid-template-columns: 1fr; gap: 3px; } .drill-bar-v { text-align: left; } .drill-head, .drill-visual, .drill-section { padding-left: 16px; padding-right: 16px; } }
 .macc-trades-table td.gold { color: var(--gold); }
 
 /* ── Meters: profit target progress + drawdown room ──
@@ -3549,12 +3580,17 @@ function renderSetups(){
 }
 /* ══════════════════════════════════════
    STAT DRILL-DOWN
-   Every KPI tile is clickable. The popup says what the number is (formula
-   and scope), breaks it down by account / strategy / person, and lists the
-   rows it was computed from — trades, accounts or payouts — under the
-   filters in force. Drills are keyed by the tile's label so kp() can wire
-   them without each call site knowing; a tile with no entry stays static.
+   Every KPI tile is clickable. The popup leads with the number and a
+   picture of it (a result strip, a kept-vs-cut strip, or the running
+   curve), then ranks the same stat by account / strategy / person as
+   bars, and keeps the raw rows behind a toggle. Drills are keyed by
+   the tile's label so kp() can wire them without each call site
+   knowing; a tile with no entry stays static.
 ══════════════════════════════════════ */
+var _drillDim = "account";     // which breakdown is showing
+var _drillOpenLabel = null;    // the tile that is open (re-render on toggle)
+var _drillRowsOpen = false;
+
 function _drillKey(label){ return String(label||"").replace(/&amp;/g,"&").replace(/\s+/g," ").trim().toLowerCase(); }
 
 // ── Row sets ──
@@ -3585,52 +3621,127 @@ function _startedAsEval(a){
   return hist.length ? hist[0].phase !== "MASTER" : a.phase !== "MASTER";
 }
 function _net(p){ return p.netAmount !== undefined ? p.netAmount : (p.amount||0); }
-function _money(v){ return (v<0?"−":"")+fmtMoney(Math.abs(v)); }
 function _signed(v){ return (v>0?"+":v<0?"−":"")+fmtMoney(Math.abs(v)); }
+function _sumBy(rows, f){ return rows.reduce(function(t,r){ return t + (f(r)||0); }, 0); }
 
-// ── Stat functions over a trade set (mirror stats() fields) ──
+// ── Stat definitions over a trade set. num() is the number the bars
+//    scale on; fmt() is how it reads. tone: "good" (more is better),
+//    "bad" (more is worse), "money" (sign decides the colour). ──
 var _TRADE_STATS = {
-  "win rate":          { f:function(tr){ var s=stats(tr); return s.total ? s.winRate+"%" : "—"; },        explain:"TP and Partial TP as a share of all trades" },
-  "loss rate":         { f:function(tr){ var s=stats(tr); return s.total ? s.lossRate+"%" : "—"; },       explain:"SL as a share of all trades" },
-  "compliance":        { f:function(tr){ var s=stats(tr); return s.total ? s.compliance+"%" : "—"; },     explain:"trades that met every rule of their strategy (pair, session, timeframe, RR, day, bias, direction) as a share of all trades" },
-  "avg r:r":           { f:function(tr){ var s=stats(tr); return s.total ? "1:"+s.avgRR : "—"; },         explain:"mean of the planned reward-to-risk ratio across trades" },
-  "avg p&l %":         { f:function(tr){ var s=stats(tr); return s.total ? (s.avgPnlPercent>0?"+":"")+s.avgPnlPercent+"%" : "—"; }, explain:"mean of each trade's P&L as a % of its own account's size" },
-  "avg p&l % per trade": null,   // alias, filled below
-  "avg win %":         { f:function(tr){ var s=stats(tr); return s.total ? "+"+s.avgWinPercent+"%" : "—"; }, explain:"mean % of the winning trades only" },
-  "avg loss %":        { f:function(tr){ var s=stats(tr); return s.total ? s.avgLossPercent+"%" : "—"; },   explain:"mean % of the losing trades only" },
-  "total p&l":         { f:function(tr){ return _signed(tr.reduce(function(a,t){ return a+(t.pnl||0); },0)); }, explain:"sum of trade P&L — payouts are not deducted", equity:true },
-  "profit factor":     { f:function(tr){ var gp=0,gl=0; tr.forEach(function(t){ var v=t.pnl||0; if(v>0) gp+=v; else gl+=-v; }); return gl>0 ? (gp/gl).toFixed(2) : (gp>0 ? "∞" : "0.00"); }, explain:"gross profit ÷ gross loss", equity:true },
-  "max drawdown":      { f:function(tr){ var run=0,peak=0,dd=0; tr.slice().sort(function(a,b){ return a.dateKey<b.dateKey?-1:1; }).forEach(function(t){ run+=(t.pnl||0); peak=Math.max(peak,run); dd=Math.max(dd,peak-run); }); return _money(-dd); }, explain:"largest peak-to-trough fall of the cumulative P&L curve, in date order", equity:true },
+  "win rate":      { tone:"good",  explain:"TP and Partial TP as a share of all trades",
+                     num:function(tr){ var s=stats(tr); return s.total ? s.winRate : null; }, fmt:function(n){ return n===null?"—":n+"%"; } },
+  "loss rate":     { tone:"bad",   explain:"SL as a share of all trades",
+                     num:function(tr){ var s=stats(tr); return s.total ? s.lossRate : null; }, fmt:function(n){ return n===null?"—":n+"%"; } },
+  "compliance":    { tone:"good",  explain:"trades that met every rule of their strategy — pair, session, timeframe, RR, day, bias and direction",
+                     num:function(tr){ var s=stats(tr); return s.total ? s.compliance : null; }, fmt:function(n){ return n===null?"—":n+"%"; } },
+  "avg r:r":       { tone:"good",  explain:"mean planned reward-to-risk across trades",
+                     num:function(tr){ var s=stats(tr); return s.total ? s.avgRR : null; }, fmt:function(n){ return n===null?"—":"1:"+n; } },
+  "avg p&l %":     { tone:"money", explain:"mean of each trade's P&L as a % of its own account's size",
+                     num:function(tr){ var s=stats(tr); return s.total ? s.avgPnlPercent : null; }, fmt:function(n){ return n===null?"—":(n>0?"+":"")+n+"%"; } },
+  "avg win %":     { tone:"good",  explain:"average size of a winning trade, as a % of its account",
+                     num:function(tr){ var s=stats(tr); return s.total ? s.avgWinPercent : null; }, fmt:function(n){ return n===null?"—":"+"+n+"%"; } },
+  "avg loss %":    { tone:"bad",   explain:"average size of a losing trade, as a % of its account",
+                     num:function(tr){ var s=stats(tr); return s.total ? Math.abs(s.avgLossPercent) : null; }, fmt:function(n){ return n===null?"—":"−"+n+"%"; } },
+  "total p&l":     { tone:"money", equity:true, explain:"sum of trade P&L — payouts are marked on the curve, never deducted",
+                     num:function(tr){ return tr.length ? _sumBy(tr, function(t){ return t.pnl; }) : null; }, fmt:function(n){ return n===null?"—":_signed(n); } },
+  "profit factor": { tone:"good",  equity:true, explain:"gross profit ÷ gross loss — above 1 the wins outweigh the losses",
+                     num:function(tr){ var gp=0,gl=0; tr.forEach(function(t){ var v=t.pnl||0; if(v>0) gp+=v; else gl+=-v; }); return !tr.length?null:gl>0?gp/gl:(gp>0?Infinity:0); },
+                     fmt:function(n){ return n===null?"—":n===Infinity?"∞":n.toFixed(2); } },
+  "max drawdown":  { tone:"bad",   equity:true, explain:"largest peak-to-trough fall of the cumulative P&L curve, in date order",
+                     num:function(tr){ if(!tr.length) return null; var run=0,peak=0,dd=0; tr.slice().sort(function(a,b){ return a.dateKey<b.dateKey?-1:1; }).forEach(function(t){ run+=(t.pnl||0); peak=Math.max(peak,run); dd=Math.max(dd,peak-run); }); return dd; },
+                     fmt:function(n){ return n===null?"—":"−"+fmtMoney(n); } },
 };
 _TRADE_STATS["avg p&l % per trade"] = _TRADE_STATS["avg p&l %"];
 
-// ── Breakdown: the same stat per account / strategy / person ──
+// ── Breakdown groups: [{key, count, n, txt}] ──
 function _groupBy(rows, keyFn){
   var m = {}, order = [];
   rows.forEach(function(r){ var k = keyFn(r) || "—"; if(!m[k]){ m[k] = []; order.push(k); } m[k].push(r); });
   return order.map(function(k){ return { key:k, rows:m[k] }; });
 }
-function _breakdownHTML(title, groups, valFn, countLbl){
-  if(!groups.length) return "";
-  var h = '<div class="drill-bd"><div class="drill-bd-title">'+esc(title)+'</div><table class="drill-bd-table">';
-  groups.forEach(function(g){
-    h += '<tr><td class="k">'+esc(g.key)+'</td><td class="n">'+g.rows.length+(countLbl||"")+'</td><td class="v">'+valFn(g.rows)+'</td></tr>';
-  });
-  return h + '</table></div>';
+function _groups(rows, keyFn, num, fmt){
+  return _groupBy(rows, keyFn).map(function(g){ var n = num(g.rows); return { key:g.key, count:g.rows.length, n:n, txt:fmt(n) }; })
+    .sort(function(a,b){ return (b.n===null?-Infinity:b.n===Infinity?1e18:b.n) - (a.n===null?-Infinity:a.n===Infinity?1e18:a.n); });
 }
-function _tradeBreakdowns(tr, statFn){
-  return _breakdownHTML("By account",  _groupBy(tr, function(t){ return t.accountName; }),  statFn, "t") +
-         _breakdownHTML("By strategy", _groupBy(tr, function(t){ return t.strategyName; }), statFn, "t") +
-         _breakdownHTML("By person",   _groupBy(tr, function(t){ return t.person; }),       statFn, "t");
+function _tradeGroups(tr, st){
+  return {
+    account:  _groups(tr, function(t){ var a = _accountsById[t.accountId]; return (a && a.accountName) || t.accountName; }, st.num, st.fmt),
+    strategy: _groups(tr, function(t){ return t.strategyName; }, st.num, st.fmt),
+    person:   _groups(tr, function(t){ return t.person; },       st.num, st.fmt),
+  };
+}
+function _accountGroups(rows, num, fmt){
+  return {
+    strategy: _groups(rows, function(a){ return (a.nameParts||parseAccountName(a.accountName)).strategy; }, num, fmt),
+    person:   _groups(rows, function(a){ return a.person; }, num, fmt),
+  };
+}
+function _payoutGroups(rows, num, fmt){
+  return {
+    account: _groups(rows, function(p){ return p.accountName; }, num, fmt),
+    person:  _groups(rows, function(p){ return p.person; },      num, fmt),
+  };
 }
 
-// ── Row tables ──
+// ── Visuals ──
+// A stacked strip: segments [{n, cls, lbl}].
+function _stripHTML(segs, legend){
+  var total = segs.reduce(function(t,s){ return t + s.n; }, 0);
+  if(!total) return "";
+  var h = '<div class="drill-strip">' + segs.filter(function(s){ return s.n > 0; }).map(function(s){
+    return '<div class="seg-'+s.cls+'" style="width:'+(s.n/total*100).toFixed(2)+'%" title="'+esc(s.lbl)+': '+s.n+'"></div>';
+  }).join("") + '</div>';
+  if(legend !== false){
+    h += '<div class="drill-legend">' + segs.map(function(s){
+      return '<span><i class="seg-'+s.cls+'"></i>'+esc(s.lbl)+' <b>'+s.n+'</b></span>';
+    }).join("") + '</div>';
+  }
+  return h;
+}
+function _resultStrip(tr){
+  var w=0,b=0,l=0,o=0;
+  tr.forEach(function(t){ if(t.result==="TP"||t.result==="PARTIAL TP") w++; else if(t.result==="SL") l++; else if(t.result==="BE") b++; else o++; });
+  return _stripHTML([{n:w,cls:"pos",lbl:"Wins"},{n:b,cls:"flat",lbl:"Break-even"},{n:o,cls:"muted",lbl:"Manual"},{n:l,cls:"neg",lbl:"Losses"}]);
+}
+function _rulesStrip(tr){
+  var ok = tr.filter(function(t){ return t.rules==="TRUE"; }).length;
+  return _stripHTML([{n:ok,cls:"pos",lbl:"Followed"},{n:tr.length-ok,cls:"neg",lbl:"Broken"}]);
+}
+// The running P&L curve as an inline SVG, drawdown span shaded.
+function _sparkline(tr){
+  var seq = tr.slice().sort(function(a,b){ return a.dateKey<b.dateKey?-1:1; });
+  if(seq.length < 2) return "";
+  var pts=[0], run=0; seq.forEach(function(t){ run+=(t.pnl||0); pts.push(run); });
+  var peak=0, peakI=0, dd=0, ddFrom=0, ddTo=0;
+  pts.forEach(function(v,i){ if(v>peak){ peak=v; peakI=i; } if(peak-v>dd){ dd=peak-v; ddFrom=peakI; ddTo=i; } });
+  var W=600, H=120, pad=6, min=Math.min.apply(null,pts), max=Math.max.apply(null,pts); if(max===min) max=min+1;
+  var X=function(i){ return pad + i/(pts.length-1)*(W-2*pad); }, Y=function(v){ return pad + (1-(v-min)/(max-min))*(H-2*pad); };
+  var d = pts.map(function(v,i){ return (i?"L":"M")+X(i).toFixed(1)+","+Y(v).toFixed(1); }).join(" ");
+  var last = pts[pts.length-1];
+  var area = d + " L"+X(pts.length-1).toFixed(1)+","+Y(min).toFixed(1)+" L"+X(0).toFixed(1)+","+Y(min).toFixed(1)+" Z";
+  var shade = dd>0 ? '<rect x="'+X(ddFrom).toFixed(1)+'" y="'+pad+'" width="'+(X(ddTo)-X(ddFrom)).toFixed(1)+'" height="'+(H-2*pad)+'" class="dd"/>' : '';
+  var zero = (min<0&&max>0) ? '<line x1="'+pad+'" x2="'+(W-pad)+'" y1="'+Y(0).toFixed(1)+'" y2="'+Y(0).toFixed(1)+'" class="zero"/>' : '';
+  return '<svg class="drill-spark '+(last>=0?"pos":"neg")+'" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none">'+
+    shade+zero+'<path class="area" d="'+area+'"/><path class="line" d="'+d+'"/>'+
+    '<circle class="dot" cx="'+X(pts.length-1).toFixed(1)+'" cy="'+Y(last).toFixed(1)+'" r="3"/></svg>'+
+    '<div class="drill-legend"><span>'+esc(isoToDMY(seq[0].dateKey))+'</span><span class="right">'+esc(isoToDMY(seq[seq.length-1].dateKey))+
+    (dd>0 ? ' · worst fall <b class="neg">−'+esc(fmtMoney(dd))+'</b>' : '')+'</span></div>';
+}
+function _payoutStrip(P){
+  var kept = _sumBy(P,_net), gross = _sumBy(P,function(p){ return p.amount; });
+  var cut = Math.max(gross-kept,0);
+  if(!gross) return "";
+  return '<div class="drill-strip"><div class="seg-pos" style="width:'+(kept/gross*100).toFixed(2)+'%"></div><div class="seg-muted" style="width:'+(cut/gross*100).toFixed(2)+'%"></div></div>'+
+    '<div class="drill-legend"><span><i class="seg-pos"></i>You kept <b>'+esc(fmtMoney(kept))+'</b></span><span><i class="seg-muted"></i>Firm\'s cut <b>'+esc(fmtMoney(cut))+'</b></span></div>';
+}
+
+// ── Row tables (behind the toggle) ──
 function _tradesTableHTML(tr, opts){
   opts = opts || {};
   if(!tr.length) return '<div class="empty" style="padding:14px 0 2px">No trades in view.</div>';
   var run = 0;
   var h = '<div class="macc-trades-wrap drill-rows"><table class="macc-trades-table"><thead><tr>'+
-    '<th>Date</th><th>Person</th><th>Account</th><th>Strat</th><th>TF</th><th>RR</th><th>Result</th>'+
+    '<th>Date</th><th>Account</th><th>Strat</th><th>TF</th><th>RR</th><th>Result</th>'+
     '<th class="num">P&amp;L</th>'+(opts.pct?'<th class="num">%</th>':'')+(opts.running?'<th class="num">Running</th>':'')+
     '<th>Rules</th></tr></thead><tbody>';
   tr.forEach(function(t){
@@ -3638,7 +3749,7 @@ function _tradesTableHTML(tr, opts){
     var pc = t.pnl>0?"pos":t.pnl<0?"neg":"muted";
     var pct = (t.pnlPercent===null||t.pnlPercent===undefined) ? "—" : ((t.pnlPercent>0?"+":"")+t.pnlPercent.toFixed(2)+"%");
     h += '<tr>'+
-      '<td class="date">'+esc(isoToDMY(t.dateKey))+'</td><td>'+esc(t.person)+'</td><td>'+esc(t.accountName)+'</td>'+
+      '<td class="date">'+esc(isoToDMY(t.dateKey))+'</td><td>'+esc(t.accountName)+' <span class="muted">'+esc(t.person)+'</span></td>'+
       '<td>'+esc(t.strategyName||"—")+'</td><td>'+esc(t.timeframe)+'</td><td>'+esc(t.rr)+'</td><td>'+esc(t.result)+'</td>'+
       '<td class="num '+pc+'">'+fmtMoney(t.pnl)+'</td>'+
       (opts.pct ? '<td class="num '+pc+'">'+pct+'</td>' : '')+
@@ -3651,10 +3762,10 @@ function _tradesTableHTML(tr, opts){
 function _accountsTableHTML(rows, cols){
   if(!rows.length) return '<div class="empty" style="padding:14px 0 2px">No accounts in view.</div>';
   var h = '<div class="macc-trades-wrap drill-rows"><table class="macc-trades-table"><thead><tr>'+
-    '<th>Account</th><th>Person</th><th>Phase</th><th>Status</th>'+cols.map(function(c){ return '<th class="'+(c.num?"num":"")+'">'+c.lbl+'</th>'; }).join("")+
+    '<th>Account</th><th>Phase</th><th>Status</th>'+cols.map(function(c){ return '<th class="'+(c.num?"num":"")+'">'+c.lbl+'</th>'; }).join("")+
     '</tr></thead><tbody>';
   rows.forEach(function(a){
-    h += '<tr><td class="date">'+esc(a.accountName)+'</td><td>'+esc(a.person)+'</td><td>'+phaseBadge(a.phase)+'</td><td>'+statusBadge(a.status)+'</td>'+
+    h += '<tr><td class="date">'+esc(a.accountName)+' <span class="muted">'+esc(a.person)+'</span></td><td>'+phaseBadge(a.phase)+'</td><td>'+statusBadge(a.status)+'</td>'+
       cols.map(function(c){ var r = c.f(a); return '<td class="'+(c.num?"num ":"")+(r.cls||"")+'">'+r.v+'</td>'; }).join("")+'</tr>';
   });
   return h + '</tbody></table></div>';
@@ -3662,141 +3773,134 @@ function _accountsTableHTML(rows, cols){
 function _payoutsTableHTML(rows){
   if(!rows.length) return '<div class="empty" style="padding:14px 0 2px">No payouts in view.</div>';
   var h = '<div class="macc-trades-wrap drill-rows"><table class="macc-trades-table"><thead><tr>'+
-    '<th>Date</th><th>Person</th><th>Account</th><th class="num">Withdrawn</th><th class="num">Split</th><th class="num">You kept</th><th>Notes</th>'+
+    '<th>Date</th><th>Account</th><th class="num">Withdrawn</th><th class="num">Split</th><th class="num">You kept</th><th>Notes</th>'+
     '</tr></thead><tbody>';
   rows.forEach(function(p){
     var sp = p.splitPct || 100;
-    h += '<tr><td class="date">'+esc(isoToDMY(p.date))+'</td><td>'+esc(p.person)+'</td><td>'+esc(p.accountName)+'</td>'+
+    h += '<tr><td class="date">'+esc(isoToDMY(p.date))+'</td><td>'+esc(p.accountName)+' <span class="muted">'+esc(p.person)+'</span></td>'+
       '<td class="num">'+fmtMoney(p.amount)+'</td><td class="num muted">'+(sp===100?"—":sp+"%")+'</td><td class="num pos">'+fmtMoney(_net(p))+'</td>'+
       '<td class="mistake" title="'+esc(p.notes||"")+'">'+esc(p.notes||"—")+'</td></tr>';
   });
   return h + '</tbody></table></div>';
 }
-function _payoutBreakdowns(rows, valFn){
-  return _breakdownHTML("By account", _groupBy(rows, function(p){ return p.accountName; }), valFn) +
-         _breakdownHTML("By person",  _groupBy(rows, function(p){ return p.person; }),      valFn);
-}
-function _accountBreakdowns(rows, valFn){
-  return _breakdownHTML("By strategy", _groupBy(rows, function(a){ return (a.nameParts||parseAccountName(a.accountName)).strategy; }), valFn) +
-         _breakdownHTML("By person",   _groupBy(rows, function(a){ return a.person; }), valFn);
-}
 
-// ── The registry: label → how to build the popup ──
+// ── The registry: label → { value, explain, tone, hero, groups, rows, rowsLabel } ──
 function _drillBuild(key){
-  var ts = _TRADE_STATS[key];
-  if(ts){
-    var tr = ts.equity ? _drillEquityTrades() : getFiltered();
-    var scope = ts.equity
-      ? "equity scope: " + (_equityIncludeClosed ? "all accounts" : "active accounts only") + ", every date (the Period filter is ignored for the curve)"
-      : "the " + tr.length + " trade" + (tr.length===1?"":"s") + " in the current filters";
+  var st = _TRADE_STATS[key];
+  if(st){
+    var tr = st.equity ? _drillEquityTrades() : getFiltered();
+    var scope = st.equity
+      ? (_equityIncludeClosed ? "all accounts" : "active accounts only") + " · every date (the curve ignores Period)"
+      : tr.length + " trade" + (tr.length===1?"":"s") + " in the current filters";
     var isPct = key.indexOf("%") !== -1;
     var rows = tr.slice().sort(function(a,b){ return a.dateKey < b.dateKey ? 1 : -1; });
     if(key === "compliance") rows.sort(function(a,b){ return (a.rules==="TRUE"?1:0) - (b.rules==="TRUE"?1:0); });
-    if(key === "max drawdown") rows = tr.slice().sort(function(a,b){ return a.dateKey < b.dateKey ? -1 : 1; });
+    if(key === "max drawdown" || key === "total p&l") rows = tr.slice().sort(function(a,b){ return a.dateKey < b.dateKey ? -1 : 1; });
+    var hero = key === "compliance" ? _rulesStrip(tr)
+             : (key === "max drawdown" || key === "total p&l" || key === "profit factor") ? _sparkline(tr)
+             : _resultStrip(tr);
     return {
-      value: ts.f(tr), explain: ts.explain + " · " + scope,
-      breakdown: _tradeBreakdowns(tr, ts.f),
+      value: st.fmt(st.num(tr)), explain: st.explain, scope: scope, tone: st.tone, hero: hero,
+      groups: _tradeGroups(tr, st),
       rows: _tradesTableHTML(rows, { pct:isPct, running:key==="max drawdown"||key==="total p&l", reasons:key==="compliance" }),
-      rowsTitle: key === "compliance" ? "Trades — rule breaks first" : key === "max drawdown" ? "Trades in date order with the running total" : "Trades",
+      rowsLabel: tr.length + " trade" + (tr.length===1?"":"s"),
     };
   }
 
   var A = _drillAccounts(), live = A.filter(function(a){ return a.status === "ACTIVE"; });
   var masters = live.filter(function(a){ return a.phase === "MASTER"; });
+  var money = function(n){ return n===null?"—":fmtMoney(n); };
+  var count = function(rows){ return rows.length; }, cfmt = function(n){ return String(n); };
   var bal = function(a){ return { v:fmtMoney(a.currentBalance||0) }; };
   var size = function(a){ return { v:fmtMoney(a.stageSize||a.startingBalance||0) }; };
-  var sumBal = function(rows){ return fmtMoney(rows.reduce(function(t,a){ return t+(a.currentBalance||0); },0)); };
-  var fees = function(rows){ return fmtMoney(rows.reduce(function(t,a){ return t+(a.cost||0); },0)); };
+  var sumBal = function(rows){ return _sumBy(rows, function(a){ return a.currentBalance; }); };
+  var fees = function(rows){ return _sumBy(rows, function(a){ return a.cost; }); };
+  var cost = { lbl:"Cost", num:true, f:function(a){ return { v:fmtMoney(a.cost||0) }; } };
+  var acct = function(o){ return Object.assign({ tone:"good", hero:"" }, o); };
+  var pctf = function(n){ return n===null?"—":n+"%"; };
 
   switch(key){
     case "total equity":
-      return { value:sumBal(live), explain:"sum of every ACTIVE account's current balance — evaluations and funded together, so it is scale, not money",
-        breakdown:_accountBreakdowns(live, sumBal),
-        rows:_accountsTableHTML(live, [{lbl:"Size",f:size,num:true},{lbl:"Balance",f:bal,num:true},{lbl:"vs size",num:true,f:function(a){ var d=(a.currentBalance||0)-(a.stageSize||a.startingBalance||0); return { v:_signed(d), cls:d>0?"pos":d<0?"neg":"muted" }; }}]), rowsTitle:"Active accounts" };
+      return acct({ value:money(sumBal(live)), explain:"every ACTIVE account's balance added up — evaluations and funded together, so it is scale, not money", scope:live.length+" active accounts",
+        groups:_accountGroups(live, sumBal, money),
+        rows:_accountsTableHTML(live, [{lbl:"Size",f:size,num:true},{lbl:"Balance",f:bal,num:true},{lbl:"vs size",num:true,f:function(a){ var d=(a.currentBalance||0)-(a.stageSize||a.startingBalance||0); return { v:_signed(d), cls:d>0?"pos":d<0?"neg":"muted" }; }}]), rowsLabel:live.length+" accounts" });
     case "live equity":
-      return { value:sumBal(masters), explain:"sum of ACTIVE Master accounts' balances — the only capital that can pay out",
-        breakdown:_accountBreakdowns(masters, sumBal),
-        rows:_accountsTableHTML(masters, [{lbl:"Funded size",f:size,num:true},{lbl:"Balance",f:bal,num:true},{lbl:"Paid out",num:true,f:function(a){ return { v:fmtMoney(a.paidOut||0), cls:(a.paidOut||0)>0?"gold":"muted" }; }}]), rowsTitle:"Active Master accounts" };
+      return acct({ value:money(sumBal(masters)), explain:"ACTIVE Master balances only — the capital that can actually pay out", scope:masters.length+" funded accounts",
+        groups:_accountGroups(masters, sumBal, money),
+        rows:_accountsTableHTML(masters, [{lbl:"Funded size",f:size,num:true},{lbl:"Balance",f:bal,num:true},{lbl:"Paid out",num:true,f:function(a){ return { v:fmtMoney(a.paidOut||0), cls:(a.paidOut||0)>0?"gold":"muted" }; }}]), rowsLabel:masters.length+" accounts" });
     case "undrawn profit":
-      var und = function(rows){ return fmtMoney(rows.reduce(function(t,a){ return t+Math.max(a.undrawnProfit||0,0); },0)); };
-      return { value:und(masters), explain:"for each ACTIVE Master, balance above its funded size, floored at zero (a loss cannot be withdrawn) — summed",
-        breakdown:_accountBreakdowns(masters, und),
-        rows:_accountsTableHTML(masters, [{lbl:"Funded size",f:size,num:true},{lbl:"Balance",f:bal,num:true},{lbl:"Undrawn",num:true,f:function(a){ var u=a.undrawnProfit||0; return { v:_signed(u), cls:u>0?"pos":u<0?"neg":"muted" }; }},{lbl:"Counts",num:true,f:function(a){ return { v:fmtMoney(Math.max(a.undrawnProfit||0,0)) }; }}]), rowsTitle:"Active Master accounts" };
+      var und = function(rows){ return _sumBy(rows, function(a){ return Math.max(a.undrawnProfit||0,0); }); };
+      return acct({ value:money(und(masters)), explain:"each ACTIVE Master's balance above its funded size, floored at zero — a loss cannot be withdrawn", scope:masters.length+" funded accounts",
+        groups:_accountGroups(masters, und, money),
+        rows:_accountsTableHTML(masters, [{lbl:"Funded size",f:size,num:true},{lbl:"Balance",f:bal,num:true},{lbl:"Undrawn",num:true,f:function(a){ var u=a.undrawnProfit||0; return { v:_signed(u), cls:u>0?"pos":u<0?"neg":"muted" }; }}]), rowsLabel:masters.length+" accounts" });
     case "nearest to passing":
     case "nearest target":
       var evals = live.filter(function(a){ return a.phase !== "MASTER"; });
-      var best = function(rows){ var m=null; rows.forEach(function(a){ if(a.targetProgress!==null&&a.targetProgress!==undefined&&(m===null||a.targetProgress>m)) m=a.targetProgress; }); return m===null?"—":Math.round(m*100)+"%"; };
-      return { value:best(evals), explain:"of the running evaluations, the one furthest along toward its profit target (current P&L ÷ target amount, capped at 100%)",
-        breakdown:_accountBreakdowns(evals, best),
-        rows:_accountsTableHTML(evals.slice().sort(function(a,b){ return (b.targetProgress||0)-(a.targetProgress||0); }), [{lbl:"Target",num:true,f:function(a){ return { v:(a.targetPct||0)?a.targetPct+"% · "+fmtMoney(a.targetAmount||0):"—" }; }},{lbl:"P&L",num:true,f:function(a){ var p=a.grossPnL||0; return { v:_signed(p), cls:p>0?"pos":p<0?"neg":"muted" }; }},{lbl:"Progress",num:true,f:function(a){ var p=a.targetProgress; return { v:p===null||p===undefined?"—":Math.round(p*100)+"%", cls:p>=0.75?"pos":"" }; }}]), rowsTitle:"Running evaluations" };
+      var best = function(rows){ var m=null; rows.forEach(function(a){ if(a.targetProgress!==null&&a.targetProgress!==undefined&&(m===null||a.targetProgress>m)) m=a.targetProgress; }); return m===null?null:Math.round(m*100); };
+      return acct({ value:pctf(best(evals)), explain:"the running evaluation furthest along toward its profit target — P&L ÷ target, capped at 100%", scope:evals.length+" evaluations running",
+        groups:{ account:_groups(evals, function(a){ return a.accountName; }, best, pctf), strategy:_accountGroups(evals, best, pctf).strategy, person:_accountGroups(evals, best, pctf).person },
+        rows:_accountsTableHTML(evals.slice().sort(function(a,b){ return (b.targetProgress||0)-(a.targetProgress||0); }), [{lbl:"Target",num:true,f:function(a){ return { v:(a.targetPct||0)?a.targetPct+"% · "+fmtMoney(a.targetAmount||0):"—" }; }},{lbl:"P&L",num:true,f:function(a){ var p=a.grossPnL||0; return { v:_signed(p), cls:p>0?"pos":p<0?"neg":"muted" }; }},{lbl:"Progress",num:true,f:function(a){ var p=a.targetProgress; return { v:p===null||p===undefined?"—":Math.round(p*100)+"%", cls:p>=0.75?"pos":"" }; }}]), rowsLabel:evals.length+" evaluations" });
     case "drawdown room":
-      var room = function(rows){ var w=null; rows.forEach(function(a){ if(a.ddUsedPct!==null&&a.ddUsedPct!==undefined){ var r=1-a.ddUsedPct; if(w===null||r<w) w=r; } }); return w===null?"—":Math.round(w*100)+"%"; };
-      return { value:room(live), explain:"of the ACTIVE accounts with a drawdown limit, the smallest share of that limit still unused — the account closest to being lost",
-        breakdown:_accountBreakdowns(live, room),
-        rows:_accountsTableHTML(live.slice().sort(function(a,b){ return (b.ddUsedPct||0)-(a.ddUsedPct||0); }), [{lbl:"Limit",num:true,f:function(a){ return { v:(a.maxDDPct||0)?a.maxDDPct+"% "+(a.ddType||"STATIC").toLowerCase():"—" }; }},{lbl:"Floor",num:true,f:function(a){ return { v:a.ddFloor===null||a.ddFloor===undefined?"—":fmtMoney(a.ddFloor) }; }},{lbl:"Room",num:true,f:function(a){ var r=a.ddRoom; return { v:r===null||r===undefined?"—":fmtMoney(r), cls:a.ddUsedPct>=0.75?"neg":a.ddUsedPct>=0.5?"":"pos" }; }},{lbl:"Used",num:true,f:function(a){ var u=a.ddUsedPct; return { v:u===null||u===undefined?"—":Math.round(u*100)+"%" }; }}]), rowsTitle:"Active accounts, tightest first" };
+      var room = function(rows){ var w=null; rows.forEach(function(a){ if(a.ddUsedPct!==null&&a.ddUsedPct!==undefined){ var r=1-a.ddUsedPct; if(w===null||r<w) w=r; } }); return w===null?null:Math.round(w*100); };
+      var roomf = function(n){ return n===null?"—":n+"%"; };
+      return acct({ value:roomf(room(live)), explain:"of the ACTIVE accounts with a drawdown limit, the smallest share of that limit still unused — the account closest to being lost", scope:live.length+" active accounts",
+        groups:{ account:_groups(live, function(a){ return a.accountName; }, room, roomf), strategy:_accountGroups(live, room, roomf).strategy, person:_accountGroups(live, room, roomf).person },
+        rows:_accountsTableHTML(live.slice().sort(function(a,b){ return (b.ddUsedPct||0)-(a.ddUsedPct||0); }), [{lbl:"Limit",num:true,f:function(a){ return { v:(a.maxDDPct||0)?a.maxDDPct+"% "+(a.ddType||"STATIC").toLowerCase():"—" }; }},{lbl:"Floor",num:true,f:function(a){ return { v:a.ddFloor===null||a.ddFloor===undefined?"—":fmtMoney(a.ddFloor) }; }},{lbl:"Room",num:true,f:function(a){ var r=a.ddRoom; return { v:r===null||r===undefined?"—":fmtMoney(r), cls:a.ddUsedPct>=0.75?"neg":a.ddUsedPct>=0.5?"":"pos" }; }}]), rowsLabel:live.length+" accounts" });
     case "evaluations taken":
       var evs = A.filter(_startedAsEval);
-      var cnt = function(rows){ return String(rows.length); };
-      return { value:cnt(evs), explain:"accounts that started life as an evaluation (Phase 1 or 2) — a funded account that came through an evaluation counts here too",
-        breakdown:_accountBreakdowns(evs, cnt),
-        rows:_accountsTableHTML(evs, [{lbl:"Outcome",f:function(a){ var m=_reachedMaster(a); return { v:m?"reached Master":a.status==="PASSED"?"passed":a.status==="BLOWN"?"blown":"running", cls:m||a.status==="PASSED"?"pos":a.status==="BLOWN"?"neg":"" }; }},{lbl:"Cost",num:true,f:function(a){ return { v:fmtMoney(a.cost||0) }; }}]), rowsTitle:"Evaluations" };
+      var p1=0,b1=0,r1=0; evs.forEach(function(a){ if(_reachedMaster(a)||a.status==="PASSED") p1++; else if(a.status==="BLOWN") b1++; else r1++; });
+      return acct({ value:String(evs.length), explain:"accounts that started as an evaluation — a funded account that came through one counts too", scope:"all time",
+        hero:_stripHTML([{n:p1,cls:"pos",lbl:"Passed"},{n:r1,cls:"flat",lbl:"Running"},{n:b1,cls:"neg",lbl:"Blown"}]),
+        groups:_accountGroups(evs, count, cfmt),
+        rows:_accountsTableHTML(evs, [{lbl:"Outcome",f:function(a){ var m=_reachedMaster(a); return { v:m?"reached Master":a.status==="PASSED"?"passed":a.status==="BLOWN"?"blown":"running", cls:m||a.status==="PASSED"?"pos":a.status==="BLOWN"?"neg":"" }; }}, cost]), rowsLabel:evs.length+" evaluations" });
     case "pass rate":
       var settled = A.filter(function(a){ return _startedAsEval(a) && (_reachedMaster(a) || a.status==="PASSED" || a.status==="BLOWN"); });
-      var pr = function(rows){ var p=rows.filter(function(a){ return _reachedMaster(a)||a.status==="PASSED"; }).length; return rows.length?Math.round(p/rows.length*100)+"%":"—"; };
-      return { value:pr(settled), explain:"evaluations that reached Master or were marked passed ÷ evaluations that are settled (passed or blown) — running ones are not counted",
-        breakdown:_accountBreakdowns(settled, pr),
-        rows:_accountsTableHTML(settled, [{lbl:"Outcome",f:function(a){ var p=_reachedMaster(a)||a.status==="PASSED"; return { v:p?"passed":"blown", cls:p?"pos":"neg" }; }},{lbl:"Cost",num:true,f:function(a){ return { v:fmtMoney(a.cost||0) }; }}]), rowsTitle:"Settled evaluations" };
+      var passed = settled.filter(function(a){ return _reachedMaster(a)||a.status==="PASSED"; }).length;
+      var pr = function(rows){ var p=rows.filter(function(a){ return _reachedMaster(a)||a.status==="PASSED"; }).length; return rows.length?Math.round(p/rows.length*100):null; };
+      return acct({ value:pctf(pr(settled)), explain:"evaluations that reached Master or were marked passed ÷ evaluations that are settled — running ones are not counted", scope:settled.length+" settled",
+        hero:_stripHTML([{n:passed,cls:"pos",lbl:"Passed"},{n:settled.length-passed,cls:"neg",lbl:"Blown"}]),
+        groups:_accountGroups(settled, pr, function(n){ return n===null?"—":n+"%"; }),
+        rows:_accountsTableHTML(settled, [{lbl:"Outcome",f:function(a){ var p=_reachedMaster(a)||a.status==="PASSED"; return { v:p?"passed":"blown", cls:p?"pos":"neg" }; }}, cost]), rowsLabel:settled.length+" evaluations" });
     case "funded accounts":
       var fd = A.filter(_reachedMaster);
-      return { value:String(fd.length), explain:"accounts that have ever been Master — bought funded or promoted there",
-        breakdown:_accountBreakdowns(fd, function(rows){ return String(rows.length); }),
-        rows:_accountsTableHTML(fd, [{lbl:"Balance",f:bal,num:true},{lbl:"Paid out",num:true,f:function(a){ return { v:fmtMoney(a.paidOut||0), cls:(a.paidOut||0)>0?"gold":"muted" }; }}]), rowsTitle:"Funded accounts" };
+      var fa=0,fb=0; fd.forEach(function(a){ if(a.status==="ACTIVE") fa++; else if(a.status==="BLOWN") fb++; });
+      return acct({ value:String(fd.length), explain:"accounts that have ever been Master — bought funded or promoted there", scope:"all time",
+        hero:_stripHTML([{n:fa,cls:"pos",lbl:"Active"},{n:fd.length-fa-fb,cls:"flat",lbl:"Finished"},{n:fb,cls:"neg",lbl:"Blown"}]),
+        groups:_accountGroups(fd, count, cfmt),
+        rows:_accountsTableHTML(fd, [{lbl:"Balance",f:bal,num:true},{lbl:"Paid out",num:true,f:function(a){ return { v:fmtMoney(a.paidOut||0), cls:(a.paidOut||0)>0?"gold":"muted" }; }}]), rowsLabel:fd.length+" accounts" });
     case "fees paid":
-      return { value:fees(A), explain:"sum of what every account cost to buy (removed accounts excluded)",
-        breakdown:_accountBreakdowns(A, fees),
-        rows:_accountsTableHTML(A.slice().sort(function(a,b){ return (b.cost||0)-(a.cost||0); }), [{lbl:"Cost",num:true,f:function(a){ return { v:fmtMoney(a.cost||0) }; }}]), rowsTitle:"Accounts bought" };
+      return acct({ tone:"bad", value:money(fees(A)), explain:"what every account cost to buy, added up", scope:A.length+" accounts",
+        groups:_accountGroups(A, fees, money), rows:_accountsTableHTML(A.slice().sort(function(a,b){ return (b.cost||0)-(a.cost||0); }), [cost]), rowsLabel:A.length+" accounts" });
     case "sunk fees":
       var blown = A.filter(function(a){ return a.status==="BLOWN"; });
-      return { value:fees(blown), explain:"the cost of every account that was blown — money that cannot come back",
-        breakdown:_accountBreakdowns(blown, fees),
-        rows:_accountsTableHTML(blown, [{lbl:"Cost",num:true,f:function(a){ return { v:fmtMoney(a.cost||0), cls:"neg" }; }}]), rowsTitle:"Blown accounts" };
+      return acct({ tone:"bad", value:money(fees(blown)), explain:"the cost of every account that was blown — money that cannot come back", scope:blown.length+" blown accounts",
+        groups:_accountGroups(blown, fees, money), rows:_accountsTableHTML(blown, [cost]), rowsLabel:blown.length+" accounts" });
   }
 
   var P = _drillPayouts();
-  var netSum = function(rows){ return fmtMoney(rows.reduce(function(t,p){ return t+_net(p); },0)); };
-  var grossSum = function(rows){ return fmtMoney(rows.reduce(function(t,p){ return t+(p.amount||0); },0)); };
+  var netSum = function(rows){ return _sumBy(rows, _net); };
   switch(key){
     case "total payouts":
     case "total received":
-      return { value:netSum(P), explain:"what reached you after each payout's split — " + grossSum(P) + " left the accounts in total",
-        breakdown:_payoutBreakdowns(P, netSum), rows:_payoutsTableHTML(P), rowsTitle:"Payouts" };
+      return { tone:"good", value:money(netSum(P)), explain:"what reached you after each payout's split", scope:P.length+" payouts", hero:_payoutStrip(P),
+        groups:_payoutGroups(P, netSum, money), rows:_payoutsTableHTML(P), rowsLabel:P.length+" payouts" };
     case "withdrawals":
     case "payout count":
-      return { value:String(P.length), explain:"number of payouts logged", breakdown:_payoutBreakdowns(P, function(r){ return String(r.length); }), rows:_payoutsTableHTML(P), rowsTitle:"Payouts" };
+      return { tone:"good", value:String(P.length), explain:"payouts logged", scope:"all time", hero:_payoutStrip(P),
+        groups:_payoutGroups(P, count, cfmt), rows:_payoutsTableHTML(P), rowsLabel:P.length+" payouts" };
     case "this month":
       var mk = currentMonthKey(), M = P.filter(function(p){ return String(p.date).slice(0,7) === mk; });
-      return { value:netSum(M), explain:"payouts dated in " + niceMonth(mk) + ", net of split", breakdown:_payoutBreakdowns(M, netSum), rows:_payoutsTableHTML(M), rowsTitle:"This month's payouts" };
+      return { tone:"good", value:money(netSum(M)), explain:"payouts dated in " + niceMonth(mk) + ", net of split", scope:M.length+" payouts", hero:_payoutStrip(M),
+        groups:_payoutGroups(M, netSum, money), rows:_payoutsTableHTML(M), rowsLabel:M.length+" payouts" };
     case "real net profit":
-      var feesAll = A.reduce(function(t,a){ return t+(a.cost||0); },0), netAll = P.reduce(function(t,p){ return t+_net(p); },0);
-      return { value:_signed(netAll-feesAll), explain:"payouts kept (" + fmtMoney(netAll) + ") − every account's cost (" + fmtMoney(feesAll) + ") — the only figure that is actual money",
-        breakdown:_payoutBreakdowns(P, netSum) + _accountBreakdowns(A, function(rows){ return "− "+fmtMoney(rows.reduce(function(t,a){ return t+(a.cost||0); },0)); }),
-        rows:_payoutsTableHTML(P) + '<div class="drill-rows-title">Fees</div>' + _accountsTableHTML(A, [{lbl:"Cost",num:true,f:function(a){ return { v:fmtMoney(a.cost||0), cls:"neg" }; }}]), rowsTitle:"Payouts" };
+      var feesAll = fees(A), netAll = netSum(P), rnp = netAll - feesAll;
+      return { tone:"money", value:_signed(rnp), explain:"payouts kept minus every account's cost — the only figure that is actual money", scope:P.length+" payouts · "+A.length+" accounts",
+        hero:'<div class="drill-strip"><div class="seg-pos" style="width:'+(netAll+feesAll?netAll/(netAll+feesAll)*100:0).toFixed(2)+'%"></div><div class="seg-neg" style="width:'+(netAll+feesAll?feesAll/(netAll+feesAll)*100:0).toFixed(2)+'%"></div></div>'+
+             '<div class="drill-legend"><span><i class="seg-pos"></i>Payouts kept <b>'+esc(fmtMoney(netAll))+'</b></span><span><i class="seg-neg"></i>Fees paid <b>'+esc(fmtMoney(feesAll))+'</b></span></div>',
+        groups:{ person:_groups(A, function(a){ return a.person; }, function(rows){ var ppl = rows[0].person; return netSum(P.filter(function(p){ return p.person===ppl; })) - fees(rows); }, _signed) },
+        rows:_payoutsTableHTML(P) + '<div class="drill-rows-title">Fees</div>' + _accountsTableHTML(A, [cost]), rowsLabel:P.length+" payouts and "+A.length+" fees" };
   }
   return null;
-}
-
-function openDrill(label){
-  var key = _drillKey(label);
-  var d;
-  try { d = _drillBuild(key); } catch(e){ d = null; }
-  if(!d) return;
-  openMaccModal(
-    _maccModalHeader(esc(label.replace(/&amp;/g,"&")) + ' <span class="drill-val">'+d.value+'</span>', esc(d.explain)) +
-    '<div class="drill-bds">'+d.breakdown+'</div>'+
-    '<div class="drill-rows-title">'+esc(d.rowsTitle||"Rows")+'</div>'+d.rows
-  );
-  var m = document.getElementById("mtModalBody");
-  if(m) m.classList.add("wide");
 }
 
 function _drillHas(label){
@@ -3807,11 +3911,66 @@ function _drillHas(label){
           "total payouts","total received","withdrawals","payout count","this month","real net profit"].indexOf(k) !== -1;
 }
 
+// ── Render ──
+var _DRILL_DIMS = [["account","Account"],["strategy","Strategy"],["person","Person"]];
+function _barsHTML(groups, tone){
+  if(!groups || !groups.length) return '<div class="empty" style="padding:12px 0 2px">Nothing to compare.</div>';
+  var nums = groups.map(function(g){ return g.n===null||g.n===Infinity?0:Math.abs(g.n); });
+  var max = Math.max.apply(null, nums) || 1;
+  return '<div class="drill-bars">' + groups.map(function(g){
+    var n = g.n===null?0:g.n===Infinity?max:g.n;
+    var w = Math.abs(n)/max*100;
+    var cls = tone==="money" ? (n>0?"pos":n<0?"neg":"flat") : tone==="bad" ? "neg" : "pos";
+    return '<div class="drill-bar-row">'+
+      '<div class="drill-bar-k" title="'+esc(g.key)+'">'+esc(g.key)+' <span class="muted">'+g.count+'</span></div>'+
+      '<div class="drill-bar"><div class="drill-bar-fill '+cls+'" style="width:'+w.toFixed(1)+'%"></div></div>'+
+      '<div class="drill-bar-v '+cls+'">'+esc(g.txt)+'</div>'+
+    '</div>';
+  }).join("") + '</div>';
+}
+
+function openDrill(label){
+  _drillOpenLabel = label;
+  var key = _drillKey(label), d;
+  try { d = _drillBuild(key); } catch(e){ d = null; }
+  if(!d) return;
+  var dims = _DRILL_DIMS.filter(function(x){ return d.groups && d.groups[x[0]]; });
+  if(!dims.some(function(x){ return x[0] === _drillDim; })) _drillDim = dims.length ? dims[0][0] : null;
+  var toneCls = d.tone==="money" ? (/^[+]/.test(d.value)?"pos":/^[−-]/.test(d.value)?"neg":"") : d.tone==="bad" ? "neg" : "pos";
+
+  var seg = dims.length > 1 ? '<div class="seg drill-seg">' + dims.map(function(x){
+    return '<button class="'+(x[0]===_drillDim?"active":"")+'" onclick="_drillSetDim(\'' + x[0] + '\')">'+x[1]+'</button>';
+  }).join("") + '</div>' : '';
+
+  openMaccModal(
+    '<div class="drill-head">'+
+      '<div class="drill-kicker">'+esc(label.replace(/&amp;/g,"&"))+'</div>'+
+      '<div class="drill-hero '+toneCls+'">'+d.value+'</div>'+
+      '<div class="drill-explain">'+esc(d.explain)+'</div>'+
+      '<div class="drill-scope">'+esc(d.scope||"")+'</div>'+
+      '<button class="mt-modal-x" title="Close (Esc)" onclick="closeMaccModal()">×</button>'+
+    '</div>'+
+    (d.hero ? '<div class="drill-visual">'+d.hero+'</div>' : '')+
+    (dims.length ? '<div class="drill-section"><div class="drill-section-head"><span class="drill-section-title">Where it comes from</span>'+seg+'</div>'+
+      _barsHTML(d.groups[_drillDim], d.tone)+'</div>' : '')+
+    '<div class="drill-section">'+
+      '<button class="drill-rows-toggle'+(_drillRowsOpen?" on":"")+'" onclick="_drillToggleRows()">'+(_drillRowsOpen?"Hide":"Show")+' the '+esc(d.rowsLabel||"rows")+' <span>'+(_drillRowsOpen?"▴":"▾")+'</span></button>'+
+      (_drillRowsOpen ? d.rows : '')+
+    '</div>'
+  );
+  var m = document.getElementById("mtModalBody");
+  if(m) m.classList.add("wide");
+}
+function _drillSetDim(k){ _drillDim = k; if(_drillOpenLabel) openDrill(_drillOpenLabel); }
+function _drillToggleRows(){ _drillRowsOpen = !_drillRowsOpen; if(_drillOpenLabel) openDrill(_drillOpenLabel); }
+
+function openDrillFromTile(label){ _drillRowsOpen = false; openDrill(label); }
+
 function kp(label,val,cls,sub,d){
   // A tile whose label has a drill entry opens the detail popup on click.
   var drill = typeof _drillHas === "function" && _drillHas(label);
   return '<div class="kpi '+cls+' '+d+(drill?' drillable':'')+'"'+
-    (drill ? ' data-label="'+label.replace(/"/g,"&quot;")+'" onclick="openDrill(this.dataset.label)" title="Click for the breakdown"' : '')+'>'+
+    (drill ? ' data-label="'+label.replace(/"/g,"&quot;")+'" onclick="openDrillFromTile(this.dataset.label)" title="Click for the breakdown"' : '')+'>'+
     '<div class="kpi-eyebrow"><div class="kpi-dot"></div><div class="kpi-label">'+label+'</div></div>'+
     '<div class="kpi-val">'+val+'</div>'+
     '<div class="kpi-divider"></div>'+
