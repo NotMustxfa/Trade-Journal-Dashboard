@@ -3367,7 +3367,7 @@ function renderCapital(){
   // Total vs Live. An evaluation balance is prop-firm scorekeeping — it
   // can never turn into money. Only a funded (Master) account pays out,
   // so the two are never summed into one "equity" figure.
-  var totalEq = 0, masterEq = 0, evalEq = 0, evalPnl = 0;
+  var totalEq = 0, masterEq = 0, evalEq = 0;
   var nMaster = 0, nEval = 0, nUnderwater = 0;
   var undrawn = 0, worstRoom = null;
   live.forEach(function(a){
@@ -3380,10 +3380,7 @@ function renderCapital(){
       undrawn  += Math.max(a.undrawnProfit || 0, 0);
       if((a.undrawnProfit || 0) < 0) nUnderwater++;
     } else {
-      evalEq  += a.currentBalance || 0;
-      // Progress toward the target, in the firm's play money. Kept apart
-      // from every withdrawable figure — see the tile below.
-      evalPnl += (a.currentBalance || 0) - (a.stageSize || a.startingBalance || 0);
+      evalEq += a.currentBalance || 0;
       nEval++;
     }
     if(a.ddUsedPct !== null && a.ddUsedPct !== undefined){
@@ -3398,7 +3395,7 @@ function renderCapital(){
   // them is what made the old pass rate wrong.
   var evTaken = 0, evPassed = 0, evBlown = 0, evActive = 0;
   var fdEver = 0, fdActive = 0, fdBlown = 0, fdPaid = 0;
-  var nearestTarget = null;
+  var nearestTarget = null, nearestAcc = null;
 
   var everTraded = 0;
   accs.forEach(function(a){
@@ -3442,7 +3439,7 @@ function renderCapital(){
         evActive++;
 
         if(a.targetProgress !== null && a.targetProgress !== undefined){
-          if(nearestTarget === null || a.targetProgress > nearestTarget) nearestTarget = a.targetProgress;
+          if(nearestTarget === null || a.targetProgress > nearestTarget){ nearestTarget = a.targetProgress; nearestAcc = a; }
         }
       }
     }
@@ -3452,11 +3449,17 @@ function renderCapital(){
   var settled = evPassed + evBlown;
   var passRate = settled ? ((evPassed/settled)*100).toFixed(0) : null;
   /* ── Live capital ── */
-  // Withdrawable money is the Undrawn tile (Masters only). Evaluation
-  // P&L gets its own tile so it is never read as profit: it is score-
-  // keeping toward a target and can never be withdrawn. Before v19 one
-  // "Open profit" tile summed both, so taking a payout looked like a loss.
-  var evCls = evalPnl > 0 ? "g" : evalPnl < 0 ? "r" : "a";
+  // Withdrawable money is the Undrawn tile (Masters only). An evaluation
+  // balance is scorekeeping and never withdrawable, so no eval dollar
+  // figure belongs on this strip — before v19 an "Open profit" tile
+  // summed evals and Masters together, so a payout read as a loss. The
+  // one eval fact that bears on capital is which one is closest to
+  // passing, because passing is how an eval becomes funded money.
+  var nearPct = nearestTarget === null ? null : Math.round(nearestTarget * 100);
+  var nearCls = nearPct === null ? "a" : nearPct >= 75 ? "g" : nearPct >= 25 ? "a" : "r";
+  var nearSub = nearestAcc
+    ? esc(nearestAcc.accountName || "") + " · " + (nearestAcc.targetPct || 0) + "% target"
+    : (nEval ? "no targets set on running evaluations" : "no evaluations running");
   document.getElementById("liveKpiStrip").innerHTML =
     kp("Total equity", fmtMoney(totalEq), "b",
        nEval + " eval" + (nEval===1?"":"s") + " + " + nMaster + " funded", "d1") +
@@ -3466,8 +3469,7 @@ function renderCapital(){
        nUnderwater
          ? "withdrawable now · " + nUnderwater + " Master" + (nUnderwater===1?"":"s") + " below funded size"
          : "withdrawable right now", "d3") +
-    kp("Eval P&L", nEval ? (evalPnl>=0?"+":"−")+fmtMoney(Math.abs(evalPnl)) : "—", nEval ? evCls : "a",
-       nEval ? "not withdrawable · " + nEval + " evaluation" + (nEval===1?"":"s") + " vs their size" : "no evaluations running", "d4") +
+    kp("Nearest to passing", nearPct === null ? "—" : nearPct + "%", nearCls, nearSub, "d4") +
     kp("Drawdown room", worstRoom===null ? "—" : (worstRoom*100).toFixed(0)+"%",
        worstRoom===null ? "a" : worstRoom<0.25 ? "r" : worstRoom<0.5 ? "a" : "g",
        worstRoom===null ? "no limits set" : "tightest active account", "d5");
