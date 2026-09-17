@@ -2130,15 +2130,15 @@ body::after {
             <div class="jgrid">
               <div class="jfield"><label class="jlabel">Session</label><select class="jselect" id="jSession" onchange="updateRulesPreview()"></select></div>
               <div class="jfield"><label class="jlabel">Strategy</label>
-                <input class="jinput" type="text" id="jStrat" list="stratList" maxlength="20" placeholder="from account name" autocomplete="off" oninput="this.value=this.value.toUpperCase()">
+                <input class="jinput" type="text" id="jStrat" list="stratList" maxlength="20" placeholder="from account name" autocomplete="off" oninput="this.value=this.value.toUpperCase(); updateRulesPreview()">
                 <datalist id="stratList"></datalist>
                 <div class="meter-note">Defaults to the account's strategy — change it only if you traded something else on this account</div></div>
               <div class="jfield"></div>
             </div>
             <div class="jgrid">
-              <div class="jfield"><label class="jlabel">Trade Type</label><select class="jselect" id="jTradeType"></select></div>
+              <div class="jfield"><label class="jlabel">Trade Type</label><select class="jselect" id="jTradeType" onchange="updateRulesPreview()"></select></div>
               <div class="jfield"><label class="jlabel">Result</label><select class="jselect" id="jResult" onchange="suggestPnl()"></select></div>
-              <div class="jfield"><label class="jlabel">Bias</label><select class="jselect" id="jBias"></select></div>
+              <div class="jfield"><label class="jlabel">Bias</label><select class="jselect" id="jBias" onchange="updateRulesPreview()"></select></div>
             </div>
             <div class="jgrid">
               <div class="jfield"><label class="jlabel">Risk Amount ($)</label><input class="jinput" type="number" id="jRisk" min="0" step="0.01" placeholder="0.00" oninput="suggestPnl()"></div>
@@ -3137,15 +3137,16 @@ function renderStreaks(trades){
 /* ── TREND ALIGNMENT ──
    Whether you trade with your own bias or against it. Both halves are
    already logged — tradeType is BUY/SELL and bias is
-   BULLISH/BEARISH/NO BIAS — and nothing has ever compared them.
+   BULLISH/BEARISH/CONSOLIDATION — and nothing has ever compared them.
 
-   NO BIAS is its own bucket, never folded into either side: a trade
-   taken with no directional view is not a counter-trend trade. ── */
+   CONSOLIDATION (stored as NO BIAS before v21) is its own bucket, never
+   folded into either side: a trade taken in a range is not a
+   counter-trend trade. ── */
 function computeTrendAlignment(trades){
   var buckets = {
     WITH:    { key:"WITH",    label:"With the trend",    n:0, wins:0, pnl:0, r:0, rN:0 },
     AGAINST: { key:"AGAINST", label:"Against the trend", n:0, wins:0, pnl:0, r:0, rN:0 },
-    NONE:    { key:"NONE",    label:"No bias taken",     n:0, wins:0, pnl:0, r:0, rN:0 },
+    NONE:    { key:"NONE",    label:"Consolidation",     n:0, wins:0, pnl:0, r:0, rN:0 },
   };
 
   (trades||[]).forEach(function(t){
@@ -5618,15 +5619,15 @@ function tradeEditFormHTML(a, t){
     '</div>'+
     '<div class="mt-grid" data-enter-scope>'+
       '<div class="jfield"><label class="jlabel">Date</label>'+
-        '<input class="jinput" type="text" id="'+p+'Date" readonly placeholder="dd/mm/yyyy" onclick="openDatePicker(\''+p+'Date\')"></div>'+
+        '<input class="jinput" type="text" id="'+p+'Date" readonly placeholder="dd/mm/yyyy" data-onpick="_tradeEditDatePicked" onclick="openDatePicker(\''+p+'Date\')"></div>'+
       '<div class="jfield"><label class="jlabel">Pair</label>'+sel("Pair", _config.pairs, t.pair, ' onchange="updateRulesPreview(\'' + p + '\')"')+'</div>'+
       '<div class="jfield"><label class="jlabel">Timeframe</label>'+sel("Timeframe", _config.timeframes, t.timeframe, ' onchange="updateRulesPreview(\'' + p + '\')"')+'</div>'+
       '<div class="jfield"><label class="jlabel">RR</label>'+sel("RR", _config.rrOptions, t.rr, ' onchange="updateRulesPreview(\'' + p + '\'); suggestPnl(false,\'' + p + '\');"')+'</div>'+
-      '<div class="jfield"><label class="jlabel">Session</label><select class="jselect" id="'+p+'Session" onchange="updateRulesPreview(\'' + p + '\')">'+sessionOptHTML(t.session || _config.sharedRules.session)+'</select></div>'+
-      '<div class="jfield"><label class="jlabel">Strategy</label><input class="jinput" type="text" id="'+p+'Strat" list="stratList" maxlength="20" autocomplete="off" value="'+esc(t.strategyName||"")+'" oninput="this.value=this.value.toUpperCase()"></div>'+
-      '<div class="jfield"><label class="jlabel">Type</label>'+sel("TradeType", _config.tradeTypes, t.tradeType)+'</div>'+
+      '<div class="jfield"><label class="jlabel">Session</label><select class="jselect" id="'+p+'Session" onchange="updateRulesPreview(\'' + p + '\')">'+sessionOptHTML(t.session || _config.defaultSession)+'</select></div>'+
+      '<div class="jfield"><label class="jlabel">Strategy</label><input class="jinput" type="text" id="'+p+'Strat" list="stratList" maxlength="20" autocomplete="off" value="'+esc(t.strategyName||"")+'" oninput="this.value=this.value.toUpperCase(); updateRulesPreview(\'' + p + '\')"></div>'+
+      '<div class="jfield"><label class="jlabel">Type</label>'+sel("TradeType", _config.tradeTypes, t.tradeType, ' onchange="updateRulesPreview(\'' + p + '\')"')+'</div>'+
       '<div class="jfield"><label class="jlabel">Result</label>'+sel("Result", _config.results, t.result, ' onchange="suggestPnl(false,\'' + p + '\')"')+'</div>'+
-      '<div class="jfield"><label class="jlabel">Bias</label>'+sel("Bias", _config.biases, t.bias)+'</div>'+
+      '<div class="jfield"><label class="jlabel">Bias</label>'+sel("Bias", _config.biases, t.bias, ' onchange="updateRulesPreview(\'' + p + '\')"')+'</div>'+
       '<div class="jfield"><label class="jlabel">Risk ($)</label>'+
         '<input class="jinput" type="number" id="'+p+'Risk" min="0" step="0.01" value="'+esc(t.riskAmount||"")+'" oninput="suggestPnl(false,\'' + p + '\')"></div>'+
       '<div class="jfield"><label class="jlabel">P&amp;L ($) <span class="mt-recalc" onclick="suggestPnl(true,\'' + p + '\')">↺</span></label>'+
@@ -5662,6 +5663,11 @@ function toggleAccountTrades(accountId){
 
 // The editor is one popup shared by every account: open it for a
 // trade, and the list row it came from is highlighted until it closes.
+// The trade editor's date input names this as its data-onpick hook, so
+// a new date re-runs the preview (Friday rules).
+var _tradeEditPrefix = null;
+function _tradeEditDatePicked(){ if(_tradeEditPrefix) updateRulesPreview(_tradeEditPrefix); }
+
 function openTradeEdit(accountId, dateKey){
   var a = _accountsById[accountId];
   var t = accountTrades(accountId).filter(function(x){ return x.dateKey === dateKey; })[0];
@@ -5669,6 +5675,7 @@ function openTradeEdit(accountId, dateKey){
   _maccTradeEdit[accountId] = dateKey;
   rerenderAccountTrades(accountId);
   openMaccModal(tradeEditFormHTML(a, t));
+  _tradeEditPrefix = _mtPrefix(accountId);
   setDateISO(_mtPrefix(accountId)+"Date", t.dateKey);
   updateRulesPreview(_mtPrefix(accountId));
 }
@@ -5695,7 +5702,7 @@ function _tradeInlineParams(accountId, dateKey){
       "&date="      + encodeURIComponent(dateKey) +
       "&pair="      + encodeURIComponent(v("Pair")) +
       "&timeframe=" + encodeURIComponent(v("Timeframe")) +
-      "&session="   + encodeURIComponent(v("Session") || _config.sharedRules.session) +
+      "&session="   + encodeURIComponent(v("Session") || _config.defaultSession) +
       "&stratName=" + encodeURIComponent((v("Strat") || "").trim()) +
       "&tradeType=" + encodeURIComponent(v("TradeType")) +
       "&rr="        + encodeURIComponent(v("RR")) +
@@ -6192,7 +6199,7 @@ function optHTML(list){
 
 // Session codes with their labels (ASIA → Asia, NY → New York).
 function sessionOptHTML(selected){
-  var list = (_config && _config.sessions) || ["NY"];
+  var list = (_config && _config.sessions) || ["NEWYORK"];
   var lbl  = (_config && _config.sessionLabels) || {};
   return list.map(function(v){
     return '<option value="'+esc(v)+'"'+(v===selected?" selected":"")+'>'+esc(lbl[v]||v)+'</option>';
@@ -6232,7 +6239,7 @@ function initJournal(){
   document.getElementById("jResult").innerHTML     = optHTML(_config.results);
   document.getElementById("jBias").innerHTML       = optHTML(_config.biases);
   document.getElementById("jMistake").innerHTML    = '<option value="">— none —</option>' + optHTML(_config.mistakes);
-  document.getElementById("jSession").innerHTML    = sessionOptHTML(_config.sharedRules.session);
+  document.getElementById("jSession").innerHTML    = sessionOptHTML(_config.defaultSession);
   document.getElementById("stratList").innerHTML   = knownStrategies().map(function(v){ return '<option value="'+esc(v)+'">'; }).join("");
   if(_journalPreselect) document.getElementById("jPerson").value = _journalPreselect.person;
   if(!getDateISO("jDate")) setDateISO("jDate", todayISO());
@@ -6342,7 +6349,7 @@ function fillJournalForm(t){
     setSelectValue("jBias", t.bias);
     setSelectValue("jStrategy", t.strategy || "");
     setSelectValue("jMistake", t.mistakes || "");
-    setSelectValue("jSession", t.session || _config.sharedRules.session);
+    setSelectValue("jSession", t.session || _config.defaultSession);
     document.getElementById("jStrat").value = t.stratName || _journalDefaultStrategy();
     document.getElementById("jRisk").value = t.riskAmount || "";
     document.getElementById("jPnl").value = t.pnl || "";
@@ -6363,50 +6370,64 @@ function resetJournalForm(){
   document.getElementById("jBias").selectedIndex = 0;
   document.getElementById("jStrategy").selectedIndex = 0;
   document.getElementById("jMistake").value = "";
-  document.getElementById("jSession").value = _config.sharedRules.session;
+  document.getElementById("jSession").value = _config.defaultSession;
   document.getElementById("jStrat").value = _journalDefaultStrategy();
   document.getElementById("jRisk").value = "";
   document.getElementById("jPnl").value = "";
 }
 
-// Client-side mirror of the backend's _computeRulesDetailed(). The
-// journal form never collects a Session field — every submitted
-// trade is always sent with the shared session (see submitTrade,
-// no "session" param — the backend defaults it to
-// CONFIG.sharedRules.session) — so this preview only needs to
-// check pair/timeframe/rr, but it explicitly SAYS what the locked
-// session is so it's never a silent assumption.
+// Client-side mirror of the backend's _computeRulesDetailed(): the
+// shared pair rule plus the rules of the trade's OWN strategy
+// (_config.strategyRules, keyed by the Strategy field). Same order of
+// checks as the server so the preview and the stored verdict agree.
+// `p` is the element-id prefix: "j" for the Journal form, or the
+// per-account trade editor's prefix.
+function computeRulesPreview(f){
+  var pair  = String(f.pair||"").trim().toUpperCase();
+  var sess  = String(f.session||"").trim().toUpperCase();
+  var tf    = String(f.timeframe||"").trim().toUpperCase();
+  var rr    = String(f.rr||"").trim();
+  var strat = String(f.stratName||"").trim().toUpperCase();
+  var bias  = String(f.bias||"").trim().toUpperCase();
+  var dir   = String(f.tradeType||"").trim().toUpperCase();
+  var day   = String(f.day||"").trim().toUpperCase();
+  var sl    = _config.sessionLabels || {};
+  var lbl   = function(x){ return sl[x] || x; };
+  var rules = (_config.strategyRules||{})[strat];
+
+  if(pair !== String(_config.sharedRules.pair).toUpperCase()) return { ok:false, hint:"pair must be " + _config.sharedRules.pair };
+  if(!strat) return { ok:false, hint:"no strategy — set it above" };
+  if(!rules) return { ok:false, hint:"no rules defined for " + strat + " (known: " + Object.keys(_config.strategyRules||{}).join(", ") + ")" };
+  if(rules.sessions.indexOf(sess) === -1)    return { ok:false, hint:strat + " trades only in " + rules.sessions.map(lbl).join(" or ") };
+  if(rules.timeframes.indexOf(tf) === -1)    return { ok:false, hint:strat + " is a " + rules.timeframes.join(" / ") + " strategy" };
+  if(rules.rr.indexOf(rr) === -1)            return { ok:false, hint:strat + " needs RR " + rules.rr.join(" or ") };
+  if(rules.noFriday && day === "FRIDAY")     return { ok:false, hint:strat + " does not trade on Fridays" };
+  if(rules.noConsolidation && bias === "CONSOLIDATION") return { ok:false, hint:strat + " does not trade in consolidation" };
+  if(rules.withTrend && ((bias === "BULLISH" && dir === "SELL") || (bias === "BEARISH" && dir === "BUY"))){
+    return { ok:false, hint:strat + " never trades against the trend — " + dir + " in a " + bias.toLowerCase() + " bias" };
+  }
+  return { ok:true, hint:"" };
+}
+
+function _dayOfISO(iso){
+  if(!iso) return "";
+  var d = new Date(iso + "T00:00:00");
+  return isNaN(d.getTime()) ? "" : ["SUNDAY","MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY"][d.getDay()];
+}
+
 function updateRulesPreview(p){
   if(!_config) return;
-  p = p || "j";   // "j" = the Journal form; per-account inline forms pass their own prefix
-  var pair = document.getElementById(p+"Pair").value;
-  var tf   = document.getElementById(p+"Timeframe").value;
-  var rr   = document.getElementById(p+"RR").value;
-  var sessEl = document.getElementById(p+"Session");
-  var sess = sessEl ? sessEl.value : _config.sharedRules.session;
-  var pairOk  = pair === _config.sharedRules.pair;
-  var sessOk  = String(sess).toUpperCase() === String(_config.sharedRules.session).toUpperCase();
-  var validTf = _config.timeframeRR.hasOwnProperty(tf);
-  var allowed = validTf ? _config.timeframeRR[tf] : [];
-  var rrOk    = validTf && allowed.indexOf(rr) !== -1;
-  var ok      = pairOk && sessOk && validTf && rrOk;
+  p = p || "j";
+  var v = function(n){ var el = document.getElementById(p+n); return el ? el.value : ""; };
+  var r = computeRulesPreview({
+    pair: v("Pair"), session: v("Session") || _config.defaultSession, timeframe: v("Timeframe"), rr: v("RR"),
+    stratName: v("Strat"), bias: v("Bias"), tradeType: v("TradeType"), day: _dayOfISO(getDateISO(p+"Date")),
+  });
   var el = document.getElementById(p+"RulesPreview");
-  if(ok){
-    el.innerHTML = '<span style="color:var(--green)">✓ Rules followed</span>';
-  } else {
-    var hint;
-    var sl = (_config.sessionLabels||{});
-    if(!pairOk){
-      hint = "pair must be " + _config.sharedRules.pair;
-    } else if(!sessOk){
-      hint = "session must be " + (sl[_config.sharedRules.session] || _config.sharedRules.session);
-    } else if(!validTf){
-      hint = tf + " has no fixed RR rule — only " + Object.keys(_config.timeframeRR).join(" / ") + " are rule-eligible";
-    } else {
-      hint = "needs RR " + allowed.join(" or ") + " on " + tf;
-    }
-    el.innerHTML = '<span style="color:var(--red)">✗ Rules broken — '+esc(hint)+'</span>';
-  }
+  if(!el) return;
+  el.innerHTML = r.ok
+    ? '<span style="color:var(--green)">✓ Rules followed</span>'
+    : '<span style="color:var(--red)">✗ Rules broken — '+esc(r.hint)+'</span>';
 }
 
 function suggestPnl(force, p){
