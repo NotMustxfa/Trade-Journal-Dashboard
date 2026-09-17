@@ -753,6 +753,19 @@ body::after {
 }
 .setup-row:hover { transform: translateX(2px); }
 .setup-row.thin { opacity: 0.5; }
+
+/* ── Strategy performance table ── */
+.strat-table th.num, .strat-table td.num { text-align: right; }
+.strat-table td.num { font-family: var(--font-mono); }
+.strat-table td.pos { color: var(--green); }
+.strat-table td.neg { color: var(--red); }
+.strat-table .muted { color: var(--txt4); font-weight: 400; }
+.strat-table tr.strat-row { cursor: pointer; }
+.strat-table tr.strat-row.thin td { opacity: 0.55; }
+.strat-table tr.strat-row.open td { background: var(--bg3); }
+.strat-table td.strat-name { font-family: var(--font-display); font-weight: 700; color: var(--txt); }
+.strat-table tr.strat-sub td { background: var(--bg2); font-size: var(--fs-1); padding-top: 6px; padding-bottom: 6px; }
+.strat-table tr.strat-sub td.strat-name { font-weight: 500; color: var(--txt2); padding-left: 28px; }
 .setup-name {
   font-family: var(--font-display); font-size: var(--fs-2); font-weight: 600;
   color: var(--txt); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -1754,6 +1767,15 @@ body::after {
 
       <div class="sec">
         <div class="sh">
+          <div class="sh-title">Strategy</div>
+          <div class="sh-line"></div>
+          <div class="sh-tag"><span class="scope-tag all">All accounts ever</span></div>
+        </div>
+        <div class="panel d3" id="strategyPanel"></div>
+      </div>
+
+      <div class="sec">
+        <div class="sh">
           <div class="sh-title">Outcomes</div>
           <div class="sh-line"></div>
           <div class="sh-tag"><span class="scope-tag all">All accounts ever</span></div>
@@ -2339,7 +2361,38 @@ function refreshDashboardQuietly(cb){
 
 function _rebuildAccountsById(){
   _accountsById = {};
-  (_data.accounts||[]).forEach(function(a){ _accountsById[a.accountId] = a; });
+  (_data.accounts||[]).forEach(function(a){
+    _accountsById[a.accountId] = a;
+    a.nameParts = parseAccountName(a.accountName);
+  });
+  _tagTradesWithAccountParts();
+}
+
+/* ── ACCOUNT NAME CONVENTION ──
+   Names are FIRM_SIZE_TYPE_STRATEGY, e.g. GFT_25K_GOAT_LQS: the prop
+   firm, the account size, the firm's account type, and the strategy
+   traded on it. The strategy is the last segment so a firm or type
+   with an underscore in it still parses; anything shorter than four
+   segments keeps what it has and leaves the rest blank. ── */
+function parseAccountName(name){
+  var p = String(name || "").trim().split("_").map(function(x){ return x.trim(); }).filter(Boolean);
+  if(p.length >= 4) return { firm:p[0], size:p[1], acctType:p.slice(2, -1).join("_"), strategy:p[p.length-1] };
+  if(p.length === 3) return { firm:p[0], size:p[1], acctType:"", strategy:p[2] };
+  if(p.length === 2) return { firm:p[0], size:"",   acctType:"", strategy:p[1] };
+  return { firm:"", size:"", acctType:"", strategy:"" };
+}
+
+// Every trade gets its account's parts so the Setups panel can group
+// by strategy / firm / type like any other dimension. Read from the
+// CURRENT account name (a rename applies to history), falling back to
+// the name stored on the trade row for accounts that no longer exist.
+function _tagTradesWithAccountParts(){
+  (_data.trades||[]).forEach(function(t){
+    var a = _accountsById[t.accountId];
+    var np = a ? a.nameParts : parseAccountName(t.accountName);
+    t.strategyName = np.strategy;
+    t.firm = np.firm; t.acctSize = np.size; t.acctType = np.acctType;
+  });
 }
 
 /* ── RENDER ALL ── */
@@ -2763,7 +2816,7 @@ function renderDashboard(){
   renderHero(s); renderCapital();
   renderKPI(s); renderResults(s); renderMistakes(s);
   renderPctKpi(s); renderPctPerformance();
-  renderDays(trades); renderCalendar(trades); renderStreaks(trades); renderSetups();
+  renderDays(trades); renderCalendar(trades); renderStreaks(trades); renderSetups(); renderStrategies();
   renderTrendAlignment(trades); renderRMetrics(trades, s);
   renderRR(s); renderCompliance(s);
   renderTrend(); renderWeekly(); renderAccounts(); renderEquity();
@@ -3240,11 +3293,15 @@ function renderRMetrics(trades, s){
    trade and were analysed nowhere. Same shape as the percentage panels:
    group, run stats() per group, sort. ── */
 var SETUP_DIMS = [
-  { key:"pair",      label:"Pair" },
-  { key:"session",   label:"Session" },
-  { key:"timeframe", label:"Timeframe" },
-  { key:"tradeType", label:"Type" },
-  { key:"bias",      label:"Bias" },
+  { key:"pair",         label:"Pair" },
+  { key:"session",      label:"Session" },
+  { key:"timeframe",    label:"Timeframe" },
+  { key:"tradeType",    label:"Type" },
+  { key:"bias",         label:"Bias" },
+  // From the account name (FIRM_SIZE_TYPE_STRATEGY) — see parseAccountName.
+  { key:"strategyName", label:"Strategy" },
+  { key:"firm",         label:"Firm" },
+  { key:"acctType",     label:"Acct type" },
 ];
 var SETUP_MIN_SAMPLE = 5;
 
@@ -3264,6 +3321,131 @@ function groupTradesBy(trades, key){
     if(a.ranked !== b.ranked) return a.ranked ? -1 : 1;
     return b.pnl - a.pnl;
   });
+}
+
+/* ── STRATEGY PERFORMANCE ──
+   One row per strategy (last segment of the account name), across the
+   filtered trades: how it trades AND how its accounts fared, because a
+   strategy that wins trades but blows evaluations is not working.
+   Click a row for the per-account breakdown. ── */
+var _stratOpen = {};   // strategy -> bool, expanded rows
+
+function computeStrategies(trades, accounts){
+  var byStrat = {};
+  (trades||[]).forEach(function(t){
+    var k = t.strategyName || "";
+    if(!k) return;
+    (byStrat[k] = byStrat[k] || { trades:[], accounts:{} }).trades.push(t);
+  });
+  // Accounts join by name, not by having traded: a blown eval with two
+  // trades still counts against the strategy that blew it.
+  (accounts||[]).forEach(function(a){
+    if(a.status === "REMOVED") return;
+    var k = (a.nameParts || parseAccountName(a.accountName)).strategy;
+    if(!k) return;
+    var b = byStrat[k] = byStrat[k] || { trades:[], accounts:{} };
+    b.accounts[a.accountId] = a;
+  });
+
+  return Object.keys(byStrat).map(function(k){
+    var b = byStrat[k];
+    var s = stats(b.trades);
+    var gp = 0, gl = 0;
+    b.trades.forEach(function(t){ var v = t.pnl||0; if(v > 0) gp += v; else gl += -v; });
+    var pf = gl > 0 ? gp / gl : (gp > 0 ? Infinity : 0);
+
+    var accs = Object.keys(b.accounts).map(function(id){ return b.accounts[id]; });
+    var active = 0, funded = 0, passed = 0, blown = 0;
+    accs.forEach(function(a){
+      var hist = a.stageHistory || [];
+      var reachedMaster = hist.length ? hist.some(function(st){ return st.phase === "MASTER"; }) : a.phase === "MASTER";
+      if(a.status === "ACTIVE") active++;
+      if(reachedMaster) funded++;
+      if(reachedMaster || a.status === "PASSED") passed++;
+      else if(a.status === "BLOWN") blown++;
+    });
+    var perAcc = accs.map(function(a){
+      var mine = b.trades.filter(function(t){ return t.accountId === a.accountId; });
+      var ms = stats(mine);
+      return { a:a, total:ms.total, winRate:ms.winRate, pnl:ms.totalPnL };
+    }).sort(function(x,y){ return y.pnl - x.pnl; });
+
+    return {
+      label:k, total:s.total, winRate:s.winRate, pnl:s.totalPnL, avgRR:s.avgRR,
+      compliance:s.compliance, pf:pf,
+      nAcc:accs.length, active:active, funded:funded, passed:passed, blown:blown,
+      ranked:s.total >= SETUP_MIN_SAMPLE, perAcc:perAcc,
+    };
+  }).sort(function(a,b){
+    if(a.ranked !== b.ranked) return a.ranked ? -1 : 1;
+    return b.pnl - a.pnl;
+  });
+}
+
+function toggleStrategy(k){
+  _stratOpen[k] = !_stratOpen[k];
+  renderStrategies();
+}
+
+function renderStrategies(){
+  var host = document.getElementById("strategyPanel");
+  if(!host) return;
+  var accs = (_data.accounts||[]).filter(function(a){
+    return _filters.person === "all" || a.person === _filters.person;
+  });
+  var rows = computeStrategies(getFiltered(), accs);
+
+  var head = '<div class="panel-head"><div>'+
+    '<div class="ptitle">Strategy performance</div>'+
+    '<div class="psub">By the last part of the account name (FIRM_SIZE_TYPE_<b>STRATEGY</b>) — how each strategy trades, and what happened to the accounts running it</div>'+
+  '</div></div>';
+
+  if(!rows.length){
+    host.innerHTML = head + '<div class="empty">No strategies found — name accounts FIRM_SIZE_TYPE_STRATEGY, e.g. GFT_25K_GOAT_LQS.</div>';
+    return;
+  }
+
+  var h = '<div class="wtable-wrap"><table class="wtable strat-table"><thead><tr>'+
+    '<th>Strategy</th><th class="num">Trades</th><th class="num">Win %</th><th class="num">Avg RR</th>'+
+    '<th class="num">Profit factor</th><th class="num">Rules</th><th class="num">P&amp;L</th>'+
+    '<th>Accounts</th><th class="num">Passed</th><th class="num">Blown</th>'+
+    '</tr></thead><tbody>';
+
+  rows.forEach(function(r){
+    var open = !!_stratOpen[r.label];
+    var pfTxt = r.pf === Infinity ? "∞" : r.pf.toFixed(2);
+    var pfCls = r.pf === Infinity || r.pf >= 1.5 ? "pos" : r.pf >= 1 ? "" : "neg";
+    var wrCls = r.winRate >= 60 ? "pos" : r.winRate >= 40 ? "" : "neg";
+    var pnlCls = r.pnl > 0 ? "pos" : r.pnl < 0 ? "neg" : "";
+    h += '<tr class="strat-row'+(r.ranked?"":" thin")+(open?" open":"")+'" data-strat="'+esc(r.label).replace(/"/g,"&quot;")+'" onclick="toggleStrategy(this.dataset.strat)">'+
+      '<td class="strat-name">'+(open?"▾":"▸")+' '+esc(r.label)+(r.ranked ? "" : ' <span class="setup-flag">low sample</span>')+'</td>'+
+      '<td class="num">'+r.total+'</td>'+
+      '<td class="num '+wrCls+'">'+(r.total ? r.winRate+"%" : "—")+'</td>'+
+      '<td class="num">'+(r.total ? "1:"+r.avgRR : "—")+'</td>'+
+      '<td class="num '+pfCls+'">'+(r.total ? pfTxt : "—")+'</td>'+
+      '<td class="num">'+(r.total ? r.compliance+"%" : "—")+'</td>'+
+      '<td class="num '+pnlCls+'">'+(r.pnl>=0?"+":"−")+esc(fmtMoney(Math.abs(r.pnl)))+'</td>'+
+      '<td>'+r.nAcc+' <span class="muted">('+r.active+' active · '+r.funded+' funded)</span></td>'+
+      '<td class="num pos">'+r.passed+'</td>'+
+      '<td class="num '+(r.blown?"neg":"")+'">'+r.blown+'</td>'+
+    '</tr>';
+    if(open){
+      r.perAcc.forEach(function(x){
+        var a = x.a, pc = x.pnl > 0 ? "pos" : x.pnl < 0 ? "neg" : "";
+        h += '<tr class="strat-sub">'+
+          '<td class="strat-name">'+esc(a.accountName)+' '+phaseBadge(a.phase)+' '+statusBadge(a.status)+'</td>'+
+          '<td class="num">'+x.total+'</td>'+
+          '<td class="num">'+(x.total ? x.winRate+"%" : "—")+'</td>'+
+          '<td colspan="3" class="muted">'+esc(a.person)+' · '+esc((a.nameParts||{}).firm||"")+' '+esc((a.nameParts||{}).size||"")+' '+esc((a.nameParts||{}).acctType||"")+'</td>'+
+          '<td class="num '+pc+'">'+(x.pnl>=0?"+":"−")+esc(fmtMoney(Math.abs(x.pnl)))+'</td>'+
+          '<td colspan="3"></td>'+
+        '</tr>';
+      });
+    }
+  });
+  h += '</tbody></table></div>'+
+    '<div class="meter-note" style="margin-top:var(--sp-3)">Sorted by P&amp;L. Passed counts evaluations that reached Master or were marked passed; Blown counts any account lost. Strategies under '+SETUP_MIN_SAMPLE+' trades are dimmed.</div>';
+  host.innerHTML = head + h;
 }
 
 function setSetupDim(k){
