@@ -2044,16 +2044,21 @@ body::after {
             </div>
           </div>
         </div>
-        <div class="jgrid" style="grid-template-columns:1fr 1fr;">
+        <div class="jgrid">
           <div class="jfield">
             <label class="jlabel">Your split (%)</label>
             <input class="jinput" type="number" id="poSplit" min="0" max="100" step="0.1" placeholder="e.g. 80" oninput="updatePayoutSplit()">
             <div class="meter-note">Blank or 0 = you keep it all</div>
           </div>
           <div class="jfield">
+            <label class="jlabel">Charges ($)</label>
+            <input class="jinput" type="number" id="poCharges" min="0" step="0.01" placeholder="0.00" oninput="updatePayoutSplit()">
+            <div class="meter-note">Wire, network or conversion fees, taken off after the split</div>
+          </div>
+          <div class="jfield">
             <label class="jlabel">You keep</label>
             <div class="jstatus" id="poNet">—</div>
-            <div class="meter-note" id="poNetNote">After the firm's cut</div>
+            <div class="meter-note" id="poNetNote">After the firm's cut and charges</div>
           </div>
         </div>
         <div class="jfield"><label class="jlabel">Notes</label><input class="jinput" type="text" id="poNotes" placeholder="optional"></div>
@@ -3728,11 +3733,12 @@ function _sparkline(tr){
     (dd>0 ? ' · worst fall <b class="neg">−'+esc(fmtMoney(dd))+'</b>' : '')+'</span></div>';
 }
 function _payoutStrip(P){
-  var kept = _sumBy(P,_net), gross = _sumBy(P,function(p){ return p.amount; });
-  var cut = Math.max(gross-kept,0);
+  var kept = _sumBy(P,_net), gross = _sumBy(P,function(p){ return p.amount; }), charges = _sumBy(P,function(p){ return p.charges; });
+  var cut = Math.max(gross-kept-charges,0);
   if(!gross) return "";
-  return '<div class="drill-strip"><div class="seg-pos" style="width:'+(kept/gross*100).toFixed(2)+'%"></div><div class="seg-muted" style="width:'+(cut/gross*100).toFixed(2)+'%"></div></div>'+
-    '<div class="drill-legend"><span><i class="seg-pos"></i>You kept <b>'+esc(fmtMoney(kept))+'</b></span><span><i class="seg-muted"></i>Firm\'s cut <b>'+esc(fmtMoney(cut))+'</b></span></div>';
+  return '<div class="drill-strip"><div class="seg-pos" style="width:'+(kept/gross*100).toFixed(2)+'%"></div><div class="seg-muted" style="width:'+(cut/gross*100).toFixed(2)+'%"></div><div class="seg-neg" style="width:'+(charges/gross*100).toFixed(2)+'%"></div></div>'+
+    '<div class="drill-legend"><span><i class="seg-pos"></i>You kept <b>'+esc(fmtMoney(kept))+'</b></span><span><i class="seg-muted"></i>Firm\'s cut <b>'+esc(fmtMoney(cut))+'</b></span>'+
+    (charges>0 ? '<span><i class="seg-neg"></i>Charges <b>'+esc(fmtMoney(charges))+'</b></span>' : '')+'</div>';
 }
 
 // ── Row tables (behind the toggle) ──
@@ -3773,12 +3779,12 @@ function _accountsTableHTML(rows, cols){
 function _payoutsTableHTML(rows){
   if(!rows.length) return '<div class="empty" style="padding:14px 0 2px">No payouts in view.</div>';
   var h = '<div class="macc-trades-wrap drill-rows"><table class="macc-trades-table"><thead><tr>'+
-    '<th>Date</th><th>Account</th><th class="num">Withdrawn</th><th class="num">Split</th><th class="num">You kept</th><th>Notes</th>'+
+    '<th>Date</th><th>Account</th><th class="num">Withdrawn</th><th class="num">Split</th><th class="num">Charges</th><th class="num">You kept</th><th>Notes</th>'+
     '</tr></thead><tbody>';
   rows.forEach(function(p){
     var sp = p.splitPct || 100;
     h += '<tr><td class="date">'+esc(isoToDMY(p.date))+'</td><td>'+esc(p.accountName)+' <span class="muted">'+esc(p.person)+'</span></td>'+
-      '<td class="num">'+fmtMoney(p.amount)+'</td><td class="num muted">'+(sp===100?"—":sp+"%")+'</td><td class="num pos">'+fmtMoney(_net(p))+'</td>'+
+      '<td class="num">'+fmtMoney(p.amount)+'</td><td class="num muted">'+(sp===100?"—":sp+"%")+'</td><td class="num '+((p.charges||0)>0?"neg":"muted")+'">'+((p.charges||0)>0?"−"+fmtMoney(p.charges):"—")+'</td><td class="num pos">'+fmtMoney(_net(p))+'</td>'+
       '<td class="mistake" title="'+esc(p.notes||"")+'">'+esc(p.notes||"—")+'</td></tr>';
   });
   return h + '</tbody></table></div>';
@@ -5000,22 +5006,29 @@ function onPayoutAccountChange(){
   updatePayoutSplit();
 }
 
+// What reaches you: the split share, then fixed charges off. Mirrors
+// the backend's _payoutNet; 0 / blank split = keep it all.
+function payoutNet(amount, splitPct, charges){
+  var amt = parseFloat(amount) || 0;
+  var sp  = parseFloat(splitPct);
+  var eff = (isNaN(sp) || sp <= 0 || sp > 100) ? 100 : sp;
+  var ch  = parseFloat(charges); if(isNaN(ch) || ch < 0) ch = 0;
+  return { net: amt * (eff / 100) - ch, effective: eff, cut: amt - amt * (eff / 100), charges: ch };
+}
+
 function updatePayoutSplit(){
-  var amt   = parseFloat(document.getElementById("poAmount").value) || 0;
-  var split = parseFloat(document.getElementById("poSplit").value);
-  var net   = document.getElementById("poNet");
-  var note  = document.getElementById("poNetNote");
+  var amt  = document.getElementById("poAmount").value;
+  var net  = document.getElementById("poNet");
+  var note = document.getElementById("poNetNote");
   if(!net) return;
-
-  // 0 / blank means no split recorded, which is treated as keeping it all.
-  var effective = (isNaN(split) || split <= 0 || split > 100) ? 100 : split;
-  if(!amt){ net.textContent = "—"; note.textContent = "Enter an amount"; return; }
-
-  var keep = amt * (effective / 100);
-  net.textContent = fmtMoney(keep);
-  note.textContent = effective === 100
-    ? "No split — you keep the full amount"
-    : "Firm takes " + fmtMoney(amt - keep) + " (" + (100 - effective).toFixed(0) + "%)";
+  var r = payoutNet(amt, document.getElementById("poSplit").value, document.getElementById("poCharges").value);
+  if(!parseFloat(amt)){ net.textContent = "—"; note.textContent = "Enter an amount"; return; }
+  net.textContent = fmtMoney(r.net);
+  var parts = [];
+  if(r.effective !== 100) parts.push("firm takes " + fmtMoney(r.cut) + " (" + (100 - r.effective).toFixed(0) + "%)");
+  if(r.charges > 0)       parts.push("charges " + fmtMoney(r.charges));
+  note.textContent = parts.length ? parts.join(" · ") : "No split, no charges — you keep the full amount";
+  note.style.color = r.net < 0 ? "var(--red)" : "";
 }
 
 function renderPayoutsKPI(){
@@ -5036,7 +5049,7 @@ function renderPayoutTable(){
   }
   // Gross is what left the prop account; net is what reached you.
   var h = '<table class="wtable"><thead><tr>'+
-    '<th>Date</th><th>Person</th><th>Account</th><th>Withdrawn</th><th>Split</th><th>You kept</th><th>Notes</th><th></th>'+
+    '<th>Date</th><th>Person</th><th>Account</th><th>Withdrawn</th><th>Split</th><th>Charges</th><th>You kept</th><th>Notes</th><th></th>'+
     '</tr></thead><tbody>';
   list.forEach(function(p){
     var acc = _accountsById[p.accountId];
@@ -5049,6 +5062,7 @@ function renderPayoutTable(){
       '<td>'+esc(p.accountName)+' '+statusTag+'</td>'+
       '<td style="color:var(--txt2)">'+fmtMoney(p.amount)+'</td>'+
       '<td style="color:'+(split===100?"var(--txt4)":"var(--gold)")+'">'+(split===100?"—":split+"%")+'</td>'+
+      '<td style="color:'+((p.charges||0)>0?"var(--red)":"var(--txt4)")+'">'+((p.charges||0)>0?"−"+fmtMoney(p.charges):"—")+'</td>'+
       '<td style="color:var(--green);font-weight:700;">'+fmtMoney(net)+'</td>'+
       '<td style="color:var(--txt3)">'+esc(p.notes||"—")+'</td>'+
       '<td class="po-act"><button class="jbtn-sm mini" onclick="openPayoutEdit(\''+p.id+'\')">Edit</button> '+
@@ -5073,6 +5087,7 @@ function submitPayout(btn){
   var accountId = document.getElementById("poAccount").value;
   var amount    = document.getElementById("poAmount").value;
   var split     = document.getElementById("poSplit").value;
+  var charges   = document.getElementById("poCharges").value;
   var date      = getDateISO("poDate");
   var notes     = document.getElementById("poNotes").value;
 
@@ -5087,6 +5102,7 @@ function submitPayout(btn){
     "&accountId=" + encodeURIComponent(accountId) +
     "&amount=" + encodeURIComponent(amount) +
     "&splitPct=" + encodeURIComponent(split || "0") +
+    "&charges=" + encodeURIComponent(charges || "0") +
     "&date=" + encodeURIComponent(date) +
     "&notes=" + encodeURIComponent(notes);
 
@@ -5099,6 +5115,7 @@ function submitPayout(btn){
     }
     document.getElementById("poOk").textContent = "Payout saved ✓";
     document.getElementById("poAmount").value = "";
+    document.getElementById("poCharges").value = "";
     document.getElementById("poNotes").value = "";
     updatePayoutSplit();   // split stays — same firm, same rule
     refreshDashboardQuietly(function(){
@@ -5131,6 +5148,8 @@ function payoutEditFormHTML(p){
         '<input class="jinput" type="number" id="pe_Amount" min="0.01" step="0.01" value="'+esc(p.amount)+'" oninput="updatePayoutEditNet()"></div>'+
       '<div class="jfield"><label class="jlabel">Your split (%)</label>'+
         '<input class="jinput" type="number" id="pe_Split" min="0" max="100" step="0.1" value="'+esc(split===100?"":split)+'" placeholder="100" oninput="updatePayoutEditNet()"></div>'+
+      '<div class="jfield"><label class="jlabel">Charges ($)</label>'+
+        '<input class="jinput" type="number" id="pe_Charges" min="0" step="0.01" value="'+esc((p.charges||0)>0?p.charges:"")+'" placeholder="0.00" oninput="updatePayoutEditNet()"></div>'+
       '<div class="jfield"><label class="jlabel">Date</label>'+
         '<input class="jinput" type="text" id="pe_Date" readonly placeholder="dd/mm/yyyy" onclick="openDatePicker(\'pe_Date\')"></div>'+
       '<div class="jfield"><label class="jlabel">You keep</label><div class="jstatus" id="pe_Net">—</div></div>'+
@@ -5148,10 +5167,10 @@ function payoutEditFormHTML(p){
 function updatePayoutEditNet(){
   var net = document.getElementById("pe_Net");
   if(!net) return;
-  var amt   = parseFloat(document.getElementById("pe_Amount").value) || 0;
-  var split = parseFloat(document.getElementById("pe_Split").value);
-  var effective = (isNaN(split) || split <= 0 || split > 100) ? 100 : split;   // 0 / blank = keep it all
-  net.textContent = amt ? fmtMoney(amt * (effective / 100)) + (effective === 100 ? "" : " (" + effective + "%)") : "—";
+  var amt = document.getElementById("pe_Amount").value;
+  var r = payoutNet(amt, document.getElementById("pe_Split").value, document.getElementById("pe_Charges").value);
+  net.textContent = parseFloat(amt) ? fmtMoney(r.net) + (r.effective === 100 && !r.charges ? "" : " · after " + (r.effective === 100 ? "" : r.effective + "% split") + (r.charges ? (r.effective === 100 ? "" : " and ") + fmtMoney(r.charges) + " charges" : "")) : "—";
+  net.style.color = r.net < 0 ? "var(--red)" : "";
 }
 
 function savePayoutEdit(payoutId, btn){
@@ -5159,10 +5178,13 @@ function savePayoutEdit(payoutId, btn){
   errEl.textContent = ""; okEl.textContent = "";
   var amount = parseFloat(document.getElementById("pe_Amount").value);
   var split  = document.getElementById("pe_Split").value;
+  var charges = document.getElementById("pe_Charges").value;
   var date   = getDateISO("pe_Date");
   var notes  = document.getElementById("pe_Notes").value;
   if(isNaN(amount) || amount <= 0){ errEl.textContent = "Enter a payout amount greater than 0."; return; }
   if(split !== "" && (parseFloat(split) < 0 || parseFloat(split) > 100)){ errEl.textContent = "Profit split must be between 0 and 100%."; return; }
+  if(charges !== "" && parseFloat(charges) < 0){ errEl.textContent = "Charges must be 0 or more."; return; }
+  if(payoutNet(amount, split, charges).net < 0){ errEl.textContent = "Charges cannot exceed your share of the payout."; return; }
   if(!date){ errEl.textContent = "Pick a date."; return; }
 
   var done = btnLoading(btn, "Updating");
@@ -5170,6 +5192,7 @@ function savePayoutEdit(payoutId, btn){
         "&payoutId=" + encodeURIComponent(payoutId) +
         "&amount="   + encodeURIComponent(amount) +
         "&splitPct=" + encodeURIComponent(split || "0") +
+        "&charges="  + encodeURIComponent(charges || "0") +
         "&date="     + encodeURIComponent(date) +
         "&notes="    + encodeURIComponent(notes), function(d){
     if(!d || !d.success){ done(); errEl.textContent = (d && d.error) || "Could not save the payout."; return; }
