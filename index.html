@@ -610,7 +610,7 @@ body::after {
 
 .g2  { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .g3  { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-.g21 { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; }
+.g21 { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; align-items: start; }
 .sec { margin-bottom: 28px; }
 
 .brow {
@@ -805,7 +805,10 @@ body::after {
   font-size: var(--fs-1); color: var(--txt4); letter-spacing: var(--tr-label);
 }
 
-.acc-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
+/* Bounded and scrolling on its own: the per-account cards sit beside the
+   weekly log, and every account added used to stretch the grid row — and
+   the weekly panel with it. */
+.acc-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; max-height: 620px; overflow-y: auto; padding-right: 4px; }
 
 .acc-card {
   background: var(--bg3); border: 1px solid var(--border);
@@ -1915,7 +1918,7 @@ body::after {
           </div>
           <div class="panel d2">
             <div class="ptitle">By account</div>
-            <div class="psub">Any status</div>
+            <div class="psub">Any status · scrolls</div>
             <div class="acc-cards" id="accCards"></div>
           </div>
         </div>
