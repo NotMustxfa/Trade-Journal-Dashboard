@@ -2128,6 +2128,14 @@ body::after {
               <div class="jfield"><label class="jlabel">RR</label><select class="jselect" id="jRR" onchange="updateRulesPreview(); suggestPnl();"></select></div>
             </div>
             <div class="jgrid">
+              <div class="jfield"><label class="jlabel">Session</label><select class="jselect" id="jSession" onchange="updateRulesPreview()"></select></div>
+              <div class="jfield"><label class="jlabel">Strategy</label>
+                <input class="jinput" type="text" id="jStrat" list="stratList" maxlength="20" placeholder="from account name" autocomplete="off" oninput="this.value=this.value.toUpperCase()">
+                <datalist id="stratList"></datalist>
+                <div class="meter-note">Defaults to the account's strategy — change it only if you traded something else on this account</div></div>
+              <div class="jfield"></div>
+            </div>
+            <div class="jgrid">
               <div class="jfield"><label class="jlabel">Trade Type</label><select class="jselect" id="jTradeType"></select></div>
               <div class="jfield"><label class="jlabel">Result</label><select class="jselect" id="jResult" onchange="suggestPnl()"></select></div>
               <div class="jfield"><label class="jlabel">Bias</label><select class="jselect" id="jBias"></select></div>
@@ -2390,7 +2398,12 @@ function _tagTradesWithAccountParts(){
   (_data.trades||[]).forEach(function(t){
     var a = _accountsById[t.accountId];
     var np = a ? a.nameParts : parseAccountName(t.accountName);
-    t.strategyName = np.strategy;
+    // The trade's own Strategy Name (v20) wins. For rows written before
+    // the column existed, the account name stored ON THE ROW is what the
+    // account was called when the trade was taken, so it beats the
+    // current name — a rename must not rewrite history. Firm, size and
+    // type are properties of the account and follow its current name.
+    t.strategyName = t.stratName || parseAccountName(t.accountName).strategy || np.strategy;
     t.firm = np.firm; t.acctSize = np.size; t.acctType = np.acctType;
   });
 }
@@ -3332,19 +3345,30 @@ var _stratOpen = {};   // strategy -> bool, expanded rows
 
 function computeStrategies(trades, accounts){
   var byStrat = {};
+  var accById = {};
+  (accounts||[]).forEach(function(a){ accById[a.accountId] = a; });
+  var bucket = function(k){ return byStrat[k] = byStrat[k] || { trades:[], accounts:{}, owned:{} }; };
+
+  // A trade lists its account under the strategy it was taken with …
   (trades||[]).forEach(function(t){
     var k = t.strategyName || "";
     if(!k) return;
-    (byStrat[k] = byStrat[k] || { trades:[], accounts:{} }).trades.push(t);
+    var b = bucket(k);
+    b.trades.push(t);
+    var a = accById[t.accountId];
+    if(a && a.status !== "REMOVED") b.accounts[a.accountId] = a;
   });
-  // Accounts join by name, not by having traded: a blown eval with two
-  // trades still counts against the strategy that blew it.
+  // … but its OUTCOME is credited to the strategy it runs now (the name):
+  // a blown eval with two trades still counts against the strategy that
+  // blew it, and an account switched from LQS to ORB is ORB's to pass or
+  // lose from here on.
   (accounts||[]).forEach(function(a){
     if(a.status === "REMOVED") return;
     var k = (a.nameParts || parseAccountName(a.accountName)).strategy;
     if(!k) return;
-    var b = byStrat[k] = byStrat[k] || { trades:[], accounts:{} };
+    var b = bucket(k);
     b.accounts[a.accountId] = a;
+    b.owned[a.accountId] = a;
   });
 
   return Object.keys(byStrat).map(function(k){
@@ -3354,9 +3378,10 @@ function computeStrategies(trades, accounts){
     b.trades.forEach(function(t){ var v = t.pnl||0; if(v > 0) gp += v; else gl += -v; });
     var pf = gl > 0 ? gp / gl : (gp > 0 ? Infinity : 0);
 
-    var accs = Object.keys(b.accounts).map(function(id){ return b.accounts[id]; });
+    var accs  = Object.keys(b.accounts).map(function(id){ return b.accounts[id]; });
+    var owned = Object.keys(b.owned).map(function(id){ return b.owned[id]; });
     var active = 0, funded = 0, passed = 0, blown = 0;
-    accs.forEach(function(a){
+    owned.forEach(function(a){
       var hist = a.stageHistory || [];
       var reachedMaster = hist.length ? hist.some(function(st){ return st.phase === "MASTER"; }) : a.phase === "MASTER";
       if(a.status === "ACTIVE") active++;
@@ -3397,7 +3422,7 @@ function renderStrategies(){
 
   var head = '<div class="panel-head"><div>'+
     '<div class="ptitle">Strategy performance</div>'+
-    '<div class="psub">By the last part of the account name (FIRM_SIZE_TYPE_<b>STRATEGY</b>) — how each strategy trades, and what happened to the accounts running it</div>'+
+    '<div class="psub">By the strategy recorded on each trade (defaults to the account name\'s last part, FIRM_SIZE_TYPE_<b>STRATEGY</b>) — how each strategy trades, and what happened to the accounts running it</div>'+
   '</div></div>';
 
   if(!rows.length){
@@ -4454,7 +4479,7 @@ function renderRawLog(){
   }
 
   var h = '<table class="wtable"><thead><tr>'+
-    '<th>Date</th><th>Person</th><th>Account</th><th>Pair</th><th>TF</th><th>Type</th>'+
+    '<th>Date</th><th>Person</th><th>Account</th><th>Strat</th><th>Session</th><th>Pair</th><th>TF</th><th>Type</th>'+
     '<th>RR</th><th>Result</th><th>Risk</th><th>P&amp;L</th><th>%</th><th>Rules</th><th>Mistake</th>'+
     '</tr></thead><tbody>';
   shown.forEach(function(t){
@@ -4468,6 +4493,8 @@ function renderRawLog(){
       '<td>'+esc(isoToDMY(t.dateKey))+'</td>'+
       '<td>'+esc(t.person)+'</td>'+
       '<td>'+esc(t.accountName)+' '+phaseBadge(t.accountPhase)+' '+statusBadge(t.accountStatus)+'</td>'+
+      '<td>'+esc(t.strategyName||"—")+'</td>'+
+      '<td>'+esc(((_config&&_config.sessionLabels)||{})[t.session]||t.session||"—")+'</td>'+
       '<td>'+esc(t.pair)+'</td>'+
       '<td>'+esc(t.timeframe)+'</td>'+
       '<td>'+esc(t.tradeType)+'</td>'+
@@ -5595,6 +5622,8 @@ function tradeEditFormHTML(a, t){
       '<div class="jfield"><label class="jlabel">Pair</label>'+sel("Pair", _config.pairs, t.pair, ' onchange="updateRulesPreview(\'' + p + '\')"')+'</div>'+
       '<div class="jfield"><label class="jlabel">Timeframe</label>'+sel("Timeframe", _config.timeframes, t.timeframe, ' onchange="updateRulesPreview(\'' + p + '\')"')+'</div>'+
       '<div class="jfield"><label class="jlabel">RR</label>'+sel("RR", _config.rrOptions, t.rr, ' onchange="updateRulesPreview(\'' + p + '\'); suggestPnl(false,\'' + p + '\');"')+'</div>'+
+      '<div class="jfield"><label class="jlabel">Session</label><select class="jselect" id="'+p+'Session" onchange="updateRulesPreview(\'' + p + '\')">'+sessionOptHTML(t.session || _config.sharedRules.session)+'</select></div>'+
+      '<div class="jfield"><label class="jlabel">Strategy</label><input class="jinput" type="text" id="'+p+'Strat" list="stratList" maxlength="20" autocomplete="off" value="'+esc(t.strategyName||"")+'" oninput="this.value=this.value.toUpperCase()"></div>'+
       '<div class="jfield"><label class="jlabel">Type</label>'+sel("TradeType", _config.tradeTypes, t.tradeType)+'</div>'+
       '<div class="jfield"><label class="jlabel">Result</label>'+sel("Result", _config.results, t.result, ' onchange="suggestPnl(false,\'' + p + '\')"')+'</div>'+
       '<div class="jfield"><label class="jlabel">Bias</label>'+sel("Bias", _config.biases, t.bias)+'</div>'+
@@ -5666,6 +5695,8 @@ function _tradeInlineParams(accountId, dateKey){
       "&date="      + encodeURIComponent(dateKey) +
       "&pair="      + encodeURIComponent(v("Pair")) +
       "&timeframe=" + encodeURIComponent(v("Timeframe")) +
+      "&session="   + encodeURIComponent(v("Session") || _config.sharedRules.session) +
+      "&stratName=" + encodeURIComponent((v("Strat") || "").trim()) +
       "&tradeType=" + encodeURIComponent(v("TradeType")) +
       "&rr="        + encodeURIComponent(v("RR")) +
       "&result="    + encodeURIComponent(v("Result")) +
@@ -6159,6 +6190,38 @@ function optHTML(list){
   return list.map(function(v){ return '<option value="'+esc(v)+'">'+esc(v)+'</option>'; }).join("");
 }
 
+// Session codes with their labels (ASIA → Asia, NY → New York).
+function sessionOptHTML(selected){
+  var list = (_config && _config.sessions) || ["NY"];
+  var lbl  = (_config && _config.sessionLabels) || {};
+  return list.map(function(v){
+    return '<option value="'+esc(v)+'"'+(v===selected?" selected":"")+'>'+esc(lbl[v]||v)+'</option>';
+  }).join("");
+}
+
+// Every strategy in play: from account names and from trades already
+// logged, so the Strategy field offers what you actually use.
+function knownStrategies(){
+  var seen = {};
+  (_data && _data.accounts || []).forEach(function(a){
+    if(a.status === "REMOVED") return;
+    var k = (a.nameParts || parseAccountName(a.accountName)).strategy;
+    if(k) seen[k] = true;
+  });
+  (_data && _data.trades || []).forEach(function(t){ if(t.strategyName) seen[t.strategyName] = true; });
+  Object.keys(_accountsByPerson || {}).forEach(function(p){
+    (_accountsByPerson[p]||[]).forEach(function(a){ var k = parseAccountName(a.name).strategy; if(k) seen[k] = true; });
+  });
+  return Object.keys(seen).sort();
+}
+
+// The strategy the Journal should default to for the chosen account.
+function _journalDefaultStrategy(){
+  var p = document.getElementById("jPerson").value, id = document.getElementById("jAccount").value;
+  var a = (_accountsByPerson[p]||[]).filter(function(x){ return x.id === id; })[0];
+  return a ? parseAccountName(a.name).strategy : "";
+}
+
 function initJournal(){
   if(!_config){ document.getElementById("jStatusBanner").textContent = "Config didn't load — try reloading."; return; }
   document.getElementById("jPerson").innerHTML     = optHTML(_config.people);
@@ -6169,6 +6232,8 @@ function initJournal(){
   document.getElementById("jResult").innerHTML     = optHTML(_config.results);
   document.getElementById("jBias").innerHTML       = optHTML(_config.biases);
   document.getElementById("jMistake").innerHTML    = '<option value="">— none —</option>' + optHTML(_config.mistakes);
+  document.getElementById("jSession").innerHTML    = sessionOptHTML(_config.sharedRules.session);
+  document.getElementById("stratList").innerHTML   = knownStrategies().map(function(v){ return '<option value="'+esc(v)+'">'; }).join("");
   if(_journalPreselect) document.getElementById("jPerson").value = _journalPreselect.person;
   if(!getDateISO("jDate")) setDateISO("jDate", todayISO());
   refreshAccountsList();
@@ -6277,6 +6342,8 @@ function fillJournalForm(t){
     setSelectValue("jBias", t.bias);
     setSelectValue("jStrategy", t.strategy || "");
     setSelectValue("jMistake", t.mistakes || "");
+    setSelectValue("jSession", t.session || _config.sharedRules.session);
+    document.getElementById("jStrat").value = t.stratName || _journalDefaultStrategy();
     document.getElementById("jRisk").value = t.riskAmount || "";
     document.getElementById("jPnl").value = t.pnl || "";
   } else {
@@ -6296,6 +6363,8 @@ function resetJournalForm(){
   document.getElementById("jBias").selectedIndex = 0;
   document.getElementById("jStrategy").selectedIndex = 0;
   document.getElementById("jMistake").value = "";
+  document.getElementById("jSession").value = _config.sharedRules.session;
+  document.getElementById("jStrat").value = _journalDefaultStrategy();
   document.getElementById("jRisk").value = "";
   document.getElementById("jPnl").value = "";
 }
@@ -6313,18 +6382,24 @@ function updateRulesPreview(p){
   var pair = document.getElementById(p+"Pair").value;
   var tf   = document.getElementById(p+"Timeframe").value;
   var rr   = document.getElementById(p+"RR").value;
+  var sessEl = document.getElementById(p+"Session");
+  var sess = sessEl ? sessEl.value : _config.sharedRules.session;
   var pairOk  = pair === _config.sharedRules.pair;
+  var sessOk  = String(sess).toUpperCase() === String(_config.sharedRules.session).toUpperCase();
   var validTf = _config.timeframeRR.hasOwnProperty(tf);
   var allowed = validTf ? _config.timeframeRR[tf] : [];
   var rrOk    = validTf && allowed.indexOf(rr) !== -1;
-  var ok      = pairOk && validTf && rrOk;
+  var ok      = pairOk && sessOk && validTf && rrOk;
   var el = document.getElementById(p+"RulesPreview");
   if(ok){
-    el.innerHTML = '<span style="color:var(--green)">✓ Rules followed</span> <span style="color:var(--txt4);font-weight:400;font-size:10px;">(session is always locked to '+esc(_config.sharedRules.session)+')</span>';
+    el.innerHTML = '<span style="color:var(--green)">✓ Rules followed</span>';
   } else {
     var hint;
+    var sl = (_config.sessionLabels||{});
     if(!pairOk){
       hint = "pair must be " + _config.sharedRules.pair;
+    } else if(!sessOk){
+      hint = "session must be " + (sl[_config.sharedRules.session] || _config.sharedRules.session);
     } else if(!validTf){
       hint = tf + " has no fixed RR rule — only " + Object.keys(_config.timeframeRR).join(" / ") + " are rule-eligible";
     } else {
@@ -6366,6 +6441,8 @@ function submitTrade(){
     "&date=" + encodeURIComponent(date) +
     "&pair="      + encodeURIComponent(document.getElementById("jPair").value) +
     "&timeframe=" + encodeURIComponent(document.getElementById("jTimeframe").value) +
+    "&session="   + encodeURIComponent(document.getElementById("jSession").value) +
+    "&stratName=" + encodeURIComponent(document.getElementById("jStrat").value.trim()) +
     "&tradeType=" + encodeURIComponent(document.getElementById("jTradeType").value) +
     "&rr="        + encodeURIComponent(document.getElementById("jRR").value) +
     "&result="    + encodeURIComponent(document.getElementById("jResult").value) +
