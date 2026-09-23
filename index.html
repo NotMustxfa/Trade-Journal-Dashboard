@@ -1007,8 +1007,12 @@ body::after {
 .setup-row.thin { opacity: 0.5; }
 
 /* ── Strategy performance table ── */
-.strat-table th.num, .strat-table td.num { text-align: right; }
-.strat-table td.num { font-family: var(--font-mono); }
+/* Figures right-align so magnitudes line up on the decimal — 9 and
+   1,240 are comparable at a glance only when their last digits share
+   a column. Text columns stay left. This started life scoped to the
+   strategy table; it is the house rule for every .wtable. */
+.wtable th.num, .wtable td.num { text-align: right; }
+.wtable td.num { font-family: var(--font-mono); }
 .strat-table td.pos { color: var(--green); }
 .strat-table td.neg { color: var(--red); }
 .strat-table .muted { color: var(--txt4); font-weight: 400; }
@@ -5118,7 +5122,8 @@ function renderWeekly(){
     return;
   }
   var h = '<table class="wtable"><thead><tr>'+
-    '<th>Week</th><th>Trades</th><th>W / L</th><th>Win Rate</th><th>Compliance</th><th>Top Mistake</th>'+
+    '<th>Week</th><th class="num">Trades</th><th class="num">W / L</th>'+
+    '<th class="num">Win Rate</th><th class="num">Compliance</th><th>Top Mistake</th>'+
     '</tr></thead><tbody>';
   weekly.forEach(function(w){
     var wr  = w.winRate;
@@ -5127,10 +5132,10 @@ function renderWeekly(){
     var parts  = w.weekKey.split("-W");
     h += '<tr>'+
       '<td>W'+parts[1]+" '"+parts[0].slice(2)+'</td>'+
-      '<td>'+w.total+'</td>'+
-      '<td><span style="color:var(--green)">'+w.wins+'</span> / <span style="color:var(--red)">'+w.losses+'</span></td>'+
-      '<td><span class="wbadge '+cls+'">'+w.winRate+'%</span></td>'+
-      '<td style="color:'+cmpCol+'">'+w.compliance+'%</td>'+
+      '<td class="num">'+w.total+'</td>'+
+      '<td class="num"><span style="color:var(--green)">'+w.wins+'</span> / <span style="color:var(--red)">'+w.losses+'</span></td>'+
+      '<td class="num"><span class="wbadge '+cls+'">'+w.winRate+'%</span></td>'+
+      '<td class="num" style="color:'+cmpCol+'">'+w.compliance+'%</td>'+
       '<td style="color:var(--txt3)">'+esc(w.topMistake||"—")+'</td>'+
     '</tr>';
   });
@@ -5240,7 +5245,8 @@ function renderRawLog(){
 
   var h = '<table class="wtable"><thead><tr>'+
     '<th>Date</th><th>Person</th><th>Account</th><th>Strat</th><th>Session</th><th>Pair</th><th>TF</th><th>Type</th>'+
-    '<th>RR</th><th>Result</th><th>Risk</th><th>P&amp;L</th><th>%</th><th>Rules</th><th>Mistake</th>'+
+    '<th>RR</th><th>Result</th><th class="num">Risk</th><th class="num">P&amp;L</th>'+
+    '<th class="num">%</th><th>Rules</th><th>Mistake</th>'+
     '</tr></thead><tbody>';
   shown.forEach(function(t){
     var pnlCol = t.pnl>0?"var(--green)":t.pnl<0?"var(--red)":"var(--txt3)";
@@ -5260,9 +5266,9 @@ function renderRawLog(){
       '<td>'+esc(t.tradeType)+'</td>'+
       '<td>'+esc(t.rr)+'</td>'+
       '<td>'+esc(t.result)+'</td>'+
-      '<td>'+fmtMoney(t.riskAmount)+'</td>'+
-      '<td style="color:'+pnlCol+'">'+fmtMoney(t.pnl)+'</td>'+
-      '<td style="color:'+pnlCol+'">'+pctTxt+'</td>'+
+      '<td class="num">'+fmtMoney(t.riskAmount)+'</td>'+
+      '<td class="num" style="color:'+pnlCol+'">'+fmtMoney(t.pnl)+'</td>'+
+      '<td class="num" style="color:'+pnlCol+'">'+pctTxt+'</td>'+
       '<td style="color:'+rulesCol+';white-space:normal;">'+rulesCellHtml+'</td>'+
       '<td>'+esc(t.mistake||"—")+'</td>'+
     '</tr>';
@@ -5359,7 +5365,9 @@ function renderPayoutTable(){
   }
   // Gross is what left the prop account; net is what reached you.
   var h = '<table class="wtable"><thead><tr>'+
-    '<th>Date</th><th>Person</th><th>Account</th><th>Withdrawn</th><th>Split</th><th>Charges</th><th>You kept</th><th>Notes</th><th></th>'+
+    '<th>Date</th><th>Person</th><th>Account</th><th class="num">Withdrawn</th>'+
+    '<th class="num">Split</th><th class="num">Charges</th><th class="num">You kept</th>'+
+    '<th>Notes</th><th></th>'+
     '</tr></thead><tbody>';
   list.forEach(function(p){
     var acc = _accountsById[p.accountId];
@@ -5370,10 +5378,10 @@ function renderPayoutTable(){
       '<td>'+esc(isoToDMY(p.date))+'</td>'+
       '<td>'+esc(p.person)+'</td>'+
       '<td>'+esc(p.accountName)+' '+statusTag+'</td>'+
-      '<td style="color:var(--txt2)">'+fmtMoney(p.amount)+'</td>'+
-      '<td style="color:'+(split===100?"var(--txt4)":"var(--gold)")+'">'+(split===100?"—":split+"%")+'</td>'+
-      '<td style="color:'+((p.charges||0)>0?"var(--red)":"var(--txt4)")+'">'+((p.charges||0)>0?"−"+fmtMoney(p.charges):"—")+'</td>'+
-      '<td style="color:var(--green);font-weight:700;">'+fmtMoney(net)+'</td>'+
+      '<td class="num" style="color:var(--txt2)">'+fmtMoney(p.amount)+'</td>'+
+      '<td class="num" style="color:'+(split===100?"var(--txt4)":"var(--gold)")+'">'+(split===100?"—":split+"%")+'</td>'+
+      '<td class="num" style="color:'+((p.charges||0)>0?"var(--red)":"var(--txt4)")+'">'+((p.charges||0)>0?"−"+fmtMoney(p.charges):"—")+'</td>'+
+      '<td class="num" style="color:var(--green);font-weight:700;">'+fmtMoney(net)+'</td>'+
       '<td style="color:var(--txt3)">'+esc(p.notes||"—")+'</td>'+
       '<td class="po-act"><button class="jbtn-sm mini" onclick="openPayoutEdit(\''+p.id+'\')">Edit</button> '+
           '<button class="jbtn-sm remove mini" onclick="removePayout(\''+p.id+'\', this)">Delete</button></td>'+
