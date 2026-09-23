@@ -1581,25 +1581,43 @@ body::after {
 .meter-note { font-family: var(--font-mono); font-size: var(--fs-0); color: var(--txt4); margin-top: var(--sp-1); }
 
 /* ── Analytics sub-tabs ──
-   The four groups used to stack into one long scroll. Same visual
-   language as .navtab so it reads as one level down, not a new idea. ── */
+   The four groups used to stack into one long scroll; these page
+   between them. They read as a segmented control, not as four words floating on
+   the page. An idle tab used to be bare text — no surface, no edge,
+   `background: none` over a transparent border — and the selected one
+   was --gold on a 6% wash of itself. That measured 8.09 in dark
+   against an idle tab's 7.13, a 1.13x step, and in LIGHT it measured
+   4.19 against an idle 6.46: the selected tab was the least visible
+   thing in the row. The active state is now a solid accent fill, the
+   same language .pill.active already speaks. */
 .subnav {
-  display: flex; gap: var(--sp-1); flex-wrap: wrap;
-  margin-bottom: var(--sp-5); padding-bottom: var(--sp-2);
+  display: flex; gap: var(--sp-h2); flex-wrap: wrap;
+  margin-bottom: var(--sp-5); padding-bottom: var(--sp-3);
   border-bottom: 1px solid var(--border2);
 }
 .subtab {
-  font-family: var(--font-display); font-size: var(--fs-2); font-weight: 600;
+  font-family: var(--font-display); font-size: var(--fs-3); font-weight: 600;
   letter-spacing: var(--tr-label);
-  padding: var(--sp-2) var(--sp-4); border-radius: var(--r-pill);
-  background: none; border: 1px solid transparent; color: var(--txt3);
-  cursor: pointer; transition: all var(--t-fast) var(--ease);
+  padding: var(--sp-h3) var(--sp-5); border-radius: var(--r-pill);
+  background: var(--bg2); border: 1px solid var(--border2); color: var(--txt2);
+  cursor: pointer; white-space: nowrap;
+  transition: color var(--t-fast), background var(--t-fast),
+              border-color var(--t-fast), box-shadow var(--t-base),
+              transform var(--t-base) var(--ease);
 }
-.subtab:hover { color: var(--txt); background: var(--bg3); }
+.subtab:hover { color: var(--txt); background: var(--bg4); border-color: var(--border3); }
+.subtab:active { transform: translateY(1px); }
 .subtab.active {
-  background: var(--gold-bg); color: var(--gold);
-  border-color: var(--gold-rim); font-weight: 700;
+  background: var(--gold); color: var(--on-accent);
+  border-color: var(--gold); font-weight: 700;
+  box-shadow: 0 var(--sp-h1) var(--sp-4) var(--gold-glow);
 }
+/* Hover must not walk back the selected state. The accent moves away
+   from its own text colour, which is a different direction per theme:
+   dark sits on a light fill and brightens, light sits on white and has
+   to deepen. --gold-lt under white measured 3.49. */
+.subtab.active:hover { background: var(--gold-lt); border-color: var(--gold-lt); color: var(--on-accent); }
+:root[data-theme="light"] .subtab.active:hover { background: var(--gold-dk); border-color: var(--gold-dk); }
 
 /* ── Stage timeline on the account card ── */
 .stage-timeline {
