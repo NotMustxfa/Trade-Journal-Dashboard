@@ -40,6 +40,10 @@
   --gold-glow:  rgba(200,168,75,0.18);
   --gold-rim:   rgba(200,168,75,0.30);
   --gold-bg:    rgba(200,168,75,0.06);
+  /* See the light theme's note: the accent's hover state moves away
+     from whatever --on-accent is, so dark brightens where light
+     deepens. Both are the same gold. */
+  --gold-hover: var(--gold-lt);
 
   --green:      #3ECFB5;
   --green-lt:   #60DFC8;
@@ -213,20 +217,31 @@
   --txt3:       #4C5362;
   --txt4:       #626A74;
 
-  /* The accent role: violet in light, gold in dark. Token names keep
-     saying "gold" because they name the ROLE (accent / highlight), and
-     renaming them would touch several hundred call sites for nothing. */
-  /* Every semantic colour is a TEXT colour here — P&L figures, badge
-     labels, meter values — so each is solved to 4.6 against the page.
-     The first pass used the brand hues straight, which put the profit
-     green at 2.7: the most important number on the page, unreadable.
-     They double as fills, where white now clears 5.4 on top. */
-  --gold:       #5053EF;
-  --gold-lt:    #7A7CF4;
-  --gold-dk:    #3E41D4;
-  --gold-glow:  rgba(80,83,239,0.16);
-  --gold-rim:   rgba(80,83,239,0.34);
-  --gold-bg:    rgba(80,83,239,0.07);
+  /* ── The accent is gold in BOTH themes ──
+     It was violet here, which made the two themes look like two
+     products. Same hue family as the dark theme's #C8A84B; what
+     changes is lightness, because it has to. Gold only looks like
+     gold when it is light, and #C8A84B measures 1.92 against this
+     page — unusable as text. Brought down to where it reads, the same
+     hue is a deep amber, and the lightness inverts with the theme:
+     dark puts near-black on a bright accent, light puts white on a
+     deep one. That is not two accents, it is one accent behaving.
+
+     Every semantic colour here is a TEXT colour — P&L figures, badge
+     labels, meter values — so each is solved against the page, which
+     is the tighter of the two surfaces in this theme. The accent goes
+     to 5.2 rather than 4.6 so that gold ON its own --gold-bg wash
+     (every badge and chip in the app) still clears 4.5 at 4.70. */
+  --gold:       #7C5B16;   /* 5.23 on the page · 6.24 under white */
+  --gold-lt:    #B68720;   /* gradient highlight only — never text */
+  --gold-dk:    #5A4210;   /* gradient shadow */
+  --gold-glow:  rgba(124,91,22,0.20);
+  --gold-rim:   rgba(124,91,22,0.38);
+  --gold-bg:    rgba(124,91,22,0.08);
+  /* Hover moves the accent AWAY from the text sitting on it, which is
+     a different direction per theme: dark brightens, light deepens.
+     One token so a hover rule never has to know which theme it is. */
+  --gold-hover: #5F450F;
 
   /* Deeper than the dark theme's teal, which is tuned for a black
      background and goes pale on white. */
@@ -251,7 +266,7 @@
   --orange-rim: rgba(158,87,4,0.28);
 
   --on-accent:  #FFFFFF;
-  --accent-rgb: 80,83,239;
+  --accent-rgb: 124,91,22;
   --green-rgb:  10,120,83;
   --red-rgb:    205,33,33;
   --blue-rgb:   29,93,234;
@@ -535,7 +550,7 @@ body::after {
   transition: transform 0.6s ease;
 }
 .login-btn:hover {
-  background: var(--gold-lt);
+  background: var(--gold-hover);
   box-shadow: 0 0 40px rgba(var(--accent-rgb),0.35), 0 8px 24px var(--shadow);
   transform: translateY(-2px);
 }
@@ -1256,7 +1271,7 @@ body::after {
   cursor: pointer; transition: all var(--t-base);
   display: inline-flex; align-items: center; justify-content: center;
 }
-.jsubmit-btn:hover { background: var(--gold-lt); box-shadow: 0 0 30px rgba(var(--accent-rgb),0.3); }
+.jsubmit-btn:hover { background: var(--gold-hover); box-shadow: 0 0 30px rgba(var(--accent-rgb),0.3); }
 .jsubmit-btn.danger { background: var(--red); }
 .jsubmit-btn.danger:hover { background: var(--red-lt); box-shadow: 0 0 30px var(--red-rim); }
 .jsubmit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -1612,12 +1627,9 @@ body::after {
   border-color: var(--gold); font-weight: 700;
   box-shadow: 0 var(--sp-h1) var(--sp-4) var(--gold-glow);
 }
-/* Hover must not walk back the selected state. The accent moves away
-   from its own text colour, which is a different direction per theme:
-   dark sits on a light fill and brightens, light sits on white and has
-   to deepen. --gold-lt under white measured 3.49. */
-.subtab.active:hover { background: var(--gold-lt); border-color: var(--gold-lt); color: var(--on-accent); }
-:root[data-theme="light"] .subtab.active:hover { background: var(--gold-dk); border-color: var(--gold-dk); }
+/* Hover must not walk back the selected state. --gold-hover already
+   knows which way to move for the current theme. */
+.subtab.active:hover { background: var(--gold-hover); border-color: var(--gold-hover); color: var(--on-accent); }
 
 /* ── Stage timeline on the account card ── */
 .stage-timeline {
