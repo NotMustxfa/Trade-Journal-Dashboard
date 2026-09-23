@@ -182,40 +182,45 @@
   /* The accent role: violet in light, gold in dark. Token names keep
      saying "gold" because they name the ROLE (accent / highlight), and
      renaming them would touch several hundred call sites for nothing. */
-  --gold:       #6366F1;
-  --gold-lt:    #818CF8;
-  --gold-dk:    #4F46E5;
-  --gold-glow:  rgba(99,102,241,0.18);
-  --gold-rim:   rgba(99,102,241,0.35);
-  --gold-bg:    rgba(99,102,241,0.08);
+  /* Every semantic colour is a TEXT colour here — P&L figures, badge
+     labels, meter values — so each is solved to 4.6 against the page.
+     The first pass used the brand hues straight, which put the profit
+     green at 2.7: the most important number on the page, unreadable.
+     They double as fills, where white now clears 5.4 on top. */
+  --gold:       #5053EF;
+  --gold-lt:    #7A7CF4;
+  --gold-dk:    #3E41D4;
+  --gold-glow:  rgba(80,83,239,0.16);
+  --gold-rim:   rgba(80,83,239,0.34);
+  --gold-bg:    rgba(80,83,239,0.07);
 
   /* Deeper than the dark theme's teal, which is tuned for a black
      background and goes pale on white. */
-  --green:      #0EA371;
-  --green-lt:   #12B981;
-  --green-dk:   #0B8A60;
-  --green-bg:   rgba(14,163,113,0.08);
-  --green-rim:  rgba(14,163,113,0.25);
+  --green:      #0A7853;
+  --green-lt:   #0E9668;
+  --green-dk:   #076040;
+  --green-bg:   rgba(10,120,83,0.09);
+  --green-rim:  rgba(10,120,83,0.28);
 
-  --red:        #DC2626;
-  --red-lt:     #EF4444;
-  --red-bg:     rgba(220,38,38,0.07);
-  --red-rim:    rgba(220,38,38,0.22);
+  --red:        #CD2121;
+  --red-lt:     #E03A3A;
+  --red-bg:     rgba(205,33,33,0.08);
+  --red-rim:    rgba(205,33,33,0.25);
 
-  --blue:       #2563EB;
-  --blue-lt:    #3B82F6;
-  --blue-bg:    rgba(37,99,235,0.07);
-  --blue-rim:   rgba(37,99,235,0.22);
+  --blue:       #1D5DEA;
+  --blue-lt:    #4680F0;
+  --blue-bg:    rgba(29,93,234,0.08);
+  --blue-rim:   rgba(29,93,234,0.25);
 
-  --orange:     #D97706;
-  --orange-bg:  rgba(217,119,6,0.08);
-  --orange-rim: rgba(217,119,6,0.25);
+  --orange:     #9E5704;
+  --orange-bg:  rgba(158,87,4,0.09);
+  --orange-rim: rgba(158,87,4,0.28);
 
   --on-accent:  #FFFFFF;
-  --accent-rgb: 99,102,241;
-  --green-rgb:  14,163,113;
-  --red-rgb:    220,38,38;
-  --blue-rgb:   37,99,235;
+  --accent-rgb: 80,83,239;
+  --green-rgb:  10,120,83;
+  --red-rgb:    205,33,33;
+  --blue-rgb:   29,93,234;
 
   /* Soft and cool rather than black — a 60%-black shadow on white
      reads as dirt. */
@@ -237,6 +242,23 @@
   --tooltip-txt: #FFFFFF;
   --tooltip-sub: rgba(255,255,255,0.75);
 }
+
+/* Ambient effects were composed for a black page and need tempering,
+   not removing: the film-grain overlay is dark noise, which reads as
+   texture on black and as dirt on white; the corner glows are the
+   opposite, needing a little more presence to survive a bright
+   surface; and saturate(1.8) on light glass is garish. */
+:root[data-theme="light"] body::before { opacity: 0.012; }
+:root[data-theme="light"] body::after  { opacity: 0.65; }
+:root[data-theme="light"] .topbar,
+:root[data-theme="light"] .filter-bar {
+  backdrop-filter: blur(20px) saturate(1.15);
+  -webkit-backdrop-filter: blur(20px) saturate(1.15);
+}
+:root[data-theme="light"] .kpi::after       { opacity: 0.10; }
+:root[data-theme="light"] .kpi:hover::after { opacity: 0.18; }
+/* A 12px coloured glow under a hairline is invisible on white. */
+:root[data-theme="light"] .kpi::before { box-shadow: none; height: 2px; }
 
 /* Light-only elevation. In dark, a card is defined by being lighter
    than the page behind it and a hairline border finishes the job — no
