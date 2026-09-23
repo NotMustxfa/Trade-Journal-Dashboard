@@ -25,10 +25,14 @@
   --border3:    rgba(255,255,255,0.15);
   --border4:    rgba(255,255,255,0.22);
 
+  /* Contrast ratios on the card surface (#16161B), which is tighter
+     than the page: 15.8 / 9.5 / 6.5 / 4.6. --txt4 carries the micro
+     labels on almost every panel and used to sit at 1.64 — below the
+     point where text is legible at all, never mind WCAG's 4.5 floor. */
   --txt:        #F2F0EC;
-  --txt2:       #AEAAA4;
-  --txt3:       #6A6660;
-  --txt4:       #3E3C38;
+  --txt2:       #BFBCB7;
+  --txt3:       #9D9B97;
+  --txt4:       #82807E;
 
   --gold:       #C8A84B;
   --gold-lt:    #E2C870;
@@ -93,10 +97,13 @@
      Eight steps, replacing the 26 ad-hoc sizes this file used to
      carry (including a 7px label and four half-pixel sizes that
      existed only to squeeze between neighbours). */
-  --fs-0: 10px;   /* badges, the smallest labels */
-  --fs-1: 11px;   /* micro-labels, table cells */
-  --fs-2: 12px;   /* secondary text, panel titles */
-  --fs-3: 13px;   /* body */
+  /* The bottom four steps were a point too small to read comfortably
+     on a dense page; each is lifted 1px. The display sizes above are
+     unchanged, so headline numerals keep their proportions. */
+  --fs-0: 11px;   /* badges, the smallest labels */
+  --fs-1: 12px;   /* micro-labels, table cells */
+  --fs-2: 13px;   /* secondary text, panel titles */
+  --fs-3: 14px;   /* body */
   --fs-4: 15px;   /* emphasised body */
   --fs-5: 18px;   /* card names */
   --fs-6: 24px;   /* small display numerals */
@@ -158,10 +165,11 @@
   --border3:    rgba(16,24,40,0.22);
   --border4:    rgba(16,24,40,0.32);
 
+  /* Same ramp on white: 17.8 / 9.5 / 6.5 / 4.6. */
   --txt:        #101828;
-  --txt2:       #475467;
-  --txt3:       #667085;
-  --txt4:       #98A2B3;
+  --txt2:       #3C4656;
+  --txt3:       #565E70;
+  --txt4:       #6E7682;
 
   /* The accent role: violet in light, gold in dark. Token names keep
      saying "gold" because they name the ROLE (accent / highlight), and
@@ -4782,7 +4790,7 @@ function renderEquity(){
         tooltip:{
           backgroundColor:cssVar("--tooltip-bg"), borderColor:cssVar("--border2"), borderWidth:1,
           titleColor:cssVar("--tooltip-txt"), titleFont:{family:"'Sora',sans-serif",size:12,weight:"700"},
-          bodyColor:cssVar("--tooltip-sub"), bodyFont:{family:"'JetBrains Mono',monospace",size:10},
+          bodyColor:cssVar("--tooltip-sub"), bodyFont:{family:"'JetBrains Mono',monospace",size:11},
           padding:16, cornerRadius:10,
           callbacks:{
             label:function(c){ return fmtV(c.parsed.y); },
@@ -4797,12 +4805,12 @@ function renderEquity(){
         y:{
           grid:{color:cssVar("--grid"), drawBorder:false},
           border:{color:"transparent"},
-          ticks:{color:cssVar("--txt4"), font:{family:"'JetBrains Mono',monospace",size:9},
+          ticks:{color:cssVar("--txt4"), font:{family:"'JetBrains Mono',monospace",size:11},
                  callback:function(v){ return pct ? v+"%" : "$"+v; }}
         },
         x:{
           grid:{display:false}, border:{color:cssVar("--border")},
-          ticks:{color:cssVar("--txt4"), font:{family:"'JetBrains Mono',monospace",size:9}, maxRotation:40, autoSkip:true, maxTicksLimit:10}
+          ticks:{color:cssVar("--txt4"), font:{family:"'JetBrains Mono',monospace",size:11}, maxRotation:40, autoSkip:true, maxTicksLimit:10}
         }
       }
     }
@@ -4930,7 +4938,7 @@ function renderTrend(){
           titleColor:cssVar("--tooltip-txt"),
           titleFont:{family:"'Sora',sans-serif", size:12, weight:"700"},
           bodyColor:cssVar("--tooltip-sub"),
-          bodyFont:{family:"'JetBrains Mono',monospace", size:10},
+          bodyFont:{family:"'JetBrains Mono',monospace", size:11},
           padding:16, cornerRadius:10,
           callbacks:{ label:function(c){ return c.dataset.label+": "+c.parsed.y+(c.dataset.yAxisID==="y"?"%":""); } }
         }
@@ -4940,15 +4948,15 @@ function renderTrend(){
           min:0, max:100, position:"left",
           grid:{color:cssVar("--grid"), drawBorder:false},
           border:{color:"transparent", dash:[2,4]},
-          ticks:{color:cssVar("--txt4"), font:{family:"'JetBrains Mono',monospace",size:9}, callback:function(v){return v+"%";}}
+          ticks:{color:cssVar("--txt4"), font:{family:"'JetBrains Mono',monospace",size:11}, callback:function(v){return v+"%";}}
         },
         y2:{
           position:"right", grid:{display:false}, border:{color:"transparent"},
-          ticks:{color:cssVar("--txt3"), font:{family:"'JetBrains Mono',monospace",size:9}}
+          ticks:{color:cssVar("--txt3"), font:{family:"'JetBrains Mono',monospace",size:11}}
         },
         x:{
           grid:{display:false}, border:{color:cssVar("--border")},
-          ticks:{color:cssVar("--txt4"), font:{family:"'JetBrains Mono',monospace",size:9}, maxRotation:40, autoSkip:true, maxTicksLimit:10}
+          ticks:{color:cssVar("--txt4"), font:{family:"'JetBrains Mono',monospace",size:11}, maxRotation:40, autoSkip:true, maxTicksLimit:10}
         }
       }
     }
@@ -5656,7 +5664,7 @@ function maccCardHTML(a){
   // tellable apart without polluting the stored name.
   var dupSuffix = "";
   var m = /\s(\(#\d+\))$/.exec(a.displayLabel || "");
-  if(m) dupSuffix = ' <span style="font-size:12px;color:var(--txt4);font-weight:600;">'+esc(m[1])+'</span>';
+  if(m) dupSuffix = ' <span style="font-size:var(--fs-2);color:var(--txt4);font-weight:600;">'+esc(m[1])+'</span>';
 
   function cell(lbl, val, cls){
     return '<div class="macc-detail"><div class="macc-detail-lbl">'+lbl+'</div>'+
@@ -5679,7 +5687,7 @@ function maccCardHTML(a){
     cells += cell((a.stageCount > 1 ? "Stage size" : "Account Size"), fmtMoney(a.stageSize || a.startingBalance));
     cells += cell("Balance",        fmtMoney(a.currentBalance), balCls);
     cells += cell("P&amp;L",        (pnl>=0?"+":"−")+fmtMoney(Math.abs(pnl))+
-                                    ' <span style="font-size:10px;">('+(pnlPct>=0?"+":"")+pnlPct.toFixed(1)+'%)</span>', pnlCls);
+                                    ' <span style="font-size:var(--fs-1);">('+(pnlPct>=0?"+":"")+pnlPct.toFixed(1)+'%)</span>', pnlCls);
     cells += cell("Trades",         (st?st.total:0));
     cells += cell("Win Rate",       (st && st.total ? st.winRate+"%" : "—"), "gold");
   }
