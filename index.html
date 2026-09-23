@@ -902,32 +902,129 @@ body::after {
 
 .daygrid { display: grid; grid-template-columns: repeat(5,1fr); gap: var(--sp-2); }
 
-/* ── Daily P&L calendar ── */
-.cal-head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--sp-3); margin-bottom: var(--sp-3); flex-wrap: wrap; }
+/* ── Daily P&L calendar ──
+   The tint and the figure used to carry the same signal in the same
+   channel: a cell was washed with up to 70% of --green/--red and the
+   P&L was printed on top in that same hue. The biggest day of the
+   month measured 1.63 contrast and a middling day 2.7 — the cells you
+   most want to read were the ones you could not. Magnitude now lives
+   in a bar along the bottom, where it can be fully saturated because
+   no text sits on it; the wash is capped at 32%, where the figure in
+   --txt still measures 7.8 and the day number in --txt2 measures 4.7.
+   The sign is carried three ways over — wash, bar and the +/− itself. */
+.cal-head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--sp-3); margin-bottom: var(--sp-4); flex-wrap: wrap; }
 .cal-head .psub { margin-bottom: 0; }
-.cal-nav { display: flex; align-items: center; gap: var(--sp-2); flex-shrink: 0; }
-.cal-title { font-family: var(--font-display); font-size: var(--fs-2); font-weight: 700; color: var(--txt); min-width: 96px; text-align: center; }
-.calgrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--sp-1); }
-.cal-dow { font-family: var(--font-display); font-size: var(--fs-0); font-weight: 700; letter-spacing: var(--tr-label); color: var(--txt4); text-align: center; padding-bottom: var(--sp-1); }
-.cal-cell {
-  border: 1px solid var(--border); border-radius: var(--r); background: var(--bg3);
-  padding: var(--sp-2); min-height: 56px; display: flex; flex-direction: column; gap: 2px;
+.cal-nav { display: flex; align-items: center; gap: var(--sp-1); flex-shrink: 0; }
+.cal-title {
+  font-family: var(--font-display); font-size: var(--fs-4); font-weight: 700;
+  color: var(--txt); min-width: 124px; text-align: center; letter-spacing: var(--tr-tight);
+}
+
+/* The month at a glance, above the grid. A calendar with no summary
+   makes you add up 20 cells to answer "how was August". */
+.cal-stats {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+}
+.cal-stat {
+  min-width: 0;
+  background: var(--bg3); border: 1px solid var(--border); border-radius: var(--r2);
+  padding: var(--sp-3) var(--sp-h4);
+  display: flex; flex-direction: column; gap: var(--sp-1);
+  position: relative; overflow: hidden;
   transition: border-color var(--t-fast);
 }
-.cal-cell:hover { border-color: var(--border2); }
+.cal-stat:hover { border-color: var(--border2); }
+.cal-stat::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+  background: var(--border3);
+}
+.cal-stat.pos::before { background: var(--green); }
+.cal-stat.neg::before { background: var(--red); }
+.cal-stat.accent::before { background: var(--gold); }
+.cal-stat-k {
+  font-family: var(--font-display); font-size: var(--fs-0); font-weight: 600;
+  color: var(--txt3); letter-spacing: var(--tr-label);
+}
+.cal-stat-v {
+  font-family: var(--font-display); font-size: var(--fs-6); font-weight: 800;
+  line-height: 1; letter-spacing: var(--tr-tight); color: var(--txt);
+  overflow: hidden; text-overflow: ellipsis;
+}
+.cal-stat-v.pos { color: var(--green); }
+.cal-stat-v.neg { color: var(--red); }
+.cal-stat-s { font-family: var(--font-mono); font-size: var(--fs-0); color: var(--txt4); }
+
+/* Five weekdays plus a week-total rail on the right. */
+.calgrid { display: grid; grid-template-columns: repeat(5, 1fr) 0.9fr; gap: var(--sp-h2); }
+.cal-dow {
+  font-family: var(--font-display); font-size: var(--fs-0); font-weight: 700;
+  letter-spacing: var(--tr-label); color: var(--txt4); text-align: center;
+  padding-bottom: var(--sp-2);
+}
+.cal-dow.wk { color: var(--txt3); }
+
+.cal-cell {
+  position: relative; overflow: hidden;
+  border: 1px solid var(--border); border-radius: var(--r2); background: var(--bg3);
+  padding: var(--sp-2) var(--sp-h3) var(--sp-h3);
+  min-height: 78px; display: flex; flex-direction: column; gap: var(--sp-1);
+  transition: border-color var(--t-fast), transform var(--t-base) var(--ease), box-shadow var(--t-base);
+}
+/* --tint is set per cell from the day's share of the month's biggest
+   move, so a quiet month still reads rather than washing out flat. */
+.cal-cell.pos { background: color-mix(in srgb, var(--green) var(--tint, 0%), var(--bg3)); border-color: var(--green-rim); }
+.cal-cell.neg { background: color-mix(in srgb, var(--red)   var(--tint, 0%), var(--bg3)); border-color: var(--red-rim); }
+.cal-cell.flat { border-color: var(--border2); }
+.cal-cell.traded:hover { transform: translateY(-3px); box-shadow: 0 var(--sp-h3) var(--sp-6) var(--shadow-soft); }
 .cal-cell.blank { visibility: hidden; }
-.cal-cell.none { opacity: 0.45; }
-.cal-cell.today { border-color: var(--gold-rim); }
-.cal-day { font-family: var(--font-mono); font-size: var(--fs-0); color: var(--txt4); }
-.cal-pnl { font-family: var(--font-mono); font-size: var(--fs-1); font-weight: 600; color: var(--txt2); }
-.cal-cell.pos .cal-pnl { color: var(--green); }
-.cal-cell.neg .cal-pnl { color: var(--red); }
-.cal-n { font-family: var(--font-display); font-size: var(--fs-0); color: var(--txt4); }
-.cal-legend { display: flex; align-items: center; gap: var(--sp-2); margin-top: var(--sp-3); font-family: var(--font-mono); font-size: var(--fs-1); color: var(--txt4); flex-wrap: wrap; }
-.cal-swatch { width: 72px; height: 6px; border-radius: var(--r-pill); background: linear-gradient(90deg, var(--red), var(--bg3), var(--green)); border: 1px solid var(--border); }
-.cal-sum { margin-left: auto; }
-.cal-sum b.pos { color: var(--green); }
-.cal-sum b.neg { color: var(--red); }
+/* A day with no trades is neutral, not broken: it used to drop the
+   whole cell to 0.45 opacity, border and all. */
+.cal-cell.none { background: none; border-style: dashed; border-color: var(--border); }
+.cal-cell.none .cal-day { color: var(--txt4); }
+.cal-cell.today { box-shadow: inset 0 0 0 1px var(--gold-rim); border-color: var(--gold); }
+.cal-cell.today .cal-day { color: var(--gold); font-weight: 700; }
+
+.cal-day { font-family: var(--font-mono); font-size: var(--fs-0); font-weight: 600; color: var(--txt2); }
+.cal-pnl {
+  font-family: var(--font-display); font-size: var(--fs-2); font-weight: 800;
+  letter-spacing: var(--tr-tight); color: var(--txt); line-height: 1.1;
+}
+.cal-n { font-family: var(--font-display); font-size: var(--fs-0); color: var(--txt2); }
+/* Magnitude, full strength, with nothing written on it. */
+.cal-bar { margin-top: auto; height: 3px; border-radius: var(--r-pill); background: var(--bg5); overflow: hidden; }
+.cal-bar i { display: block; height: 100%; border-radius: var(--r-pill); transition: width var(--t-slow) var(--ease); }
+.cal-cell.pos .cal-bar i { background: var(--green); }
+.cal-cell.neg .cal-bar i { background: var(--red); }
+
+.cal-week {
+  border: 1px solid var(--border2); border-radius: var(--r2); background: var(--bg2);
+  padding: var(--sp-2) var(--sp-h3);
+  display: flex; flex-direction: column; gap: var(--sp-1); justify-content: center;
+}
+.cal-week.empty-wk { opacity: 0.4; }
+.cal-week-k { font-family: var(--font-mono); font-size: var(--fs-0); color: var(--txt4); letter-spacing: var(--tr-label); }
+.cal-week-v {
+  font-family: var(--font-display); font-size: var(--fs-2); font-weight: 800;
+  letter-spacing: var(--tr-tight); color: var(--txt3);
+}
+.cal-week-v.pos { color: var(--green); }
+.cal-week-v.neg { color: var(--red); }
+.cal-week-v.flat { color: var(--txt3); }
+.cal-week-n { font-family: var(--font-display); font-size: var(--fs-0); color: var(--txt4); }
+
+.cal-foot {
+  display: flex; align-items: center; gap: var(--sp-h3); flex-wrap: wrap;
+  margin-top: var(--sp-4); padding-top: var(--sp-3); border-top: 1px solid var(--border);
+  font-family: var(--font-mono); font-size: var(--fs-1); color: var(--txt4);
+}
+.cal-scale { display: flex; align-items: center; gap: var(--sp-h2); }
+.cal-swatch {
+  width: 88px; height: var(--sp-h2); border-radius: var(--r-pill);
+  background: linear-gradient(90deg, var(--red), var(--bg5), var(--green));
+  border: 1px solid var(--border);
+}
+.cal-foot .cal-sum { margin-left: auto; }
 
 .daycell {
   border: 1px solid var(--border); border-radius: var(--r2);
@@ -1876,6 +1973,10 @@ summary:focus-visible,
   .kpi-val { font-size: var(--fs-8); }
   .jgrid { grid-template-columns: 1fr; }
   .macc-detail-grid { grid-template-columns: repeat(2,1fr); }
+  /* Four summary cards at 24px numerals stop fitting here, and this
+     is the one place the calendar shows the unabbreviated figure. */
+  .cal-stats { grid-template-columns: 1fr 1fr; }
+  .cal-stat-v { font-size: var(--fs-5); }
   /* Sticky costs too much vertical room on a phone. */
   .filter-bar { position: static; }
   .fb-select, .fb-search { min-width: 0; width: 100%; }
@@ -1894,6 +1995,12 @@ summary:focus-visible,
   .macc-group-sub { margin-left: 0; width: 100%; }
   /* Five columns at 320px leaves ~55px per cell. Wrap to 3 + 2. */
   .daygrid { grid-template-columns: repeat(3,1fr); }
+  /* The week rail needs a column of its own it cannot have here. */
+  .calgrid { grid-template-columns: repeat(5,1fr); }
+  .cal-dow.wk, .cal-week { display: none; }
+  .cal-stats { grid-template-columns: 1fr 1fr; }
+  .cal-cell { min-height: 62px; padding: var(--sp-1) var(--sp-2) var(--sp-2); }
+  .cal-n { display: none; }
   .setup-head, .setup-row { grid-template-columns: 1fr 40px 48px 72px; }
   .stage-step { grid-template-columns: 14px 1fr 84px; }
   .stage-when, .stage-n { display: none; }
@@ -3391,53 +3498,109 @@ function renderCalendar(trades){
   var y = parseInt(_calMonth.slice(0,4), 10), m = parseInt(_calMonth.slice(5,7), 10);
   var daysInMonth = new Date(y, m, 0).getDate();
   var today = todayISO();
+  var iso = function(d){ return _calMonth + "-" + String(d).padStart(2,"0"); };
 
-  // Scale tints to the month's biggest day so a quiet month still reads.
-  var maxAbs = 1, mN = 0, mPnl = 0, green = 0, red = 0;
+  // ── Bucket the month into weeks ──
+  // Each row is Mon–Fri plus a total, so the grid is built week by
+  // week rather than as one long run of cells with blanks in front.
+  var weeks = [], byMonday = {};
   for(var d = 1; d <= daysInMonth; d++){
-    var iso = _calMonth + "-" + String(d).padStart(2,"0");
-    var rec = c.days[iso]; if(!rec) continue;
-    maxAbs = Math.max(maxAbs, Math.abs(rec.pnl));
-    mN += rec.n; mPnl += rec.pnl;
-    if(rec.pnl > 0) green++; else if(rec.pnl < 0) red++;
-  }
-
-  var h = '<div class="calgrid">' + ["Mon","Tue","Wed","Thu","Fri"].map(function(l){
-    return '<div class="cal-dow">'+l+'</div>';
-  }).join("");
-  // Pad to the weekday column of the 1st (Mon = 0 … Fri = 4).
-  var firstDow = new Date(y, m - 1, 1).getDay();          // 0 = Sun
-  var firstCol = firstDow === 0 ? 5 : firstDow - 1;        // Sat/Sun roll to the next row
-  if(firstCol < 5) for(var b = 0; b < firstCol; b++) h += '<div class="cal-cell blank"></div>';
-
-  for(var day = 1; day <= daysInMonth; day++){
-    var dow = new Date(y, m - 1, day).getDay();
-    if(dow === 0 || dow === 6) continue;
-    var key = _calMonth + "-" + String(day).padStart(2,"0");
-    var r = c.days[key];
-    var cls = "cal-cell" + (key === today ? " today" : "");
-    if(!r){
-      h += '<div class="'+cls+' none"><span class="cal-day">'+day+'</span></div>';
-      continue;
+    var dow = new Date(y, m - 1, d).getDay();      // 0 = Sun
+    if(dow === 0 || dow === 6) continue;           // weekends are not traded
+    var col = dow - 1;                             // Mon 0 … Fri 4
+    var mon = new Date(y, m - 1, d - col);
+    var mk  = mon.getFullYear() + "-" + (mon.getMonth()+1) + "-" + mon.getDate();
+    if(byMonday[mk] === undefined){
+      byMonday[mk] = weeks.length;
+      weeks.push({ days: [null,null,null,null,null], pnl: 0, n: 0, traded: 0 });
     }
-    var pos = r.pnl > 0, neg = r.pnl < 0;
-    var pct = Math.round(10 + 60 * Math.abs(r.pnl) / maxAbs);
-    var tint = pos ? 'background:color-mix(in srgb, var(--green) '+pct+'%, var(--bg3));'
-             : neg ? 'background:color-mix(in srgb, var(--red) '+pct+'%, var(--bg3));' : '';
-    var sign = r.pnl > 0 ? "+" : r.pnl < 0 ? "−" : "";
-    h += '<div class="'+cls+(pos?" pos":neg?" neg":" flat")+'" style="'+tint+'" '+
-         'title="'+esc(isoToDMY(key))+': '+r.n+' trade'+(r.n===1?"":"s")+', '+sign+esc(fmtMoney(Math.abs(r.pnl)))+'">'+
-      '<span class="cal-day">'+day+'</span>'+
-      '<span class="cal-pnl">'+sign+esc(fmtMoney(Math.abs(r.pnl)))+'</span>'+
-      '<span class="cal-n">'+r.n+'t</span>'+
-    '</div>';
+    var w = weeks[byMonday[mk]];
+    w.days[col] = d;
+    var rec = c.days[iso(d)];
+    if(rec){ w.pnl += rec.pnl; w.n += rec.n; w.traded++; }
   }
+
+  // ── Month totals, and the tint scale ──
+  // Tints are relative to the month's biggest move so a quiet month
+  // still reads instead of washing out flat.
+  var maxAbs = 0, mN = 0, mPnl = 0, green = 0, red = 0, tradedDays = 0, best = null, worst = null;
+  for(var q = 1; q <= daysInMonth; q++){
+    var rq = c.days[iso(q)]; if(!rq) continue;
+    tradedDays++;
+    maxAbs = Math.max(maxAbs, Math.abs(rq.pnl));
+    mN += rq.n; mPnl += rq.pnl;
+    if(rq.pnl > 0){ green++; if(!best  || rq.pnl > best.pnl)  best  = { d: q, pnl: rq.pnl }; }
+    if(rq.pnl < 0){ red++;   if(!worst || rq.pnl < worst.pnl) worst = { d: q, pnl: rq.pnl }; }
+  }
+  if(!maxAbs) maxAbs = 1;
+  var money  = function(v){ return (v > 0 ? "+" : v < 0 ? "−" : "") + esc(fmtMoney(Math.abs(v))); };
+  var moneyS = function(v){ return (v > 0 ? "+" : v < 0 ? "−" : "") + esc(fmtMoneyShort(v)); };
+  var sgn    = function(v){ return v > 0 ? "pos" : v < 0 ? "neg" : ""; };
+  var dayLbl = function(d){ return d ? isoToDMY(iso(d)).slice(0,5) : "—"; };
+
+  // ── The month at a glance ──
+  var hitRate = (green + red) ? Math.round(100 * green / (green + red)) : null;
+  var h = '<div class="cal-stats">'+
+    '<div class="cal-stat '+(sgn(mPnl)||"accent")+'">'+
+      '<span class="cal-stat-k">Net this month</span>'+
+      '<span class="cal-stat-v '+sgn(mPnl)+'">'+money(mPnl)+'</span>'+
+      '<span class="cal-stat-s">'+mN+' trade'+(mN===1?"":"s")+'</span></div>'+
+    '<div class="cal-stat pos">'+
+      '<span class="cal-stat-k">Best day</span>'+
+      '<span class="cal-stat-v pos">'+(best ? money(best.pnl) : "—")+'</span>'+
+      '<span class="cal-stat-s">'+dayLbl(best && best.d)+'</span></div>'+
+    '<div class="cal-stat neg">'+
+      '<span class="cal-stat-k">Worst day</span>'+
+      '<span class="cal-stat-v neg">'+(worst ? money(worst.pnl) : "—")+'</span>'+
+      '<span class="cal-stat-s">'+dayLbl(worst && worst.d)+'</span></div>'+
+    '<div class="cal-stat accent">'+
+      '<span class="cal-stat-k">Green days</span>'+
+      '<span class="cal-stat-v">'+(hitRate===null ? "—" : hitRate+"%")+'</span>'+
+      '<span class="cal-stat-s">'+green+' up · '+red+' down</span></div>'+
+  '</div>';
+
+  // ── The grid ──
+  h += '<div class="calgrid">' + ["Mon","Tue","Wed","Thu","Fri"].map(function(l){
+    return '<div class="cal-dow">'+l+'</div>';
+  }).join("") + '<div class="cal-dow wk">Week</div>';
+
+  weeks.forEach(function(w, wi){
+    w.days.forEach(function(day){
+      if(day === null){ h += '<div class="cal-cell blank"></div>'; return; }
+      var key = iso(day);
+      var base = "cal-cell" + (key === today ? " today" : "");
+      var r = c.days[key];
+      if(!r){
+        h += '<div class="'+base+' none"><span class="cal-day">'+day+'</span></div>';
+        return;
+      }
+      var k = Math.abs(r.pnl) / maxAbs;
+      // 8-32%: the ceiling is where --txt still measures 7.8 on the
+      // wash and --txt2 still clears 4.5. Above that the cell starts
+      // eating its own figures.
+      var tint = Math.round(8 + 24 * k);
+      var bar  = Math.max(6, Math.round(100 * k));
+      h += '<div class="'+base+' traded '+(sgn(r.pnl)||"flat")+'" style="--tint:'+tint+'%" '+
+           'title="'+esc(isoToDMY(key))+': '+r.n+' trade'+(r.n===1?"":"s")+', '+money(r.pnl)+'">'+
+        '<span class="cal-day">'+day+'</span>'+
+        '<span class="cal-pnl">'+moneyS(r.pnl)+'</span>'+
+        '<span class="cal-n">'+r.n+' trade'+(r.n===1?"":"s")+'</span>'+
+        '<span class="cal-bar"><i style="width:'+bar+'%"></i></span>'+
+      '</div>';
+    });
+    h += '<div class="cal-week'+(w.traded ? "" : " empty-wk")+'"'+
+         (w.traded ? ' title="Week '+(wi+1)+': '+w.n+' trade'+(w.n===1?"":"s")+
+                     ' over '+w.traded+' day'+(w.traded===1?"":"s")+', '+money(w.pnl)+'"' : '')+'>'+
+      '<span class="cal-week-k">W'+(wi+1)+'</span>'+
+      '<span class="cal-week-v '+(sgn(w.pnl)||"flat")+'">'+(w.traded ? moneyS(w.pnl) : "—")+'</span>'+
+      '<span class="cal-week-n">'+w.n+'t · '+w.traded+'d</span>'+
+    '</div>';
+  });
   h += '</div>';
 
-  var netSign = mPnl > 0 ? "+" : mPnl < 0 ? "−" : "";
-  h += '<div class="cal-legend"><span class="cal-swatch"></span><span>loss · flat · gain</span>'+
-       '<span class="cal-sum">'+mN+' trade'+(mN===1?"":"s")+' · '+green+' green day'+(green===1?"":"s")+' · '+red+' red · net '+
-       '<b class="'+(mPnl>0?"pos":mPnl<0?"neg":"")+'">'+netSign+esc(fmtMoney(Math.abs(mPnl)))+'</b></span></div>';
+  h += '<div class="cal-foot"><span class="cal-scale"><span class="cal-swatch"></span>'+
+       '<span>shade and bar scale to '+esc(fmtMoneyShort(maxAbs))+', the month\'s biggest day</span></span>'+
+       '<span class="cal-sum">'+tradedDays+' trading day'+(tradedDays===1?"":"s")+'</span></div>';
   host.innerHTML = h;
 }
 
@@ -4838,6 +5001,18 @@ function toggleEquityClosed(){
 function fmtMoney(v){
   var sign = v<0 ? "-" : "";
   return sign + "$" + Math.abs(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+/* Unsigned and abbreviated, for cells that are scanned rather than
+   read: ".00" repeated across twenty calendar cells is noise, and a
+   five-figure day has to fit the column. Callers add their own sign;
+   the exact number stays in the tooltip and the month summary. */
+function fmtMoneyShort(v){
+  var a = Math.abs(v);
+  if(a >= 10000) return "$" + Math.round(a / 1000) + "k";
+  if(a >= 1000)  return "$" + (a / 1000).toFixed(1).replace(/\.0$/, "") + "k";
+  if(a >= 100)   return "$" + Math.round(a);
+  return "$" + (Math.round(a * 10) / 10);
 }
 
 /* Shows or clears an empty-state message over a chart WITHOUT removing
