@@ -40,9 +40,16 @@
   --gold-glow:  rgba(200,168,75,0.18);
   --gold-rim:   rgba(200,168,75,0.30);
   --gold-bg:    rgba(200,168,75,0.06);
-  /* See the light theme's note: the accent's hover state moves away
-     from whatever --on-accent is, so dark brightens where light
-     deepens. Both are the same gold. */
+
+  /* ── The accent has two jobs and they want different colours ──
+     As TEXT (--gold) it has to be readable on the page. As a SURFACE
+     (--gold-fill) nothing is asked of it except to look like gold,
+     because the only thing on top is --on-gold. On a dark page one
+     value does both, so these are the same colour here. On a light
+     page they cannot be: see the light theme. */
+  --gold-fill:  var(--gold);
+  --on-gold:    #08070A;
+  /* The fill, one step brighter, for hover. */
   --gold-hover: var(--gold-lt);
 
   --green:      #3ECFB5;
@@ -232,16 +239,33 @@
      is the tighter of the two surfaces in this theme. The accent goes
      to 5.2 rather than 4.6 so that gold ON its own --gold-bg wash
      (every badge and chip in the app) still clears 4.5 at 4.70. */
-  --gold:       #7C5B16;   /* 5.23 on the page · 6.24 under white */
-  --gold-lt:    #B68720;   /* gradient highlight only — never text */
-  --gold-dk:    #5A4210;   /* gradient shadow */
-  --gold-glow:  rgba(124,91,22,0.20);
+  /* Two values, because the accent has two jobs and a light page will
+     not let one colour do both. Gold only looks like gold when it is
+     light, and a light gold cannot be read as text on a near-white
+     page — the dark theme's #C8A84B measures 1.92 here.
+
+     --gold is the accent as TEXT and as a standalone border: deep
+     enough to read at 5.23 on the page, which is what a KPI figure or
+     an active nav label needs.
+
+     --gold-fill is the accent as a SURFACE — the active tab, the
+     primary button, the selected date. Nothing is asked of it but to
+     look like gold, because the only thing on top of it is --on-gold,
+     which is near-black in both themes. So the button is properly
+     bright here, the way it is in dark, and the two themes' fills
+     finally look like the same colour. */
+  --gold:       #7C5B16;   /* text · 5.23 on the page, 6.24 on a card */
+  --gold-fill:  #C39622;   /* surface · 6.78 under --on-gold */
+  --gold-hover: #D4A62C;   /* the fill, one step brighter */
+  --on-gold:    #08070A;
+  --gold-lt:    #D8AE3A;   /* gradient highlight only — never text */
+  --gold-dk:    #7A5B14;   /* gradient shadow */
+  /* The glow belongs to the fill; the rim and the wash sit under gold
+     TEXT on badges and chips, so they stay keyed to the deep value or
+     that text stops clearing 4.5 on its own background. */
+  --gold-glow:  rgba(195,150,34,0.34);
   --gold-rim:   rgba(124,91,22,0.38);
   --gold-bg:    rgba(124,91,22,0.08);
-  /* Hover moves the accent AWAY from the text sitting on it, which is
-     a different direction per theme: dark brightens, light deepens.
-     One token so a hover rule never has to know which theme it is. */
-  --gold-hover: #5F450F;
 
   /* Deeper than the dark theme's teal, which is tuned for a black
      background and goes pale on white. */
@@ -266,7 +290,10 @@
   --orange-rim: rgba(158,87,4,0.28);
 
   --on-accent:  #FFFFFF;
-  --accent-rgb: 124,91,22;
+  /* Decorative glows and the cursor trail follow the fill, not the
+     text value — they are light on a light page and want the brighter
+     of the two. */
+  --accent-rgb: 195,150,34;
   --green-rgb:  10,120,83;
   --red-rgb:    205,33,33;
   --blue-rgb:   29,93,234;
@@ -415,7 +442,7 @@ body::after {
 .loader-dot {
   position: absolute; top: 50%; left: 50%;
   width: 6px; height: 6px;
-  background: var(--gold); border-radius: 50%;
+  background: var(--gold-fill); border-radius: 50%;
   transform: translate(-50%,-50%);
   box-shadow: 0 0 14px var(--gold);
   animation: pulseDot 1.4s ease-in-out infinite;
@@ -483,7 +510,7 @@ body::after {
 }
 .login-eyebrow-dot {
   width: 5px; height: 5px;
-  background: var(--gold); border-radius: 50%;
+  background: var(--gold-fill); border-radius: 50%;
   box-shadow: 0 0 8px var(--gold);
   animation: pulseDot 2s ease-in-out infinite;
 }
@@ -535,7 +562,7 @@ body::after {
 .login-btn {
   width: 100%; margin-top: var(--sp-4);
   padding: var(--sp-4) var(--sp-5);
-  background: var(--gold); color: var(--on-accent);
+  background: var(--gold-fill); color: var(--on-gold);
   border: none; border-radius: var(--r2);
   font-family: var(--font-display); font-size: var(--fs-2); font-weight: 700;
   letter-spacing: var(--tr-label); text-transform: none;
@@ -653,7 +680,7 @@ body::after {
    are looking at, not the one you would switch to. */
 .tt-thumb {
   position: absolute; top: 2px; left: 2px; width: 22px; height: 22px; border-radius: 50%;
-  background: var(--gold); box-shadow: 0 2px 6px var(--shadow-soft);
+  background: var(--gold-fill); box-shadow: 0 2px 6px var(--shadow-soft);
   transform: translateX(24px);
   transition: transform var(--t-base) var(--ease-out), background var(--t-base);
 }
@@ -663,8 +690,8 @@ body::after {
   font-size: 12px; line-height: 28px; color: var(--txt4); transition: color var(--t-base);
   pointer-events: none;
 }
-:root[data-theme="light"] .tt-icon.sun  { color: var(--on-accent); }
-:root:not([data-theme="light"]) .tt-icon.moon { color: var(--on-accent); }
+:root[data-theme="light"] .tt-icon.sun  { color: var(--on-gold); }
+:root:not([data-theme="light"]) .tt-icon.moon { color: var(--on-gold); }
 
 .logout-btn {
   font-family: var(--font-display); font-size: var(--fs-1); font-weight: 600;
@@ -740,7 +767,7 @@ body::after {
 }
 .pill:hover { color: var(--txt2); border-color: var(--border3); background: var(--bg3); }
 .pill.active {
-  background: var(--gold); color: var(--on-accent); border-color: var(--gold);
+  background: var(--gold-fill); color: var(--on-gold); border-color: var(--gold-fill);
   font-weight: 700; box-shadow: 0 2px 16px rgba(var(--accent-rgb),0.25);
 }
 .pill.acc.active {
@@ -782,14 +809,14 @@ body::after {
 .kpi:hover::after { opacity: 0.12; }
 .kpi.g::after { background: var(--green); }
 .kpi.r::after { background: var(--red); }
-.kpi.a::after { background: var(--gold); }
+.kpi.a::after { background: var(--gold-fill); }
 .kpi.b::after { background: var(--blue); }
 
 .kpi-eyebrow { display: flex; align-items: center; gap: var(--sp-h2); margin-bottom: var(--sp-4); }
 .kpi-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; }
 .kpi.g .kpi-dot { background: var(--green); box-shadow: 0 0 6px var(--green); }
 .kpi.r .kpi-dot { background: var(--red);   box-shadow: 0 0 6px var(--red); }
-.kpi.a .kpi-dot { background: var(--gold);  box-shadow: 0 0 6px var(--gold); }
+.kpi.a .kpi-dot { background: var(--gold-fill);  box-shadow: 0 0 6px var(--gold); }
 .kpi.b .kpi-dot { background: var(--blue);  box-shadow: 0 0 6px var(--blue); }
 
 .kpi-label {
@@ -956,7 +983,7 @@ body::after {
 }
 .cal-stat.pos::before { background: var(--green); }
 .cal-stat.neg::before { background: var(--red); }
-.cal-stat.accent::before { background: var(--gold); }
+.cal-stat.accent::before { background: var(--gold-fill); }
 .cal-stat-k {
   font-family: var(--font-display); font-size: var(--fs-0); font-weight: 600;
   color: var(--txt3); letter-spacing: var(--tr-label);
@@ -1264,7 +1291,7 @@ body::after {
 .jactions { display: flex; gap: var(--sp-h3); align-items: center; flex-wrap: wrap; }
 .jsubmit-btn {
   padding: var(--sp-4) var(--sp-6);
-  background: var(--gold); color: var(--on-accent);
+  background: var(--gold-fill); color: var(--on-gold);
   border: none; border-radius: var(--r2);
   font-family: var(--font-display); font-size: var(--fs-2); font-weight: 700;
   letter-spacing: var(--tr-label); text-transform: none;
@@ -1305,7 +1332,7 @@ body::after {
 .jbtn-sm.remove  { background: none; border-color: var(--red-rim); color: var(--red); }
 .jbtn-sm.remove:hover { background: var(--red-bg); }
 .jbtn-sm.gold    { background: var(--gold-bg); border-color: var(--gold-rim); color: var(--gold); }
-.jbtn-sm.gold:hover { background: var(--gold); color: var(--on-accent); }
+.jbtn-sm.gold:hover { background: var(--gold-fill); color: var(--on-gold); }
 .jbtn-sm:disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* ── Inline button loading spinner (used across all action buttons) ── */
@@ -1313,7 +1340,7 @@ body::after {
   display: inline-block; width: 12px; height: 12px;
   margin-right: var(--sp-2); vertical-align: -2px;
   border: 2px solid var(--spin-track);
-  border-top-color: var(--on-accent);
+  border-top-color: var(--on-gold);
   border-radius: 50%;
   animation: spin 0.65s linear infinite;
   flex-shrink: 0;
@@ -1328,7 +1355,7 @@ body::after {
 .jdelete-btn .btn-spinner { border-color: rgba(var(--red-rgb),0.28); border-top-color: var(--red); }
 .jbtn-sm.remove .btn-spinner { border-color: rgba(var(--red-rgb),0.28); border-top-color: var(--red); }
 .jbtn-sm.add .btn-spinner { border-color: var(--spin-track); border-top-color: var(--on-accent); }
-.jbtn-sm.gold .btn-spinner { border-color: var(--spin-track); border-top-color: var(--on-accent); }
+.jbtn-sm.gold .btn-spinner { border-color: var(--spin-track); border-top-color: var(--on-gold); }
 .jbtn-sm .btn-spinner { width: 10px; height: 10px; border-width: 2px; margin-right: var(--sp-h2); }
 
 /* ── Badges: phase / status ── */
@@ -1379,7 +1406,7 @@ body::after {
   background: var(--border2); transition: background var(--t-base);
 }
 .macc-card.st-active::before  { background: var(--green); }
-.macc-card.st-passed::before  { background: var(--gold); }
+.macc-card.st-passed::before  { background: var(--gold-fill); }
 .macc-card.st-blown::before   { background: var(--red); }
 .macc-card.st-removed::before { background: var(--txt4); }
 .macc-card:hover { border-color: var(--border2); box-shadow: 0 8px 30px var(--shadow-soft); }
@@ -1530,7 +1557,7 @@ body::after {
 .drill-visual { padding: var(--sp-4) var(--sp-h6) var(--sp-1); }
 .drill-strip { display: flex; height: 10px; border-radius: var(--r-pill); overflow: hidden; background: var(--bg5); border: 1px solid var(--border); }
 .drill-strip > div { height: 100%; }
-.seg-pos { background: var(--green); } .seg-neg { background: var(--red); } .seg-flat { background: var(--gold); } .seg-muted { background: var(--txt4); }
+.seg-pos { background: var(--green); } .seg-neg { background: var(--red); } .seg-flat { background: var(--gold-fill); } .seg-muted { background: var(--txt4); }
 .drill-legend { display: flex; gap: var(--sp-4); flex-wrap: wrap; margin-top: var(--sp-2); font-family: var(--font-mono); font-size: var(--fs-1); color: var(--txt3); }
 .drill-legend .right { margin-left: auto; }
 .drill-legend i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: var(--sp-h2); vertical-align: middle; }
@@ -1623,13 +1650,13 @@ body::after {
 .subtab:hover { color: var(--txt); background: var(--bg4); border-color: var(--border3); }
 .subtab:active { transform: translateY(1px); }
 .subtab.active {
-  background: var(--gold); color: var(--on-accent);
-  border-color: var(--gold); font-weight: 700;
+  background: var(--gold-fill); color: var(--on-gold);
+  border-color: var(--gold-fill); font-weight: 700;
   box-shadow: 0 var(--sp-h1) var(--sp-4) var(--gold-glow);
 }
 /* Hover must not walk back the selected state. --gold-hover already
    knows which way to move for the current theme. */
-.subtab.active:hover { background: var(--gold-hover); border-color: var(--gold-hover); color: var(--on-accent); }
+.subtab.active:hover { background: var(--gold-hover); border-color: var(--gold-hover); color: var(--on-gold); }
 
 /* ── Stage timeline on the account card ── */
 .stage-timeline {
@@ -1711,7 +1738,7 @@ body::after {
   background: none; color: var(--txt3); cursor: pointer; transition: all var(--t-fast);
 }
 .viewtoggle button:hover { color: var(--txt2); }
-.viewtoggle button.active { background: var(--gold); color: var(--on-accent); font-weight: 700; }
+.viewtoggle button.active { background: var(--gold-fill); color: var(--on-gold); font-weight: 700; }
 
 .macc-group-header {
   display: flex; align-items: baseline; gap: var(--sp-3); flex-wrap: wrap;
@@ -1845,7 +1872,7 @@ body::after {
   background: none; color: var(--txt3); cursor: pointer; transition: all var(--t-fast);
 }
 .seg button:hover { color: var(--txt2); }
-.seg button.active { background: var(--gold); color: var(--on-accent); font-weight: 700; }
+.seg button.active { background: var(--gold-fill); color: var(--on-gold); font-weight: 700; }
 
 .panel-head {
   display: flex; align-items: flex-start; justify-content: space-between;
@@ -1924,7 +1951,7 @@ body::after {
 .dp-cell.empty:hover { background: none; }
 .dp-cell.weekend { color: var(--txt4); }
 .dp-cell.today { border: 1px solid var(--gold-rim); color: var(--gold); }
-.dp-cell.sel { background: var(--gold); color: var(--on-accent); font-weight: 700; }
+.dp-cell.sel { background: var(--gold-fill); color: var(--on-gold); font-weight: 700; }
 .dp-foot { margin-top: var(--sp-h3); text-align: center; border-top: 1px solid var(--border); padding-top: var(--sp-h3); }
 .dp-today {
   background: none; border: 1px solid var(--border2); color: var(--txt3);
