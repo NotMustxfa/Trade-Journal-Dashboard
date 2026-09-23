@@ -152,24 +152,32 @@
    whole app only needed its literals tokenised, not restyled.
 ══════════════════════════════════════ */
 :root[data-theme="light"] {
-  --bg:         #F6F7F9;
+  /* The page has to be clearly DARKER than a card or the two merge:
+     #F6F7F9 against white measured 1.07 contrast, which is no edge at
+     all. At #E8EBF1 a white card reads as a raised surface on its own,
+     before the border or shadow does any work. */
+  --bg:         #E8EBF1;
   --bg1:        #FFFFFF;
-  --bg2:        #F9FAFB;
+  --bg2:        #F5F7FA;
   --bg3:        #FFFFFF;
-  --bg4:        #F3F4F6;
-  --bg5:        #E9EAEE;
-  --bg6:        #DDDFE4;
+  --bg4:        #EFF2F6;
+  --bg5:        #DCE1E9;
+  --bg6:        #C8CFDA;
 
-  --border:     rgba(16,24,40,0.08);
-  --border2:    rgba(16,24,40,0.14);
-  --border3:    rgba(16,24,40,0.22);
-  --border4:    rgba(16,24,40,0.32);
+  /* Roughly double the old alphas. On a dark theme a 5%-white hairline
+     is enough because the surface behind it is near-black; over white
+     the same alpha is invisible. */
+  --border:     rgba(16,24,40,0.14);
+  --border2:    rgba(16,24,40,0.22);
+  --border3:    rgba(16,24,40,0.32);
+  --border4:    rgba(16,24,40,0.44);
 
-  /* Same ramp on white: 17.8 / 9.5 / 6.5 / 4.6. */
+  /* Measured against the PAGE, which is now the tighter surface:
+     16.4 / 9.5 / 6.5 / 4.6 there, and higher again on a white card. */
   --txt:        #101828;
-  --txt2:       #3C4656;
-  --txt3:       #565E70;
-  --txt4:       #6E7682;
+  --txt2:       #323B48;
+  --txt3:       #4C5362;
+  --txt4:       #626A74;
 
   /* The accent role: violet in light, gold in dark. Token names keep
      saying "gold" because they name the ROLE (accent / highlight), and
@@ -211,14 +219,14 @@
 
   /* Soft and cool rather than black — a 60%-black shadow on white
      reads as dirt. */
-  --shadow:      rgba(16,24,40,0.12);
-  --shadow-soft: rgba(16,24,40,0.06);
-  --shadow-deep: rgba(16,24,40,0.16);
-  --shadow-1: 0 4px 20px rgba(16,24,40,0.06);
-  --shadow-2: 0 8px 40px rgba(16,24,40,0.08);
-  --shadow-3: 0 20px 60px rgba(16,24,40,0.14);
+  --shadow:      rgba(16,24,40,0.16);
+  --shadow-soft: rgba(16,24,40,0.09);
+  --shadow-deep: rgba(16,24,40,0.22);
+  --shadow-1: 0 2px 6px rgba(16,24,40,0.07), 0 8px 24px rgba(16,24,40,0.05);
+  --shadow-2: 0 4px 12px rgba(16,24,40,0.09), 0 16px 40px rgba(16,24,40,0.06);
+  --shadow-3: 0 12px 28px rgba(16,24,40,0.16), 0 32px 72px rgba(16,24,40,0.10);
   --scrim:       rgba(16,24,40,0.45);
-  --glass:       rgba(255,255,255,0.85);
+  --glass:       rgba(246,248,251,0.90);
   --sheen:       rgba(16,24,40,0.05);
   --sheen-2:     rgba(255,255,255,0.70);
   --spin-track:  rgba(255,255,255,0.40);
@@ -229,6 +237,32 @@
   --tooltip-txt: #FFFFFF;
   --tooltip-sub: rgba(255,255,255,0.75);
 }
+
+/* Light-only elevation. In dark, a card is defined by being lighter
+   than the page behind it and a hairline border finishes the job — no
+   shadow needed. On light the card is the BRIGHT surface, so it needs
+   a shadow to sit above the page instead of dissolving into it. These
+   are resting shadows; the existing hover rules still lift further. */
+:root[data-theme="light"] .panel,
+:root[data-theme="light"] .kpi,
+:root[data-theme="light"] .macc-card,
+:root[data-theme="light"] .acc-card,
+:root[data-theme="light"] .daycell,
+:root[data-theme="light"] .login-card { box-shadow: var(--shadow-1); }
+
+/* Table headers and row rules carry the grid in light mode, where a
+   5%-white hairline reads as nothing. */
+:root[data-theme="light"] .wtable thead th,
+:root[data-theme="light"] .macc-trades-table thead th,
+:root[data-theme="light"] .macc-table thead th { background: var(--bg4); }
+:root[data-theme="light"] .wtable tbody tr:hover,
+:root[data-theme="light"] .macc-trades-table tbody tr:hover td { background: var(--bg4); }
+
+/* Inputs need a visible well, not a white box on a white card. */
+:root[data-theme="light"] .jinput,
+:root[data-theme="light"] .jselect { background: var(--bg2); }
+:root[data-theme="light"] .jinput:focus,
+:root[data-theme="light"] .jselect:focus { background: var(--bg1); }
 
 html { scroll-behavior: smooth; }
 
