@@ -2793,6 +2793,7 @@ var FILTER_STORE_KEY = "tj_filters";
 var _journalState = { editing:false };
 var _journalPreselect = null;          // { person, accountId } set by gotoLogTrade, consumed by onPersonChange
 var _accountsByPerson = {};   // from getAccounts — every status, per person
+var _pastAccountsByPerson = {}; // v23: accounts each person held before a transfer
 var _accountsById = {};       // from getDashboardData accounts list
 
 var _rawPerson="all", _rawAccount="all", _rawLimit=50, _rawInherit=true;
@@ -3070,15 +3071,22 @@ function filtersActive(){
 // Accounts visible under the current filters. Period/date range is
 // deliberately NOT applied here: an account exists regardless of
 // which month you're looking at.
+// Person scope: by default an account belongs to its CURRENT holder
+// (cards, live capital). {everHeld:true} widens that to anyone who has
+// ever held it (v23 transfers), for views built from dated history —
+// the equity curve, the strategy panel — where a past holder's trades
+// on it still count as theirs.
 function filterAccounts(accounts, opts){
   var q = (_filters.q || "").trim().toLowerCase();
   var includeRemoved = !!(opts && opts.includeRemoved);
+  var byHistory = !!(opts && opts.everHeld);
   return (accounts || []).filter(function(a){
     // REMOVED means merged away or deleted. It is never part of a
     // total, a card list or the equity curve — only Manage Accounts
     // asks for it, via its "Show removed" toggle.
     if(a.status === "REMOVED" && !includeRemoved) return false;
-    if(_filters.person   !== "all" && a.person    !== _filters.person)   return false;
+    if(_filters.person !== "all" &&
+       !(byHistory ? everHeld(a, _filters.person) : a.person === _filters.person)) return false;
     if(_filters.status   !== "all" && a.status    !== _filters.status)   return false;
     if(_filters.phase    !== "all" && a.phase     !== _filters.phase)    return false;
     if(_filters.accountId!== "all" && a.accountId !== _filters.accountId) return false;
@@ -3093,7 +3101,7 @@ function filterTrades(trades){
   var ids = null;
   if(_filters.phase !== "all" || (_filters.q || "").trim()){
     ids = {};
-    filterAccounts(_data ? _data.accounts : []).forEach(function(a){ ids[a.accountId] = 1; });
+    filterAccounts(_data ? _data.accounts : [], { everHeld:true }).forEach(function(a){ ids[a.accountId] = 1; });
   }
   return (trades || []).filter(function(t){
     if(_filters.person    !== "all" && t.person        !== _filters.person)    return false;
@@ -3104,6 +3112,96 @@ function filterTrades(trades){
     if(_filters.from && t.dateKey < _filters.from) return false;
     if(_filters.to   && t.dateKey > _filters.to)   return false;
     return true;
+  });
+}
+
+/* ── ACCOUNT TRANSFERS (v23) ──
+   An account can change hands on an effective date. Every trade and
+   payout carries the person who held the account on its date (the
+   backend keeps that true), so trade-level views already split
+   correctly by filtering on t.person. What needs dates here is the
+   ACCOUNT-level story: the fee belongs to whoever bought it, and each
+   track-record event (passed, funded, blown) to whoever held it on the
+   day it happened. accountShareFor is the one place that decides. ── */
+function holderOn(a, dk){
+  var list = (a && a.transfers) || [];
+  if(!list.length) return a.person;
+  var h = list[0].from;
+  for(var i = 0; i < list.length; i++){
+    if(list[i].date <= dk) h = list[i].to; else break;
+  }
+  return h;
+}
+function everHeld(a, person){
+  if(person === "all" || a.person === person) return true;
+  return ((a && a.transfers) || []).some(function(t){ return t.from === person || t.to === person; });
+}
+function boughtBy(a){
+  if(a.boughtBy) return a.boughtBy;
+  return (a.transfers && a.transfers.length) ? a.transfers[0].from : a.person;
+}
+// The last day `person` held the account, for "(until dd/mm)" labels:
+// the day before the transfer that took it from them.
+function heldUntil(a, person){
+  var until = "";
+  ((a && a.transfers) || []).forEach(function(t){ if(t.from === person) until = t.date; });
+  return until;
+}
+
+// This person's slice of one account's account-level figures. With
+// person "all" every field is exactly what the pre-v23 per-account
+// counting produced, so the unfiltered page does not move.
+function accountShareFor(a, person, payouts){
+  var s = { bought:0, fee:0, sunk:0, evTaken:0, evPassed:0, evBlown:0, evActive:0,
+            fdEver:0, fdActive:0, fdBlown:0, fdPaid:0, live:false };
+  if(!a || a.status === "REMOVED") return s;
+  var all  = person === "all";
+  var mine = function(p){ return all || p === person; };
+  // An event with no recorded date falls to the current holder.
+  var at   = function(dk){ return dk ? holderOn(a, dk) : a.person; };
+
+  var hist = a.stageHistory || [];
+  var master = null;
+  hist.forEach(function(st){ if(!master && st.phase === "MASTER") master = st; });
+  var last = hist.length ? hist[hist.length - 1] : null;
+  var closedOn = last && last.endedAt ? last.endedAt : "";
+  var fundedOn = master ? master.startedAt : "";
+  var reached = _reachedMaster(a), asEval = _startedAsEval(a);
+
+  if(mine(boughtBy(a))){
+    s.bought = 1;
+    s.fee = a.cost || 0;
+    if(a.status === "BLOWN") s.sunk = a.cost || 0;
+  }
+  s.live = a.status === "ACTIVE" && mine(a.person);
+
+  if(asEval){
+    if(s.bought) s.evTaken = 1;
+    // Reaching Master IS passing the evaluation, on the day it did.
+    if(reached){ if(mine(at(fundedOn))) s.evPassed = 1; }
+    else if(a.status === "PASSED"){ if(mine(at(closedOn))) s.evPassed = 1; }
+    else if(a.status === "BLOWN"){  if(mine(at(closedOn))) s.evBlown = 1; }
+    else if(a.status === "ACTIVE"){ if(s.live) s.evActive = 1; }
+  }
+  if(reached){
+    if(mine(at(fundedOn))) s.fdEver = 1;
+    if(a.status === "ACTIVE" && s.live) s.fdActive = 1;
+    if(a.status === "BLOWN" && mine(at(closedOn))) s.fdBlown = 1;
+    var paid = all ? (a.paidOut || 0) > 0
+                   : (payouts || []).some(function(p){ return p.accountId === a.accountId && p.person === person && (p.amount || 0) > 0; });
+    if(paid) s.fdPaid = 1;
+  }
+  return s;
+}
+
+// Payouts for the Person filter, by the person stamped on each payout —
+// so money taken before a transfer stays with whoever took it. Rows on
+// REMOVED or unknown accounts count for nothing, as before.
+function payoutsForPerson(person){
+  return ((_data && _data.payouts && _data.payouts.list) || []).filter(function(p){
+    var a = _accountsById[p.accountId];
+    if(!a || a.status === "REMOVED") return false;
+    return person === "all" || p.person === person;
   });
 }
 
@@ -3431,22 +3529,18 @@ function stats(trades){
    actually made, what is actually live, and whether the trading works.
    The page used to open with 19 tiles of identical weight. ── */
 function renderHero(s){
-  var accs = (_data.accounts || []).filter(function(a){
-    return _filters.person === "all" || a.person === _filters.person;
-  });
-  // REMOVED rows are merged-away or deleted; they contribute to nothing.
-  var real = accs.filter(function(a){ return a.status !== "REMOVED"; });
-  // netPaidOut is what you actually kept after the firm's cut; paidOut is
-  // the gross that left the account and drives its balance.
-  var net = real.reduce(function(t,a){
-    var kept = a.netPaidOut !== undefined ? a.netPaidOut : (a.paidOut||0);
-    return t + kept - (a.cost||0);
-  }, 0);
+  var person = _filters.person;
+  // REMOVED rows are merged-away or deleted; accountShareFor gives them
+  // nothing. Payouts are what you kept after the firm's cut (net), each
+  // credited to whoever took it; fees to whoever bought the account.
+  var real = (_data.accounts || []).filter(function(a){ return a.status !== "REMOVED" && everHeld(a, person); });
+  var net = _sumBy(payoutsForPerson(person), _net) -
+            _sumBy(real, function(a){ return accountShareFor(a, person).fee; });
 
   // Live equity is MASTER accounts only — an evaluation balance can never
   // become money. This tile used to sum every active account, so it
   // disagreed with Money → Live capital by the size of every open eval.
-  var live = real.filter(function(a){ return a.status === "ACTIVE" && a.phase === "MASTER"; });
+  var live = real.filter(function(a){ return a.status === "ACTIVE" && a.phase === "MASTER" && (person === "all" || a.person === person); });
   var liveEq = live.reduce(function(t,a){ return t + (a.currentBalance||0); }, 0);
   var nLive = live.length;
 
@@ -3936,7 +4030,7 @@ function groupTradesBy(trades, key){
    Click a row for the per-account breakdown. ── */
 var _stratOpen = {};   // strategy -> bool, expanded rows
 
-function computeStrategies(trades, accounts){
+function computeStrategies(trades, accounts, person){
   var byStrat = {};
   var accById = {};
   (accounts||[]).forEach(function(a){ accById[a.accountId] = a; });
@@ -3955,8 +4049,11 @@ function computeStrategies(trades, accounts){
   // a blown eval with two trades still counts against the strategy that
   // blew it, and an account switched from LQS to ORB is ORB's to pass or
   // lose from here on.
+  // With a Person filter, only the current holder owns the outcome; a
+  // past holder still sees the account listed through their trades.
   (accounts||[]).forEach(function(a){
     if(a.status === "REMOVED") return;
+    if(person && person !== "all" && a.person !== person) return;
     var k = (a.nameParts || parseAccountName(a.accountName)).strategy;
     if(!k) return;
     var b = bucket(k);
@@ -4008,10 +4105,10 @@ function toggleStrategy(k){
 function renderStrategies(){
   var host = document.getElementById("strategyPanel");
   if(!host) return;
-  var accs = (_data.accounts||[]).filter(function(a){
-    return _filters.person === "all" || a.person === _filters.person;
-  });
-  var rows = computeStrategies(getFiltered(), accs);
+  // Listed by history (a past holder's trades on it are theirs); the
+  // account's OUTCOME stays with its current holder — see computeStrategies.
+  var accs = (_data.accounts||[]).filter(function(a){ return everHeld(a, _filters.person); });
+  var rows = computeStrategies(getFiltered(), accs, _filters.person);
 
   var head = '<div class="panel-head"><div>'+
     '<div class="ptitle">Strategy performance</div>'+
@@ -4134,11 +4231,15 @@ var _drillRowsOpen = false;
 function _drillKey(label){ return String(label||"").replace(/&amp;/g,"&").replace(/\s+/g," ").trim().toLowerCase(); }
 
 // ── Row sets ──
+// Every account the Person filter can see any part of — including one
+// they held before a transfer (v23). Live-capital drills narrow this to
+// the current holder; fee and track-record drills to the person's share.
 function _drillAccounts(){
   return (_data.accounts||[]).filter(function(a){
-    return a.status !== "REMOVED" && (_filters.person === "all" || a.person === _filters.person);
+    return a.status !== "REMOVED" && everHeld(a, _filters.person);
   });
 }
+function _drillShare(a){ return accountShareFor(a, _filters.person, _drillPayouts()); }
 function _drillPayouts(){
   return ((_data.payouts && _data.payouts.list) || []).filter(function(p){
     return _filters.person === "all" || p.person === _filters.person;
@@ -4149,7 +4250,7 @@ function _drillEquityTrades(){
     return a.status !== "REMOVED" && (_equityIncludeClosed || a.status === "ACTIVE");
   });
   var ok = {}; accs.forEach(function(a){ ok[a.accountId] = a; });
-  return (_data.trades||[]).filter(function(t){ return !!ok[t.accountId]; })
+  return (_data.trades||[]).filter(function(t){ return !!ok[t.accountId] && _tradeInPersonScope(t); })
     .slice().sort(function(a,b){ return a.dateKey < b.dateKey ? -1 : 1; });
 }
 function _reachedMaster(a){
@@ -4210,10 +4311,12 @@ function _tradeGroups(tr, st){
     person:   _groups(tr, function(t){ return t.person; },       st.num, st.fmt),
   };
 }
-function _accountGroups(rows, num, fmt){
+// personOf: who an account is grouped under — the current holder by
+// default; fee drills pass boughtBy, since the buyer paid it.
+function _accountGroups(rows, num, fmt, personOf){
   return {
     strategy: _groups(rows, function(a){ return (a.nameParts||parseAccountName(a.accountName)).strategy; }, num, fmt),
-    person:   _groups(rows, function(a){ return a.person; }, num, fmt),
+    person:   _groups(rows, personOf || function(a){ return a.person; }, num, fmt),
   };
 }
 function _payoutGroups(rows, num, fmt){
@@ -4348,7 +4451,9 @@ function _drillBuild(key){
     };
   }
 
-  var A = _drillAccounts(), live = A.filter(function(a){ return a.status === "ACTIVE"; });
+  var A = _drillAccounts(), live = A.filter(function(a){ return _drillShare(a).live; });
+  // Accounts the filtered person paid for (all of them when unfiltered).
+  var bought = A.filter(function(a){ return _drillShare(a).bought; });
   var masters = live.filter(function(a){ return a.phase === "MASTER"; });
   var money = function(n){ return n===null?"—":fmtMoney(n); };
   var count = function(rows){ return rows.length; }, cfmt = function(n){ return String(n); };
@@ -4388,14 +4493,14 @@ function _drillBuild(key){
         groups:{ account:_groups(live, function(a){ return a.accountName; }, room, roomf), strategy:_accountGroups(live, room, roomf).strategy, person:_accountGroups(live, room, roomf).person },
         rows:_accountsTableHTML(live.slice().sort(function(a,b){ return (b.ddUsedPct||0)-(a.ddUsedPct||0); }), [{lbl:"Limit",num:true,f:function(a){ return { v:(a.maxDDPct||0)?a.maxDDPct+"% "+(a.ddType||"STATIC").toLowerCase():"—" }; }},{lbl:"Floor",num:true,f:function(a){ return { v:a.ddFloor===null||a.ddFloor===undefined?"—":fmtMoney(a.ddFloor) }; }},{lbl:"Room",num:true,f:function(a){ var r=a.ddRoom; return { v:r===null||r===undefined?"—":fmtMoney(r), cls:a.ddUsedPct>=0.75?"neg":a.ddUsedPct>=0.5?"":"pos" }; }}]), rowsLabel:live.length+" accounts" });
     case "evaluations taken":
-      var evs = A.filter(_startedAsEval);
+      var evs = A.filter(function(a){ return _drillShare(a).evTaken; });
       var p1=0,b1=0,r1=0; evs.forEach(function(a){ if(_reachedMaster(a)||a.status==="PASSED") p1++; else if(a.status==="BLOWN") b1++; else r1++; });
       return acct({ value:String(evs.length), explain:"accounts that started as an evaluation — a funded account that came through one counts too", scope:"all time",
         hero:_stripHTML([{n:p1,cls:"pos",lbl:"Passed"},{n:r1,cls:"flat",lbl:"Running"},{n:b1,cls:"neg",lbl:"Blown"}]),
-        groups:_accountGroups(evs, count, cfmt),
+        groups:_accountGroups(evs, count, cfmt, boughtBy),
         rows:_accountsTableHTML(evs, [{lbl:"Outcome",f:function(a){ var m=_reachedMaster(a); return { v:m?"reached Master":a.status==="PASSED"?"passed":a.status==="BLOWN"?"blown":"running", cls:m||a.status==="PASSED"?"pos":a.status==="BLOWN"?"neg":"" }; }}, cost]), rowsLabel:evs.length+" evaluations" });
     case "pass rate":
-      var settled = A.filter(function(a){ return _startedAsEval(a) && (_reachedMaster(a) || a.status==="PASSED" || a.status==="BLOWN"); });
+      var settled = A.filter(function(a){ var sh = _drillShare(a); return sh.evPassed || sh.evBlown; });
       var passed = settled.filter(function(a){ return _reachedMaster(a)||a.status==="PASSED"; }).length;
       var pr = function(rows){ var p=rows.filter(function(a){ return _reachedMaster(a)||a.status==="PASSED"; }).length; return rows.length?Math.round(p/rows.length*100):null; };
       return acct({ value:pctf(pr(settled)), explain:"evaluations that reached Master or were marked passed ÷ evaluations that are settled — running ones are not counted", scope:settled.length+" settled",
@@ -4403,19 +4508,19 @@ function _drillBuild(key){
         groups:_accountGroups(settled, pr, function(n){ return n===null?"—":n+"%"; }),
         rows:_accountsTableHTML(settled, [{lbl:"Outcome",f:function(a){ var p=_reachedMaster(a)||a.status==="PASSED"; return { v:p?"passed":"blown", cls:p?"pos":"neg" }; }}, cost]), rowsLabel:settled.length+" evaluations" });
     case "funded accounts":
-      var fd = A.filter(_reachedMaster);
+      var fd = A.filter(function(a){ return _drillShare(a).fdEver; });
       var fa=0,fb=0; fd.forEach(function(a){ if(a.status==="ACTIVE") fa++; else if(a.status==="BLOWN") fb++; });
       return acct({ value:String(fd.length), explain:"accounts that have ever been Master — bought funded or promoted there", scope:"all time",
         hero:_stripHTML([{n:fa,cls:"pos",lbl:"Active"},{n:fd.length-fa-fb,cls:"flat",lbl:"Finished"},{n:fb,cls:"neg",lbl:"Blown"}]),
         groups:_accountGroups(fd, count, cfmt),
         rows:_accountsTableHTML(fd, [{lbl:"Balance",f:bal,num:true},{lbl:"Paid out",num:true,f:function(a){ return { v:fmtMoney(a.paidOut||0), cls:(a.paidOut||0)>0?"gold":"muted" }; }}]), rowsLabel:fd.length+" accounts" });
     case "fees paid":
-      return acct({ tone:"bad", value:money(fees(A)), explain:"what every account cost to buy, added up", scope:A.length+" accounts",
-        groups:_accountGroups(A, fees, money), rows:_accountsTableHTML(A.slice().sort(function(a,b){ return (b.cost||0)-(a.cost||0); }), [cost]), rowsLabel:A.length+" accounts" });
+      return acct({ tone:"bad", value:money(fees(bought)), explain:"what every account cost to buy, added up — charged to whoever bought it", scope:bought.length+" accounts",
+        groups:_accountGroups(bought, fees, money, boughtBy), rows:_accountsTableHTML(bought.slice().sort(function(a,b){ return (b.cost||0)-(a.cost||0); }), [cost]), rowsLabel:bought.length+" accounts" });
     case "sunk fees":
-      var blown = A.filter(function(a){ return a.status==="BLOWN"; });
+      var blown = bought.filter(function(a){ return a.status==="BLOWN"; });
       return acct({ tone:"bad", value:money(fees(blown)), explain:"the cost of every account that was blown — money that cannot come back", scope:blown.length+" blown accounts",
-        groups:_accountGroups(blown, fees, money), rows:_accountsTableHTML(blown, [cost]), rowsLabel:blown.length+" accounts" });
+        groups:_accountGroups(blown, fees, money, boughtBy), rows:_accountsTableHTML(blown, [cost]), rowsLabel:blown.length+" accounts" });
   }
 
   var P = _drillPayouts();
@@ -4434,12 +4539,26 @@ function _drillBuild(key){
       return { tone:"good", value:money(netSum(M)), explain:"payouts dated in " + niceMonth(mk) + ", net of split", scope:M.length+" payouts", hero:_payoutStrip(M),
         groups:_payoutGroups(M, netSum, money), rows:_payoutsTableHTML(M), rowsLabel:M.length+" payouts" };
     case "real net profit":
-      var feesAll = fees(A), netAll = netSum(P), rnp = netAll - feesAll;
-      return { tone:"money", value:_signed(rnp), explain:"payouts kept minus every account's cost — the only figure that is actual money", scope:P.length+" payouts · "+A.length+" accounts",
+      // P here must match the tile: payouts on REMOVED accounts count for nothing.
+      P = P.filter(function(p){ var a = _accountsById[p.accountId]; return a && a.status !== "REMOVED"; });
+      var feesAll = fees(bought), netAll = netSum(P), rnp = netAll - feesAll;
+      // Grouped by person over everyone with a payout or a fee, so a
+      // holder who bought nothing still shows what they took out.
+      var ppl = {};
+      P.forEach(function(p){ ppl[p.person] = 1; });
+      bought.forEach(function(a){ ppl[boughtBy(a)] = 1; });
+      var byPerson = Object.keys(ppl).map(function(k){
+        var n = netSum(P.filter(function(p){ return p.person === k; })) -
+                fees(bought.filter(function(a){ return boughtBy(a) === k; }));
+        return { k:k, n:n };
+      });
+      return { tone:"money", value:_signed(rnp), explain:"payouts kept minus every account's cost — the only figure that is actual money", scope:P.length+" payouts · "+bought.length+" accounts",
         hero:'<div class="drill-strip"><div class="seg-pos" style="width:'+(netAll+feesAll?netAll/(netAll+feesAll)*100:0).toFixed(2)+'%"></div><div class="seg-neg" style="width:'+(netAll+feesAll?feesAll/(netAll+feesAll)*100:0).toFixed(2)+'%"></div></div>'+
              '<div class="drill-legend"><span><i class="seg-pos"></i>Payouts kept <b>'+esc(fmtMoney(netAll))+'</b></span><span><i class="seg-neg"></i>Fees paid <b>'+esc(fmtMoney(feesAll))+'</b></span></div>',
-        groups:{ person:_groups(A, function(a){ return a.person; }, function(rows){ var ppl = rows[0].person; return netSum(P.filter(function(p){ return p.person===ppl; })) - fees(rows); }, _signed) },
-        rows:_payoutsTableHTML(P) + '<div class="drill-rows-title">Fees</div>' + _accountsTableHTML(A, [cost]), rowsLabel:P.length+" payouts and "+A.length+" fees" };
+        groups:{ person:byPerson.map(function(g){
+                   return { key:g.k, count:bought.filter(function(a){ return boughtBy(a) === g.k; }).length, n:g.n, txt:_signed(g.n) };
+                 }).sort(function(a,b){ return b.n - a.n; }) },
+        rows:_payoutsTableHTML(P) + '<div class="drill-rows-title">Fees</div>' + _accountsTableHTML(bought, [cost]), rowsLabel:P.length+" payouts and "+bought.length+" fees" };
   }
   return null;
 }
@@ -4560,12 +4679,13 @@ function renderCapital(){
 
   // Recompute per-person rather than using the server totals when a
   // Person filter is on, so these tiles agree with the rest of the page.
-  var accs = (_data.accounts || []).filter(function(a){
-    return _filters.person === "all" || a.person === _filters.person;
-  });
-  var scoped = _filters.person !== "all";
+  // Live capital is the CURRENT holder's; real money and the track
+  // record are split by date across everyone who held the account (v23).
+  var person = _filters.person;
+  var accs = (_data.accounts || []).filter(function(a){ return everHeld(a, person); });
+  var scoped = person !== "all";
 
-  var live = accs.filter(function(a){ return a.status === "ACTIVE"; });
+  var live = accs.filter(function(a){ return a.status === "ACTIVE" && (person === "all" || a.person === person); });
 
   // Total vs Live. An evaluation balance is prop-firm scorekeeping — it
   // can never turn into money. Only a funded (Master) account pays out,
@@ -4600,51 +4720,32 @@ function renderCapital(){
   var fdEver = 0, fdActive = 0, fdBlown = 0, fdPaid = 0;
   var nearestTarget = null, nearestAcc = null;
 
+  // Payouts by the person stamped on each one, so money taken before a
+  // transfer stays with whoever took it.
+  var plist = payoutsForPerson(person);
+  payouts      = _sumBy(plist, _net);
+  grossPayouts = _sumBy(plist, function(p){ return p.amount; });
+
   var everTraded = 0;
   accs.forEach(function(a){
     // REMOVED is a soft-delete bucket — merged away or deleted. It
     // contributes to nothing, or a merged-away account keeps its fee in
     // "Fees paid" and merging never actually removes the double charge.
-    if(a.status === "REMOVED") return;
-    everTraded++;
-
-    payouts     += (a.netPaidOut !== undefined ? a.netPaidOut : (a.paidOut||0));
-    grossPayouts += a.paidOut || 0;
-    fees        += a.cost    || 0;
-    if(a.status === "BLOWN") sunk += a.cost || 0;
-
+    // accountShareFor returns all zeros for it.
+    //
     // With v15 stages an account carries its own journey, so a Master
     // that started life as a Phase 1 counts as BOTH an evaluation taken
-    // and a funded account — which is what actually happened. Accounts
-    // with no stages fall back to counting by their current phase.
-    var hist = a.stageHistory || [];
-    var startedAsEval = hist.length
-      ? hist[0].phase !== "MASTER"
-      : a.phase !== "MASTER";
-    var reachedMaster = hist.length
-      ? hist.some(function(st){ return st.phase === "MASTER"; })
-      : a.phase === "MASTER";
+    // and a funded account — which is what actually happened. Each of
+    // those events is credited to whoever held the account that day.
+    var sh = accountShareFor(a, person, plist);
+    everTraded += sh.bought;
+    fees += sh.fee;
+    sunk += sh.sunk;
+    evTaken += sh.evTaken; evPassed += sh.evPassed; evBlown += sh.evBlown; evActive += sh.evActive;
+    fdEver += sh.fdEver; fdActive += sh.fdActive; fdBlown += sh.fdBlown; fdPaid += sh.fdPaid;
 
-    if(reachedMaster){
-      fdEver++;
-      if(a.status === "ACTIVE") fdActive++;
-      if(a.status === "BLOWN")  fdBlown++;
-      if((a.paidOut||0) > 0)    fdPaid++;
-    }
-    if(startedAsEval){
-      evTaken++;
-      // Reaching Master IS passing the evaluation. Without stages we
-      // fall back to the PASSED status.
-      if(reachedMaster)                          evPassed++;
-      else if(a.status === "PASSED")             evPassed++;
-      else if(a.status === "BLOWN")              evBlown++;
-      else if(a.status === "ACTIVE"){
-        evActive++;
-
-        if(a.targetProgress !== null && a.targetProgress !== undefined){
-          if(nearestTarget === null || a.targetProgress > nearestTarget){ nearestTarget = a.targetProgress; nearestAcc = a; }
-        }
-      }
+    if(sh.evActive && a.targetProgress !== null && a.targetProgress !== undefined){
+      if(nearestTarget === null || a.targetProgress > nearestTarget){ nearestTarget = a.targetProgress; nearestAcc = a; }
     }
   });
 
@@ -4990,7 +5091,7 @@ function computeEquity(){
   // starts mid-history isn't an equity curve. Account-level filters
   // still apply.
   var trades = (_data.trades||[]).filter(function(t){
-    return !!inScope[t.accountId];
+    return !!inScope[t.accountId] && _tradeInPersonScope(t);
   }).slice().sort(function(a,b){ return new Date(a.date) - new Date(b.date); });
 
   var byDate = {}, order = [];
@@ -5009,7 +5110,7 @@ function computeEquity(){
   // Payout dates, for markers on the curve.
   var payoutByDate = {};
   ((_data.payouts && _data.payouts.list) || []).forEach(function(p){
-    if(!inScope[p.accountId]) return;
+    if(!inScope[p.accountId] || !_tradeInPersonScope(p)) return;
     var dk = String(p.date).slice(0,10);
     payoutByDate[dk] = (payoutByDate[dk]||0) + (p.amount||0);
   });
@@ -5048,9 +5149,16 @@ function computeEquity(){
   };
 }
 
-// Account filters minus Period, which equity ignores by design.
+// Account filters minus Period, which equity ignores by design. Scoped
+// by history (v23): an account someone held before a transfer stays on
+// their curve, carrying only their own trades — see _tradeInPersonScope.
 function filterAccountsIgnoringPeriod(){
-  return filterAccounts(_data ? _data.accounts : []);
+  return filterAccounts(_data ? _data.accounts : [], { everHeld:true });
+}
+// A trade or payout counts for the Person filter by the person stamped
+// on it — who held the account that day — not by the current holder.
+function _tradeInPersonScope(t){
+  return _filters.person === "all" || t.person === _filters.person;
 }
 
 function setEquityUnit(u){
@@ -5433,7 +5541,8 @@ function populateRawFilters(){
 
   var curAcc = accSel.value || "all";
   var person = personSel.value;   // resolved value, not the pre-rebuild one
-  var accs = (_data.accounts||[]).filter(function(a){ return person==="all" || a.person===person; });
+  // Every account the person has trades on, including one held before a transfer.
+  var accs = (_data.accounts||[]).filter(function(a){ return everHeld(a, person); });
   accSel.innerHTML = '<option value="all">All Accounts</option>' +
     accs.map(function(a){
       var lbl = a.displayLabel + " — " + ((_config&&_config.phaseLabels&&_config.phaseLabels[a.phase])||a.phase) + " · " + ((_config&&_config.statusLabels&&_config.statusLabels[a.status])||a.status);
@@ -5539,7 +5648,7 @@ function initPayoutsTab(){
 
 function onPayoutPersonChange(){
   var p = document.getElementById("poPerson").value;
-  var masters = (_accountsByPerson[p]||[]).filter(function(a){ return a.phase==="MASTER"; });
+  var masters = _pickerAccounts(p).filter(function(a){ return a.phase==="MASTER"; });
   var sel = document.getElementById("poAccount");
   if(!masters.length){
     sel.innerHTML = '<option value="">— no Master accounts yet —</option>';
@@ -5549,7 +5658,7 @@ function onPayoutPersonChange(){
   }
   sel.disabled = false;
   sel.innerHTML = masters.map(function(a){
-    var lbl = a.name + " (" + ((_config&&_config.statusLabels&&_config.statusLabels[a.status])||a.status) + ")";
+    var lbl = a.name + " (" + ((_config&&_config.statusLabels&&_config.statusLabels[a.status])||a.status) + ")" + _pickerSuffix(a, p);
     return '<option value="'+esc(a.id)+'">'+esc(lbl)+'</option>';
   }).join("");
   onPayoutAccountChange();
@@ -5560,7 +5669,7 @@ function onPayoutPersonChange(){
 function onPayoutAccountChange(){
   var accId = document.getElementById("poAccount").value;
   var p     = document.getElementById("poPerson").value;
-  var acc   = (_accountsByPerson[p]||[]).filter(function(a){ return a.id === accId; })[0];
+  var acc   = _pickerAccounts(p).filter(function(a){ return a.id === accId; })[0];
   var el    = document.getElementById("poSplit");
   if(el && acc && acc.splitPct) el.value = acc.splitPct;
   updatePayoutSplit();
@@ -6041,6 +6150,9 @@ function maccCardHTML(a){
   }
   var nTrades = accountTrades(a.accountId).length;
   quickBtns += '<button class="jbtn-sm'+(_maccTrades[a.accountId]?" on":"")+'" id="maccTradesBtn_'+a.accountId+'" onclick="toggleAccountTrades(\'' + a.accountId + '\')">Trades ('+nTrades+')</button>';
+  if(a.status !== "REMOVED"){
+    quickBtns += '<button class="jbtn-sm" onclick="openTransfer(\'' + a.accountId + '\')">Transfer</button>';
+  }
   quickBtns += '<button class="jbtn-sm" onclick="openAccountEdit(\'' + a.accountId + '\')">Edit</button>';
 
   var st = (_data.accountStats && _data.accountStats[a.accountId]) || null;
@@ -6099,6 +6211,7 @@ function maccCardHTML(a){
         '</div>'+
         '<div class="macc-id">ID '+esc(shortId)+'… · created '+esc(createdTxt)+
           (a.cost ? ' · cost '+esc(fmtMoney(a.cost)) : '')+'</div>'+
+        transferHistoryHTML(a, "macc-id")+
       '</div>'+
       '<div class="macc-actions">'+quickBtns+'</div>'+
     '</div>'+
@@ -6987,6 +7100,93 @@ function gotoPayout(accountId){
   }, 50);
 }
 
+/* ── TRANSFER (v23) ──
+   Hands an account to another person from an effective date. Trades
+   and payouts dated on or after it move to the new holder; everything
+   earlier stays with whoever held it then. Only the latest transfer can
+   be undone. ── */
+function transferHistoryHTML(a, cls){
+  var list = a.transfers || [];
+  if(!list.length) return "";
+  return '<div class="'+cls+'">'+list.map(function(t){
+    return 'Transferred '+esc(t.from)+' → '+esc(t.to)+' on '+esc(isoToDMY(t.date));
+  }).join(" · ")+'</div>';
+}
+
+function openTransfer(accountId){
+  var a = _accountsById[accountId];
+  if(!a) return;
+  openMaccModal(
+    _maccModalHeader('Transfer account', esc(a.person)+' · '+esc(a.accountName||"(unnamed)")) +
+    transferFormHTML(a)
+  );
+  setDateISO("xfDate_"+accountId, todayISO());
+}
+
+function transferFormHTML(a){
+  var id = a.accountId;
+  var others = ((_config && _config.people) || []).filter(function(p){ return p !== a.person; });
+  var last = (a.transfers || []).length ? a.transfers[a.transfers.length - 1] : null;
+  var undo = last
+    ? '<div class="meter-note" style="margin-top:var(--sp-4)">'+transferHistoryHTML(a, "")+'</div>'+
+      '<div class="mt-modal-foot">'+
+        '<span class="mt-modal-msgs">Undo moves everything dated from '+esc(isoToDMY(last.date))+' back to '+esc(last.from)+'.</span>'+
+        '<button class="jbtn-sm remove" onclick="submitUndoTransfer(\'' + id + '\', this)">Undo last transfer</button>'+
+      '</div>'
+    : '';
+  return '<div class="macc-edit show" data-enter-scope>'+
+    '<div class="psub" style="margin-bottom:var(--sp-3)">'+
+      'Trades and payouts from the effective date on move to the new holder. Everything earlier stays with '+esc(a.person)+
+      ', and the '+esc(fmtMoney(a.cost||0))+' fee stays with '+esc(boughtBy(a))+', who bought it.</div>'+
+    '<div class="jgrid">'+
+      '<div class="jfield"><label class="jlabel">Transfer to</label>'+
+        '<select class="jselect" id="xfTo_'+id+'">'+others.map(function(p){ return '<option value="'+esc(p)+'">'+esc(p)+'</option>'; }).join("")+'</select></div>'+
+      '<div class="jfield"><label class="jlabel">Effective date</label>'+
+        '<input class="jinput" type="text" id="xfDate_'+id+'" readonly placeholder="dd/mm/yyyy" onclick="openDatePicker(\'xfDate_'+id+'\')">'+
+        '<div class="meter-note">The new holder\'s first day. Defaults to today.</div></div>'+
+    '</div>'+
+    '<div class="mt-modal-foot">'+
+      '<span class="mt-modal-msgs"><span class="jerr" id="xfErr_'+id+'"></span></span>'+
+      '<button class="jbtn-sm" onclick="closeMaccModal()">Cancel</button>'+
+      '<button class="jsubmit-btn" onclick="submitTransfer(\'' + id + '\', this)">Transfer</button>'+
+    '</div>'+
+    undo+
+  '</div>';
+}
+
+function submitTransfer(accountId, btn){
+  var errEl = document.getElementById("xfErr_"+accountId);
+  errEl.textContent = "";
+  var to  = (document.getElementById("xfTo_"+accountId) || {}).value;
+  var iso = getDateISO("xfDate_"+accountId) || todayISO();
+  if(!to){ errEl.textContent = "Pick who the account goes to."; return; }
+  if(iso > todayISO()){ errEl.textContent = "The date cannot be in the future."; return; }
+  var done = btnLoading(btn, "Transferring");
+  jsonp(APPS_SCRIPT_URL + "?action=transferAccount&token=" + encodeURIComponent(_tok) +
+        "&accountId=" + encodeURIComponent(accountId) +
+        "&toPerson="  + encodeURIComponent(to) +
+        "&date="      + encodeURIComponent(iso), function(d){
+    if(!d || !d.success){ done(); errEl.textContent = (d && d.error) || "Could not transfer the account."; return; }
+    _afterTransferChange();
+  });
+}
+
+function submitUndoTransfer(accountId, btn){
+  if(!confirm("Undo the last transfer? Trades and payouts dated from it go back to the previous holder.")) return;
+  var done = btnLoading(btn, "Undoing");
+  jsonp(APPS_SCRIPT_URL + "?action=undoTransfer&token=" + encodeURIComponent(_tok) +
+        "&accountId=" + encodeURIComponent(accountId), function(d){
+    if(!d || !d.success){ done(); alert((d && d.error) || "Could not undo the transfer."); return; }
+    _afterTransferChange();
+  });
+}
+
+function _afterTransferChange(){
+  closeMaccModal();
+  refreshAccountsList();
+  refreshDashboardQuietly(function(){ renderManageAccounts(); });
+}
+
 /* ══════════════════════════════════════
    DATE PICKER — dd/mm/yyyy display, ISO storage
    Every date input in the app (Journal Trade, Payouts) is a
@@ -7277,15 +7477,31 @@ function initJournal(){
 
 function refreshAccountsList(afterCb){
   jsonp(APPS_SCRIPT_URL + "?action=getAccounts&token=" + encodeURIComponent(_tok), function(d){
-    if(d && d.success){ _accountsByPerson = d.accountsByPerson || {}; }
+    if(d && d.success){ _accountsByPerson = d.accountsByPerson || {}; _pastAccountsByPerson = d.pastAccountsByPerson || {}; }
     onPersonChange();
     if(typeof afterCb === "function") afterCb();
   });
 }
 
+// Accounts a person can log against: what they hold now, then (v23)
+// what they held before a transfer — for backfilling a missed day from
+// their own time on it. The backend refuses a date outside that time.
+function _pickerAccounts(p){
+  var now  = _accountsByPerson[p] || [];
+  var seen = {};
+  now.forEach(function(a){ seen[a.id] = 1; });
+  var past = (_pastAccountsByPerson[p] || []).filter(function(a){ return !seen[a.id]; });
+  return now.concat(past);
+}
+function _pickerSuffix(a, p){
+  if(a.person === p) return "";
+  var until = heldUntil(a, p);
+  return until ? " (yours until " + isoToDMY(until) + ")" : "";
+}
+
 function onPersonChange(){
   var p = document.getElementById("jPerson").value;
-  var accounts = (_accountsByPerson[p]||[]).filter(function(a){ return a.status==="ACTIVE"; });
+  var accounts = _pickerAccounts(p).filter(function(a){ return a.status==="ACTIVE"; });
   var sel = document.getElementById("jAccount");
 
   if(!accounts.length){
@@ -7298,7 +7514,7 @@ function onPersonChange(){
   }
 
   sel.disabled = false;
-  sel.innerHTML = accounts.map(function(a){ return '<option value="'+esc(a.id)+'">'+esc(a.name)+' — '+esc((_config&&_config.phaseLabels&&_config.phaseLabels[a.phase])||a.phase)+'</option>'; }).join("");
+  sel.innerHTML = accounts.map(function(a){ return '<option value="'+esc(a.id)+'">'+esc(a.name)+' — '+esc((_config&&_config.phaseLabels&&_config.phaseLabels[a.phase])||a.phase)+esc(_pickerSuffix(a, p))+'</option>'; }).join("");
   // Arrived via "+ Log trade" on an account card: land on that account.
   // Consumed here, after the list is built, so there is no race with
   // the getAccounts round-trip.
