@@ -5658,8 +5658,7 @@ function onPayoutPersonChange(){
   }
   sel.disabled = false;
   sel.innerHTML = masters.map(function(a){
-    var lbl = a.name + " (" + ((_config&&_config.statusLabels&&_config.statusLabels[a.status])||a.status) + ")" + _pickerSuffix(a, p);
-    return '<option value="'+esc(a.id)+'">'+esc(lbl)+'</option>';
+    return '<option value="'+esc(a.id)+'">'+esc(pickerLabel(a, p, { status:true }))+'</option>';
   }).join("");
   onPayoutAccountChange();
 }
@@ -7499,6 +7498,33 @@ function _pickerSuffix(a, p){
   return until ? " (yours until " + isoToDMY(until) + ")" : "";
 }
 
+// Picker text that tells two same-named accounts apart: the server's
+// "(#1)"/"(#2)" label (creation order, the same one the cards and the
+// filter bar show), then live facts — phase, balance, and the last
+// trade (or the day it was added, before any trade). The balance comes
+// from the dashboard payload, so it is left out until that has loaded.
+function pickerLabel(a, p, opts){
+  var name = String(a.displayLabel || a.name || "");
+  var prefix = a.person + " · ";
+  if(name.indexOf(prefix) === 0) name = name.slice(prefix.length);
+  var parts = [ (_config && _config.phaseLabels && _config.phaseLabels[a.phase]) || a.phase ];
+  if(opts && opts.status) parts.push((_config && _config.statusLabels && _config.statusLabels[a.status]) || a.status);
+  var live = _accountsById && _accountsById[a.id];
+  if(live && typeof live.currentBalance === "number") parts.push(fmtMoney(live.currentBalance));
+  var last = _lastTradeKey(a.id);
+  var added = a.createdAt ? _dateKeyFromAny(a.createdAt) : "";
+  if(last) parts.push("last trade " + isoToDMY(last));
+  else if(added) parts.push("added " + isoToDMY(added));
+  return name + " — " + parts.join(" · ") + _pickerSuffix(a, p || a.person);
+}
+function _lastTradeKey(accountId){
+  var last = "";
+  ((_data && _data.trades) || []).forEach(function(t){
+    if(t.accountId === accountId && t.dateKey > last) last = t.dateKey;
+  });
+  return last;
+}
+
 function onPersonChange(){
   var p = document.getElementById("jPerson").value;
   var accounts = _pickerAccounts(p).filter(function(a){ return a.status==="ACTIVE"; });
@@ -7514,7 +7540,7 @@ function onPersonChange(){
   }
 
   sel.disabled = false;
-  sel.innerHTML = accounts.map(function(a){ return '<option value="'+esc(a.id)+'">'+esc(a.name)+' — '+esc((_config&&_config.phaseLabels&&_config.phaseLabels[a.phase])||a.phase)+esc(_pickerSuffix(a, p))+'</option>'; }).join("");
+  sel.innerHTML = accounts.map(function(a){ return '<option value="'+esc(a.id)+'">'+esc(pickerLabel(a, p))+'</option>'; }).join("");
   // Arrived via "+ Log trade" on an account card: land on that account.
   // Consumed here, after the list is built, so there is no race with
   // the getAccounts round-trip.
