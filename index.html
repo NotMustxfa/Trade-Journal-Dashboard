@@ -1079,6 +1079,96 @@ body::after {
 }
 .cal-foot .cal-sum { margin-left: auto; }
 
+/* Every traded day, week total and summary card opens the detail
+   popup, so they behave like the drillable KPI tiles. */
+.cal-cell.traded, .cal-week.click, .cal-stat.click { cursor: pointer; }
+.cal-stat.click:hover { border-color: var(--border3); }
+.cal-stat.click .cal-stat-s::after { content: " ›"; color: var(--txt4); }
+.cal-week { transition: border-color var(--t-fast), transform var(--t-base) var(--ease); }
+.cal-week.click:hover { border-color: var(--border3); transform: translateY(-2px); }
+.cal-cell.sel { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-rim), 0 var(--sp-h3) var(--sp-6) var(--shadow-soft); }
+.cal-top { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-1); }
+/* One dot per trade, by outcome. Shapes carry no text, so they can
+   take the full role colours; the ring keeps them off the wash. */
+.cal-dots { display: inline-flex; align-items: center; gap: 3px; flex-wrap: wrap; justify-content: flex-end; }
+.cal-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--txt4); box-shadow: 0 0 0 1px var(--bg3); }
+.cal-dots i.w { background: var(--green); }
+.cal-dots i.l { background: var(--red); }
+.cal-dots i.b { background: var(--accent-fill); }
+.cal-dots b { font-family: var(--font-mono); font-size: var(--fs-0); font-weight: 600; color: var(--txt3); }
+
+/* ── Calendar detail popup (day / week / month) ── */
+.drill-head .cd-nav { position: absolute; top: 12px; right: 48px; display: flex; gap: var(--sp-1); }
+.drill-explain b { color: var(--txt); font-weight: 700; }
+.cd-tiles { grid-template-columns: repeat(4, 1fr); margin-bottom: var(--sp-3); }
+.cd-tiles .cal-stat-v { font-size: var(--fs-5); }
+.cd-tiles .cal-stat-s { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.cd-trades { display: flex; flex-direction: column; gap: var(--sp-h3); padding-bottom: var(--sp-1); }
+.cd-trade {
+  position: relative; overflow: hidden;
+  background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r2);
+  padding: var(--sp-3) var(--sp-4) var(--sp-3) var(--sp-h5);
+  display: flex; flex-direction: column; gap: var(--sp-h3);
+  transition: border-color var(--t-fast);
+}
+.cd-trade:hover { border-color: var(--border2); }
+.cd-trade::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--border3); }
+.cd-trade.pos::before { background: var(--green); }
+.cd-trade.neg::before { background: var(--red); }
+.cd-trade-top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-3); }
+.cd-trade-who { min-width: 0; }
+.cd-trade-acc { font-family: var(--font-display); font-size: var(--fs-3); font-weight: 700; color: var(--txt); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cd-trade-sub { font-family: var(--font-display); font-size: var(--fs-1); color: var(--txt3); margin-top: 2px; }
+.cd-trade-pnl { display: flex; align-items: baseline; gap: var(--sp-2); flex-shrink: 0; }
+.cd-trade-v { font-family: var(--font-display); font-size: var(--fs-5); font-weight: 800; letter-spacing: var(--tr-tight); color: var(--txt); }
+.cd-trade-v.pos { color: var(--green); } .cd-trade-v.neg { color: var(--red); }
+.cd-pct { font-family: var(--font-mono); font-size: var(--fs-1); color: var(--txt3); }
+.cd-res {
+  font-family: var(--font-display); font-size: var(--fs-0); font-weight: 700; letter-spacing: var(--tr-label);
+  padding: 2px var(--sp-2); border-radius: var(--r-pill); border: 1px solid var(--border2); color: var(--txt3);
+  align-self: center;
+}
+.cd-res.win  { color: var(--green); border-color: var(--green-rim); background: var(--green-bg); }
+.cd-res.loss { color: var(--red);   border-color: var(--red-rim);   background: var(--red-bg); }
+.cd-chips { display: flex; flex-wrap: wrap; gap: var(--sp-h2); }
+.cd-chip {
+  font-family: var(--font-mono); font-size: var(--fs-1); color: var(--txt);
+  background: var(--bg4); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 3px var(--sp-2);
+}
+.cd-chip i { font-style: normal; font-family: var(--font-display); color: var(--txt4); margin-right: var(--sp-h2); }
+.cd-fees { font-family: var(--font-mono); font-size: var(--fs-1); color: var(--txt3); }
+.cd-trade-foot { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-h2) var(--sp-2); }
+.cd-rule { font-family: var(--font-display); font-size: var(--fs-1); font-weight: 600; }
+.cd-rule.ok { color: var(--green); }
+.cd-rule.bad { color: var(--red); }
+.cd-mistake {
+  font-family: var(--font-display); font-size: var(--fs-0); color: var(--orange);
+  border: 1px dashed var(--border2); border-radius: var(--r-pill); padding: 2px var(--sp-2);
+}
+.cd-edit { margin-left: auto; }
+
+.cd-days { display: flex; flex-direction: column; gap: var(--sp-1); padding-bottom: var(--sp-1); }
+.cd-day {
+  display: grid; grid-template-columns: 96px 64px 72px 1fr 104px 12px; align-items: center; gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3); border: 1px solid var(--border); border-radius: var(--r);
+  background: var(--bg2); cursor: pointer;
+  transition: border-color var(--t-fast), transform var(--t-base) var(--ease);
+}
+.cd-day:hover { border-color: var(--border3); transform: translateX(2px); }
+.cd-day .cal-dots { justify-content: flex-start; }
+.cd-day-d { font-family: var(--font-display); font-size: var(--fs-1); color: var(--txt3); }
+.cd-day-d b { font-family: var(--font-mono); color: var(--txt); font-weight: 600; margin-right: var(--sp-1); }
+.cd-day-n { font-family: var(--font-display); font-size: var(--fs-1); color: var(--txt3); }
+.cd-day-bar { height: 6px; border-radius: var(--r-pill); background: var(--bg5); overflow: hidden; }
+.cd-day-bar i { display: block; height: 100%; border-radius: var(--r-pill); background: var(--txt4); }
+.cd-day.pos .cd-day-bar i { background: var(--green); }
+.cd-day.neg .cd-day-bar i { background: var(--red); }
+.cd-day-v { font-family: var(--font-mono); font-size: var(--fs-2); font-weight: 600; text-align: right; color: var(--txt); }
+.cd-day-v.pos { color: var(--green); } .cd-day-v.neg { color: var(--red); }
+.cd-day-go { color: var(--txt4); }
+
 .daycell {
   border: 1px solid var(--border); border-radius: var(--r2);
   padding: var(--sp-4) var(--sp-h2) var(--sp-h4); text-align: center;
@@ -2070,6 +2160,12 @@ summary:focus-visible,
   .cal-stats { grid-template-columns: 1fr 1fr; }
   .cal-cell { min-height: 62px; padding: var(--sp-1) var(--sp-2) var(--sp-2); }
   .cal-n { display: none; }
+  .cal-dots i { width: 5px; height: 5px; }
+  .cd-tiles { grid-template-columns: 1fr 1fr; }
+  .cd-day { grid-template-columns: 1fr auto auto; }
+  .cd-day .cal-dots, .cd-day-bar, .cd-day-go { display: none; }
+  .cd-trade-top { flex-direction: column; gap: var(--sp-h2); }
+  .drill-head .cd-nav { position: static; margin-top: var(--sp-h3); }
   .setup-head, .setup-row { grid-template-columns: 1fr 40px 48px 72px; }
   .stage-step { grid-template-columns: 14px 1fr 84px; }
   .stage-when, .stage-n { display: none; }
@@ -3637,12 +3733,28 @@ function computeCalendar(trades){
   var days = {}, months = {};
   (trades||[]).forEach(function(t){
     var k = t.dateKey; if(!k) return;
-    var d = days[k] || (days[k] = { pnl:0, n:0, wins:0 });
+    var d = days[k] || (days[k] = { pnl:0, n:0, wins:0, losses:0, outs:[] });
     d.n++; d.pnl += (t.pnl || 0);
-    if(t.result === "TP" || t.result === "PARTIAL TP") d.wins++;
+    var o = _calOutcome(t);
+    if(o === "w") d.wins++;
+    if(o === "l") d.losses++;
+    d.outs.push(o);
     months[k.slice(0,7)] = true;
   });
   return { months: Object.keys(months).sort(), days: days };
+}
+// One letter per trade for the cell's dots: win, loss, break-even, manual.
+function _calOutcome(t){
+  return (t.result === "TP" || t.result === "PARTIAL TP") ? "w" : t.result === "SL" ? "l" : t.result === "BE" ? "b" : "m";
+}
+function _calDotsHTML(outs){
+  var max = 6, h = outs.slice(0, max).map(function(o){ return '<i class="'+o+'"></i>'; }).join("");
+  if(outs.length > max) h += '<b>+'+(outs.length - max)+'</b>';
+  return '<span class="cal-dots" aria-hidden="true">'+h+'</span>';
+}
+// role="button" + tab stop + Enter/Space, as kp() does for KPI tiles.
+function _calBtnAttrs(call, title){
+  return ' role="button" tabindex="0" onclick="'+call+'" onkeydown="_kbActivate(event)" title="'+esc(title)+'"';
 }
 
 function renderCalendar(trades){
@@ -3708,20 +3820,23 @@ function renderCalendar(trades){
 
   // ── The month at a glance ──
   var hitRate = (green + red) ? Math.round(100 * green / (green + red)) : null;
+  var monthLast = _calMonth + "-" + String(daysInMonth).padStart(2,"0");
+  var monthBtn = _calBtnAttrs("openCalRange('"+_calMonth+"-01','"+monthLast+"','month')", "Open "+niceMonth(_calMonth));
+  var dayBtn = function(d){ return d ? _calBtnAttrs("openCalDay('"+iso(d)+"')", "Open "+isoToDMY(iso(d))) : ""; };
   var h = '<div class="cal-stats">'+
-    '<div class="cal-stat '+(sgn(mPnl)||"accent")+'">'+
+    '<div class="cal-stat click '+(sgn(mPnl)||"accent")+'"'+monthBtn+'>'+
       '<span class="cal-stat-k">Net this month</span>'+
       '<span class="cal-stat-v '+sgn(mPnl)+'">'+money(mPnl)+'</span>'+
       '<span class="cal-stat-s">'+mN+' trade'+(mN===1?"":"s")+'</span></div>'+
-    '<div class="cal-stat pos">'+
+    '<div class="cal-stat pos'+(best?" click":"")+'"'+dayBtn(best && best.d)+'>'+
       '<span class="cal-stat-k">Best day</span>'+
       '<span class="cal-stat-v pos">'+(best ? money(best.pnl) : "—")+'</span>'+
       '<span class="cal-stat-s">'+dayLbl(best && best.d)+'</span></div>'+
-    '<div class="cal-stat neg">'+
+    '<div class="cal-stat neg'+(worst?" click":"")+'"'+dayBtn(worst && worst.d)+'>'+
       '<span class="cal-stat-k">Worst day</span>'+
       '<span class="cal-stat-v neg">'+(worst ? money(worst.pnl) : "—")+'</span>'+
       '<span class="cal-stat-s">'+dayLbl(worst && worst.d)+'</span></div>'+
-    '<div class="cal-stat accent">'+
+    '<div class="cal-stat click accent"'+monthBtn+'>'+
       '<span class="cal-stat-k">Green days</span>'+
       '<span class="cal-stat-v">'+(hitRate===null ? "—" : hitRate+"%")+'</span>'+
       '<span class="cal-stat-s">'+green+' up · '+red+' down</span></div>'+
@@ -3748,17 +3863,22 @@ function renderCalendar(trades){
       // eating its own figures.
       var tint = Math.round(8 + 24 * k);
       var bar  = Math.max(6, Math.round(100 * k));
-      h += '<div class="'+base+' traded '+(sgn(r.pnl)||"flat")+'" style="--tint:'+tint+'%" '+
-           'title="'+esc(isoToDMY(key))+': '+r.n+' trade'+(r.n===1?"":"s")+', '+money(r.pnl)+'">'+
-        '<span class="cal-day">'+day+'</span>'+
+      var wr   = (r.wins + r.losses) ? Math.round(100 * r.wins / (r.wins + r.losses)) + "% win" : "no W/L";
+      // Exact figure in the title; the cell shows the rounded one.
+      h += '<div class="'+base+' traded '+(sgn(r.pnl)||"flat")+(key === _calSel ? " sel" : "")+'" style="--tint:'+tint+'%"'+
+           _calBtnAttrs("openCalDay('"+key+"')", isoToDMY(key)+": "+r.n+" trade"+(r.n===1?"":"s")+", "+money(r.pnl)+" — click for the day")+'>'+
+        '<span class="cal-top"><span class="cal-day">'+day+'</span>'+_calDotsHTML(r.outs)+'</span>'+
         '<span class="cal-pnl">'+moneyS(r.pnl)+'</span>'+
-        '<span class="cal-n">'+r.n+' trade'+(r.n===1?"":"s")+'</span>'+
+        '<span class="cal-n">'+r.n+' trade'+(r.n===1?"":"s")+' · '+wr+'</span>'+
         '<span class="cal-bar"><i style="width:'+bar+'%"></i></span>'+
       '</div>';
     });
-    h += '<div class="cal-week'+(w.traded ? "" : " empty-wk")+'"'+
-         (w.traded ? ' title="Week '+(wi+1)+': '+w.n+' trade'+(w.n===1?"":"s")+
-                     ' over '+w.traded+' day'+(w.traded===1?"":"s")+', '+money(w.pnl)+'"' : '')+'>'+
+    var wDays = w.days.filter(function(x){ return x !== null; });
+    var wFrom = iso(wDays[0]), wTo = iso(wDays[wDays.length - 1]);
+    h += '<div class="cal-week'+(w.traded ? " click" : " empty-wk")+'"'+
+         (w.traded ? _calBtnAttrs("openCalRange('"+wFrom+"','"+wTo+"','week')",
+                     "Week "+(wi+1)+": "+w.n+" trade"+(w.n===1?"":"s")+
+                     " over "+w.traded+" day"+(w.traded===1?"":"s")+" — click for the week") : '')+'>'+
       '<span class="cal-week-k">W'+(wi+1)+'</span>'+
       '<span class="cal-week-v '+(sgn(w.pnl)||"flat")+'">'+(w.traded ? moneyS(w.pnl) : "—")+'</span>'+
       '<span class="cal-week-n">'+w.n+'t · '+w.traded+'d</span>'+
@@ -3768,7 +3888,7 @@ function renderCalendar(trades){
 
   h += '<div class="cal-foot"><span class="cal-scale"><span class="cal-swatch"></span>'+
        '<span>shade and bar scale to '+esc(fmtMoneyShort(maxAbs))+', the month\'s biggest day</span></span>'+
-       '<span class="cal-sum">'+tradedDays+' trading day'+(tradedDays===1?"":"s")+'</span></div>';
+       '<span class="cal-sum">'+tradedDays+' trading day'+(tradedDays===1?"":"s")+' · click a day, week or card for the detail</span></div>';
   host.innerHTML = h;
 }
 
@@ -3780,6 +3900,211 @@ function calShift(delta){
   i = Math.max(0, Math.min(months.length - 1, i + delta));
   _calMonth = months[i];
   renderCalendar(getFiltered());
+}
+
+/* ── Calendar detail popup ──
+   A day, a week or a month opened from the calendar, laid out like the
+   KPI drill-downs (#mtModal, .drill-*) so it reads as the same family:
+   the net as the hero, a summary strip, where the money came from, and
+   then the trades themselves. A day lists every trade as a card with an
+   Edit button; a week or month lists its days, each of which opens. */
+var _calSel   = null;   // the day last opened, outlined on the grid
+var _calDrill = null;   // { from, to, kind } while the popup is open
+var _calDim   = "account";
+
+function openCalDay(isoKey){ openCalRange(isoKey, isoKey, "day"); }
+
+function openCalRange(from, to, kind){
+  _calDrill = { from: from, to: to, kind: kind };
+  if(kind === "day"){
+    _calSel = from;
+    // Stepping across a month boundary drags the grid along with it.
+    if(from.slice(0,7) !== _calMonth) _calMonth = from.slice(0,7);
+    renderCalendar(getFiltered());
+  }
+  var tr = getFiltered().filter(function(t){ return t.dateKey >= from && t.dateKey <= to; })
+    .sort(function(a,b){ return a.dateKey < b.dateKey ? -1 : a.dateKey > b.dateKey ? 1 : String(a.accountName).localeCompare(String(b.accountName)); });
+  openMaccModal(_calDrillHTML(tr, from, to, kind));
+  var m = document.getElementById("mtModalBody");
+  if(m) m.classList.add("wide");
+}
+
+// Traded days in the current filters, in order, for ‹ › and the arrow keys.
+function _calTradedDays(){ return Object.keys(computeCalendar(getFiltered()).days).sort(); }
+function calDayStep(delta){
+  if(!_calDrill || _calDrill.kind !== "day") return;
+  var ds = _calTradedDays(), i = ds.indexOf(_calDrill.from);
+  var j = i + delta;
+  if(i === -1 || j < 0 || j >= ds.length) return;
+  openCalDay(ds[j]);
+}
+function _calSetDim(k){ _calDim = k; if(_calDrill) openCalRange(_calDrill.from, _calDrill.to, _calDrill.kind); }
+function _calToggleRows(){ _drillRowsOpen = !_drillRowsOpen; if(_calDrill) openCalRange(_calDrill.from, _calDrill.to, _calDrill.kind); }
+function _calEditTrade(accountId, dateKey){ closeMaccModal(); openTradeEdit(accountId, dateKey); }
+
+function _calDrillHTML(tr, from, to, kind){
+  var DOW = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  var dowOf = function(k){ return DOW[new Date(+k.slice(0,4), +k.slice(5,7) - 1, +k.slice(8,10)).getDay()]; };
+  var plural = function(n, w){ return n + " " + w + (n === 1 ? "" : "s"); };
+  var sgn = function(v){ return v > 0 ? "pos" : v < 0 ? "neg" : ""; };
+
+  var kicker = kind === "day"   ? dowOf(from) + " · " + isoToDMY(from)
+             : kind === "week"  ? "Week · " + isoToDMY(from).slice(0,5) + " – " + isoToDMY(to)
+             :                    niceMonth(from.slice(0,7));
+
+  // ── Nav (days only): previous / next traded day ──
+  var nav = "";
+  if(kind === "day"){
+    var ds = _calTradedDays(), i = ds.indexOf(from);
+    var pv = i > 0 ? ds[i-1] : null, nx = i > -1 && i < ds.length - 1 ? ds[i+1] : null;
+    nav = '<div class="cd-nav">'+
+      '<button class="jbtn-sm mini" '+(pv ? 'onclick="calDayStep(-1)" title="'+esc(isoToDMY(pv))+' (←)"' : 'disabled')+'>‹</button>'+
+      '<button class="jbtn-sm mini" '+(nx ? 'onclick="calDayStep(1)" title="'+esc(isoToDMY(nx))+' (→)"' : 'disabled')+'>›</button>'+
+    '</div>';
+  }
+
+  var head = function(hero, explain, scope){
+    return '<div class="drill-head">'+
+      '<div class="drill-kicker">'+esc(kicker)+'</div>'+
+      '<div class="drill-hero '+sgn(hero)+'">'+(tr.length ? _signed(hero) : "—")+'</div>'+
+      '<div class="drill-explain">'+explain+'</div>'+
+      '<div class="drill-scope">'+esc(scope)+'</div>'+
+      nav+
+      '<button class="mt-modal-x" title="Close (Esc)" onclick="closeMaccModal()">×</button>'+
+    '</div>';
+  };
+
+  if(!tr.length){
+    return head(0, "No trades on this " + kind + " in the current filters.", "") +
+      '<div class="drill-section"><div class="empty">Nothing logged. Weekends are never traded, and the Person / Account / Strategy filters apply here too.</div></div>';
+  }
+
+  // ── Figures ──
+  var s = stats(tr);
+  var net = _sumBy(tr, function(t){ return t.pnl; });
+  var fees = _sumBy(tr, function(t){ return (t.commission||0) + (t.swap||0); });
+  var gross = net + fees;
+  var w = 0, l = 0;
+  tr.forEach(function(t){ var o = _calOutcome(t); if(o === "w") w++; if(o === "l") l++; });
+  var ok = tr.filter(function(t){ return t.rules === "TRUE"; }).length;
+  var bestT = tr.reduce(function(b,t){ return !b || t.pnl > b.pnl ? t : b; }, null);
+  var worstT = tr.reduce(function(b,t){ return !b || t.pnl < b.pnl ? t : b; }, null);
+  var byDay = {};
+  tr.forEach(function(t){ (byDay[t.dateKey] = byDay[t.dateKey] || []).push(t); });
+  var dayKeys = Object.keys(byDay).sort();
+
+  var explain = plural(tr.length, "trade") + " · " + plural(w, "win") + " · " + l + " loss" + (l === 1 ? "" : "es") +
+    (w + l ? " — <b>" + Math.round(100 * w / (w + l)) + "%</b> of decided trades won" : "") +
+    (kind !== "day" ? " · " + plural(dayKeys.length, "trading day") : "");
+  var scope = (fees > 0 ? "Gross " + _signed(gross) + " − fees " + fmtMoney(fees) + " = net " + _signed(net) + " · " : "") +
+              "follows the dashboard filters";
+
+  var tile = function(k, v, cls, sub, call){
+    return '<div class="cal-stat '+(cls||"")+(call ? ' click"'+_calBtnAttrs(call, "Open") : '"')+'>'+
+      '<span class="cal-stat-k">'+k+'</span><span class="cal-stat-v '+(cls||"")+'">'+v+'</span>'+
+      '<span class="cal-stat-s">'+sub+'</span></div>';
+  };
+  var tName = function(t){ return esc(t.accountName || "—"); };
+  var openT = function(t){ return kind === "day" ? null : "openCalDay('"+t.dateKey+"')"; };
+  var tiles;
+  if(kind === "day"){
+    tiles = tile("Rules followed", ok + "/" + tr.length, ok === tr.length ? "pos" : ok ? "" : "neg", ok === tr.length ? "clean day" : plural(tr.length - ok, "break"))+
+            tile("Avg R:R", s.avgRR ? "1:" + s.avgRR : "—", "accent", "planned")+
+            tile("Best trade", bestT.pnl > 0 ? _signed(bestT.pnl) : "—", "pos", bestT.pnl > 0 ? tName(bestT) : "no winner")+
+            tile("Worst trade", worstT.pnl < 0 ? _signed(worstT.pnl) : "—", "neg", worstT.pnl < 0 ? tName(worstT) : "no loser");
+  } else {
+    var dNet = dayKeys.map(function(k){ return { k:k, v:_sumBy(byDay[k], function(t){ return t.pnl; }) }; });
+    var bd = dNet.reduce(function(b,d){ return !b || d.v > b.v ? d : b; }, null);
+    var wd = dNet.reduce(function(b,d){ return !b || d.v < b.v ? d : b; }, null);
+    var up = dNet.filter(function(d){ return d.v > 0; }).length, dn = dNet.filter(function(d){ return d.v < 0; }).length;
+    tiles = tile("Green days", (up + dn ? Math.round(100 * up / (up + dn)) + "%" : "—"), "accent", up + " up · " + dn + " down")+
+            tile("Rules followed", Math.round(100 * ok / tr.length) + "%", ok === tr.length ? "pos" : "", ok + " of " + tr.length)+
+            tile("Best day", bd.v > 0 ? _signed(bd.v) : "—", "pos", bd.v > 0 ? esc(isoToDMY(bd.k).slice(0,5)) : "none green", bd.v > 0 ? "openCalDay('"+bd.k+"')" : null)+
+            tile("Worst day", wd.v < 0 ? _signed(wd.v) : "—", "neg", wd.v < 0 ? esc(isoToDMY(wd.k).slice(0,5)) : "none red", wd.v < 0 ? "openCalDay('"+wd.k+"')" : null);
+  }
+
+  // ── Where it comes from ──
+  var sessLbl = (_config && _config.sessionLabels) || {};
+  var st = _TRADE_STATS["total p&l"];
+  var groups = _tradeGroups(tr, st);
+  groups.session = _groups(tr, function(t){ return sessLbl[t.session] || t.session; }, st.num, st.fmt);
+  var dims = [["account","Account"],["strategy","Strategy"],["session","Session"],["person","Person"]]
+    .filter(function(x){ return groups[x[0]] && groups[x[0]].length; });
+  if(!dims.some(function(x){ return x[0] === _calDim; })) _calDim = dims[0][0];
+  var seg = '<div class="seg drill-seg">' + dims.map(function(x){
+    return '<button class="'+(x[0]===_calDim?"active":"")+'" onclick="_calSetDim(\''+x[0]+'\')">'+x[1]+'</button>';
+  }).join("") + '</div>';
+
+  var h = head(net, explain, scope) +
+    '<div class="drill-visual"><div class="cal-stats cd-tiles">'+tiles+'</div>'+
+      (kind === "day" ? _resultStrip(tr) : _sparkline(tr) || _resultStrip(tr))+'</div>'+
+    '<div class="drill-section"><div class="drill-section-head"><span class="drill-section-title">Where it comes from</span>'+seg+'</div>'+
+      _barsHTML(groups[_calDim], "money")+'</div>';
+
+  if(kind === "day"){
+    h += '<div class="drill-section"><div class="drill-section-head"><span class="drill-section-title">'+plural(tr.length, "trade")+'</span></div>'+
+      '<div class="cd-trades">' + tr.map(function(t){ return _calTradeCardHTML(t, sessLbl); }).join("") + '</div></div>';
+  } else {
+    var maxD = Math.max.apply(null, dNet.map(function(d){ return Math.abs(d.v); })) || 1;
+    h += '<div class="drill-section"><div class="drill-section-head"><span class="drill-section-title">Day by day</span></div>'+
+      '<div class="cd-days">' + dNet.map(function(d){
+        var ts = byDay[d.k];
+        return '<div class="cd-day '+(sgn(d.v)||"flat")+'"'+_calBtnAttrs("openCalDay('"+d.k+"')", "Open "+isoToDMY(d.k))+'>'+
+          '<span class="cd-day-d"><b>'+esc(isoToDMY(d.k).slice(0,5))+'</b> '+dowOf(d.k).slice(0,3)+'</span>'+
+          _calDotsHTML(ts.map(_calOutcome))+
+          '<span class="cd-day-n">'+plural(ts.length, "trade")+'</span>'+
+          '<span class="cd-day-bar"><i style="width:'+Math.max(4, Math.round(100 * Math.abs(d.v) / maxD))+'%"></i></span>'+
+          '<span class="cd-day-v '+sgn(d.v)+'">'+_signed(d.v)+'</span>'+
+          '<span class="cd-day-go">›</span>'+
+        '</div>';
+      }).join("") + '</div></div>'+
+      '<div class="drill-section">'+
+        '<button class="drill-rows-toggle'+(_drillRowsOpen?" on":"")+'" onclick="_calToggleRows()">'+(_drillRowsOpen?"Hide":"Show")+' all '+plural(tr.length, "trade")+' <span>'+(_drillRowsOpen?"▴":"▾")+'</span></button>'+
+        (_drillRowsOpen ? _tradesTableHTML(tr, { pct:true, running:true }) : '')+
+      '</div>';
+  }
+  return h;
+}
+
+// One trade as a card: what was traded, how it ended, what it cost,
+// whether it kept the rules, and a way into the editor.
+function _calTradeCardHTML(t, sessLbl){
+  var o = _calOutcome(t);
+  var cls = t.pnl > 0 ? "pos" : t.pnl < 0 ? "neg" : "flat";
+  var res = { w:"win", l:"loss", b:"be", m:"man" }[o];
+  var pct = (t.pnlPercent === null || t.pnlPercent === undefined) ? "" :
+            '<span class="cd-pct">'+(t.pnlPercent > 0 ? "+" : "")+t.pnlPercent.toFixed(2)+'%</span>';
+  var fees = (t.commission||0) + (t.swap||0);
+  var chip = function(k, v){ return v ? '<span class="cd-chip"><i>'+k+'</i>'+esc(v)+'</span>' : ""; };
+  var mistakes = String(t.mistake||"").split(/\s*[,;]\s*/).filter(Boolean);
+  var acc = _accountsById[t.accountId];
+  var canEdit = acc && acc.status !== "REMOVED";
+  return '<div class="cd-trade '+cls+'">'+
+    '<div class="cd-trade-top">'+
+      '<div class="cd-trade-who">'+
+        '<div class="cd-trade-acc">'+esc(t.accountName || "—")+'</div>'+
+        '<div class="cd-trade-sub">'+esc(t.person || "")+'</div>'+
+      '</div>'+
+      '<div class="cd-trade-pnl">'+
+        '<span class="cd-res '+res+'">'+esc(t.result || "—")+'</span>'+
+        '<span class="cd-trade-v '+cls+'">'+_signed(t.pnl||0)+'</span>'+pct+
+      '</div>'+
+    '</div>'+
+    '<div class="cd-chips">'+
+      chip("Strategy", t.strategyName)+chip("Session", sessLbl[t.session] || t.session)+
+      chip("TF", t.timeframe)+chip("R:R", t.rr)+chip("Bias", t.bias)+chip("Side", t.tradeType)+
+      chip("Pair", t.pair)+(t.riskAmount ? chip("Risk", fmtMoney(t.riskAmount)) : "")+
+    '</div>'+
+    (fees > 0 ? '<div class="cd-fees">Gross '+_signed(tradeGrossPnl(t))+
+      (t.commission ? ' · commission −'+fmtMoney(t.commission) : '')+(t.swap ? ' · swap −'+fmtMoney(t.swap) : '')+'</div>' : '')+
+    '<div class="cd-trade-foot">'+
+      (t.rules === "TRUE"
+        ? '<span class="cd-rule ok">✓ Rules followed</span>'
+        : '<span class="cd-rule bad">✗ '+esc(t.ruleReason || "Rule broken")+'</span>')+
+      mistakes.map(function(m){ return '<span class="cd-mistake">'+esc(m)+'</span>'; }).join("")+
+      (canEdit ? '<button class="jbtn-sm mini cd-edit" onclick="_calEditTrade(\''+esc(t.accountId)+'\',\''+t.dateKey+'\')">Edit trade</button>' : '')+
+    '</div>'+
+  '</div>';
 }
 
 function renderStreaks(trades){
@@ -6939,6 +7264,8 @@ function closeMaccModal(){
   document.getElementById("mtModal").classList.remove("show");
   document.getElementById("mtModalBody").innerHTML = "";
   document.getElementById("mtModalBody").classList.remove("wide");
+  // Closing a calendar popup drops the outline it put on the grid.
+  if(_calDrill){ _calDrill = null; _calSel = null; renderCalendar(getFiltered()); }
   Object.keys(_maccTradeEdit).forEach(function(id){
     if(_maccTradeEdit[id]){ _maccTradeEdit[id] = null; rerenderAccountTrades(id); }
   });
@@ -7904,6 +8231,11 @@ document.addEventListener("keydown", function(e){
   var modal = document.getElementById("mtModal");
   var open  = modal && modal.classList.contains("show");
   if(e.key==="Escape" && open){ closeMaccModal(); return; }
+  // ← → page through traded days while a calendar day is open.
+  if(open && _calDrill && _calDrill.kind === "day" && (e.key==="ArrowLeft" || e.key==="ArrowRight")){
+    var tg = e.target && e.target.tagName;
+    if(tg !== "INPUT" && tg !== "SELECT" && tg !== "TEXTAREA"){ e.preventDefault(); calDayStep(e.key==="ArrowLeft" ? -1 : 1); return; }
+  }
 
   // Enter inside a popup submits the form you are typing in. Forms mark
   // themselves with data-enter-scope; a scope's own submit is either a
