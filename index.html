@@ -1621,6 +1621,47 @@ body::after {
   background: var(--scrim); backdrop-filter: blur(2px);
 }
 .mt-modal-backdrop.show { display: flex; }
+
+/* ── Busy overlay: above everything, including the date picker ── */
+.busy {
+  position: fixed; inset: 0; z-index: 10002; display: none;
+  align-items: center; justify-content: center; padding: var(--sp-4);
+  background: var(--scrim); backdrop-filter: blur(4px);
+  cursor: progress; outline: none;
+}
+.busy.show { display: flex; animation: fadeUp var(--t-fast) ease both; }
+.busy-card {
+  width: 100%; max-width: 340px; box-sizing: border-box;
+  background: var(--bg3); border: 1px solid var(--border3); border-radius: var(--r3);
+  padding: var(--sp-6) var(--sp-5) var(--sp-5);
+  box-shadow: 0 20px 60px var(--shadow);
+  display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--sp-3);
+}
+.busy-icon { width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; }
+.busy-ring {
+  width: 48px; height: 48px; border-radius: 50%; box-sizing: border-box;
+  border: 4px solid var(--bg5); border-top-color: var(--accent);
+  animation: spin 0.8s linear infinite;
+}
+.busy-tick {
+  width: 48px; height: 48px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--green-bg); border: 2px solid var(--green); color: var(--green);
+  font-size: var(--fs-6); font-weight: 800;
+  animation: busyPop var(--t-slow) var(--ease) both;
+}
+@keyframes busyPop { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.busy-title { font-family: var(--font-display); font-size: var(--fs-5); font-weight: 700; color: var(--txt); letter-spacing: var(--tr-tight); }
+.busy.done .busy-title { color: var(--green); }
+.busy-steps { display: flex; flex-direction: column; gap: var(--sp-2); width: 100%; margin-top: var(--sp-1); text-align: left; }
+.busy-step { display: flex; align-items: center; gap: var(--sp-h3); font-family: var(--font-display); font-size: var(--fs-2); color: var(--txt4); }
+.busy-step i { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; box-sizing: border-box; border: 2px solid var(--border3); }
+.busy-step.run { color: var(--txt); }
+.busy-step.run i { border-color: var(--bg5); border-top-color: var(--accent); animation: spin 0.8s linear infinite; }
+.busy-step.ok { color: var(--txt2); }
+.busy-step.ok i { border: none; background: var(--green); position: relative; }
+.busy-step.ok i::after { content: '✓'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: var(--fs-0); font-weight: 800; color: var(--on-solid); }
+.busy-note { font-family: var(--font-mono); font-size: var(--fs-1); color: var(--txt4); margin-top: var(--sp-1); }
 .mt-modal {
   width: 100%; max-width: 640px; max-height: calc(100vh - 32px); overflow-y: auto;
   background: var(--bg3); border: 1px solid var(--border3); border-radius: var(--r2);
@@ -2843,6 +2884,12 @@ summary:focus-visible,
   <div class="mt-modal" id="mtModalBody"></div>
 </div>
 
+<!-- Blocks the whole page while a save and everything it triggers
+     (the re-check, the dashboard refresh) is in flight. See busyStart(). -->
+<div class="busy" id="busyOverlay" role="alertdialog" aria-modal="true" aria-live="assertive" tabindex="-1">
+  <div class="busy-card" id="busyCard"></div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
 /* ══════════════════════════════════════
@@ -2898,6 +2945,75 @@ function btnLoading(btn, label){
     delete btn.dataset.origHtml;
   };
 }
+
+/* ══════════════════════════════════════
+   BUSY OVERLAY
+   A save is not finished when its own request returns: the Journal
+   then re-checks the day (which flips the form to "Update Entry") and
+   refreshes the dashboard. Only the first step used to lock anything,
+   so clicks in between landed on a half-updated form. busyStart()
+   covers the page, makes it inert and swallows keys until busyEnd().
+   Steps run in parallel where they can, so each has its own state:
+   "wait" · "run" · "ok".
+══════════════════════════════════════ */
+var _busy = null;
+function busyStart(title, steps){
+  if(_busy && _busy.timer) clearTimeout(_busy.timer);
+  _busy = { title: title, steps: steps.map(function(s, i){ return { label: s, st: i === 0 ? "run" : "wait" }; }), done: false };
+  // Failsafe: every request gives up after 30s and at most two run
+  // back to back, so nothing legitimate takes 75s. If a render throws
+  // mid-flow and busyEnd is never reached, the page still unlocks.
+  _busy.timer = setTimeout(function(){ busyEnd(); }, 75000);
+  _busyRender();
+  var el = document.getElementById("busyOverlay");
+  el.classList.remove("done");
+  el.classList.add("show");
+  _busyInert(true);
+  if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  if(el.focus) el.focus();
+}
+function busyStep(i, st){
+  if(!_busy || !_busy.steps[i]) return;
+  _busy.steps[i].st = st;
+  _busyRender();
+}
+// msg: the success line to flash before unlocking; omit it on an
+// error, which unlocks at once so the form's error message is readable.
+function busyEnd(msg){
+  if(!_busy) return;
+  var el = document.getElementById("busyOverlay");
+  if(_busy.timer){ clearTimeout(_busy.timer); _busy.timer = null; }
+  var finish = function(){
+    el.classList.remove("show"); el.classList.remove("done");
+    _busyInert(false);
+    _busy = null;
+  };
+  if(!msg){ finish(); return; }
+  _busy.steps.forEach(function(s){ s.st = "ok"; });
+  _busy.title = msg; _busy.done = true;
+  _busyRender();
+  el.classList.add("done");
+  setTimeout(finish, 900);
+}
+function _busyInert(on){
+  ["app","mtModal"].forEach(function(id){ var n = document.getElementById(id); if(n) n.inert = on; });
+}
+function _busyRender(){
+  var card = document.getElementById("busyCard");
+  if(!card || !_busy) return;
+  card.innerHTML =
+    '<div class="busy-icon">'+(_busy.done ? '<span class="busy-tick">✓</span>' : '<span class="busy-ring"></span>')+'</div>'+
+    '<div class="busy-title">'+esc(_busy.title)+(_busy.done ? '' : '…')+'</div>'+
+    '<div class="busy-steps">'+_busy.steps.map(function(s){
+      return '<div class="busy-step '+s.st+'"><i></i><span>'+esc(s.label)+'</span></div>';
+    }).join("")+'</div>'+
+    '<div class="busy-note">'+(_busy.done ? 'Ready for the next one' : 'Hold on — the page is locked until this finishes')+'</div>';
+}
+// inert already stops clicks and focus; this catches keys pressed on
+// the overlay itself (Enter, Space, Escape) before any other handler.
+document.addEventListener("keydown", function(e){
+  if(_busy){ e.preventDefault(); e.stopImmediatePropagation(); }
+}, true);
 
 /* ══════════════════════════════════════
    APPS SCRIPT & STATE
@@ -6335,13 +6451,16 @@ function submitPayout(btn){
     "&date=" + encodeURIComponent(date) +
     "&notes=" + encodeURIComponent(notes);
 
+  busyStart("Saving payout", ["Saving the payout", "Refreshing payouts and balances"]);
   var done = btnLoading(btn, "Saving");
   jsonp(APPS_SCRIPT_URL + "?action=addPayout&" + params, function(d){
     done();
     if(!d || !d.success){
+      busyEnd();
       document.getElementById("poErr").textContent = (d && d.error) || "Could not save payout.";
       return;
     }
+    busyStep(0, "ok"); busyStep(1, "run");
     document.getElementById("poOk").textContent = "Payout saved ✓";
     document.getElementById("poAmount").value = "";
     document.getElementById("poCharges").value = "";
@@ -6349,6 +6468,7 @@ function submitPayout(btn){
     updatePayoutSplit();   // split stays — same firm, same rule
     refreshDashboardQuietly(function(){
       renderPayoutsKPI(); renderPayoutTable(); renderPayoutByPerson();
+      busyEnd("Payout saved");
     });
   });
 }
@@ -8125,7 +8245,17 @@ function onKeyFieldChange(){
   checkExistingTrade();
 }
 
-function checkExistingTrade(){
+// Each check is numbered so only the latest one may touch the form:
+// change the date twice quickly and the first answer arrives late, it
+// used to overwrite the second. Save stays locked until the latest
+// answer is in — saving before it would log a NEW entry over a day
+// that already has one. cb (optional) runs once the check is settled.
+var _jCheckSeq = 0;
+function checkExistingTrade(cb){
+  var fin = typeof cb === "function" ? cb : function(){};
+  var seq = ++_jCheckSeq;
+  var saveBtn = document.getElementById("jSubmitBtn");
+  saveBtn.disabled = false;
   var person    = document.getElementById("jPerson").value;
   var accountId = document.getElementById("jAccount").value;
   var date      = getDateISO("jDate");
@@ -8139,24 +8269,27 @@ function checkExistingTrade(){
     } else {
       document.getElementById("jStatusBanner").textContent = "Pick a person, account, and date to begin";
     }
-    return;
+    fin(); return;
   }
 
   if(isWeekendISO(date)){
     document.getElementById("jTradeFields").style.display = "none";
     document.getElementById("jStatusBanner").innerHTML = '🚫 Markets are closed on weekends — pick a weekday.';
-    return;
+    fin(); return;
   }
 
-  document.getElementById("jStatusBanner").textContent = "Checking…";
+  document.getElementById("jStatusBanner").innerHTML = '<span class="btn-spinner"></span>Checking whether '+esc(isoToDMY(date))+' already has an entry…';
+  saveBtn.disabled = true;
   jsonp(APPS_SCRIPT_URL + "?action=getTrade&token=" + encodeURIComponent(_tok) +
         "&person=" + encodeURIComponent(person) +
         "&accountId=" + encodeURIComponent(accountId) +
         "&date=" + encodeURIComponent(date), function(d){
+    if(seq !== _jCheckSeq){ fin(); return; }     // superseded by a newer check
+    saveBtn.disabled = false;
     document.getElementById("jTradeFields").style.display = "block";
     if(!d || !d.success){
       document.getElementById("jStatusBanner").textContent = (d && d.error) || "Could not check existing entry.";
-      return;
+      fin(); return;
     }
     if(d.exists){
       _journalState = { editing:true };
@@ -8172,7 +8305,22 @@ function checkExistingTrade(){
       document.getElementById("jDeleteBtn").style.display = "none";
     }
     updateRulesPreview();
+    fin();
   });
+}
+
+// After a write: re-check the day and refresh the dashboard in
+// parallel under the busy overlay, then flash `okMsg` and unlock.
+function _journalAfterWrite(okMsg, formMsg){
+  busyStep(0, "ok"); busyStep(1, "run"); busyStep(2, "run");
+  var left = 2;
+  var one = function(){
+    if(--left) return;
+    document.getElementById("jOk").textContent = formMsg;   // after the re-check, which clears it
+    busyEnd(okMsg);
+  };
+  checkExistingTrade(function(){ busyStep(1, "ok"); one(); });
+  refreshDashboardQuietly(function(){ busyStep(2, "ok"); one(); });
 }
 
 // Fills the form from an existing row. Legacy safety net: rows
@@ -8352,16 +8500,18 @@ function submitTrade(){
   document.getElementById("jErr").textContent = "";
   document.getElementById("jOk").textContent = "";
 
-  var done = btnLoading(document.getElementById("jSubmitBtn"), _journalState.editing ? "Updating" : "Saving");
+  var editing = _journalState.editing;
+  busyStart(editing ? "Updating trade" : "Saving trade",
+            [editing ? "Updating the entry" : "Saving the entry", "Re-checking " + isoToDMY(date), "Refreshing the dashboard"]);
+  var done = btnLoading(document.getElementById("jSubmitBtn"), editing ? "Updating" : "Saving");
   jsonp(APPS_SCRIPT_URL + "?action=" + action + "&" + params, function(d){
     done();
     if(!d || !d.success){
+      busyEnd();
       document.getElementById("jErr").textContent = (d && d.error) || "Something went wrong.";
       return;
     }
-    document.getElementById("jOk").textContent = "Saved ✓";
-    checkExistingTrade();
-    refreshDashboardQuietly();
+    _journalAfterWrite(editing ? "Trade updated" : "Trade saved", "Saved ✓");
   });
 }
 
@@ -8370,6 +8520,7 @@ function deleteTradeEntry(){
   var person    = document.getElementById("jPerson").value;
   var accountId = document.getElementById("jAccount").value;
   var date      = getDateISO("jDate");
+  busyStart("Deleting trade", ["Deleting the entry", "Re-checking " + isoToDMY(date), "Refreshing the dashboard"]);
   var done = btnLoading(document.getElementById("jDeleteBtn"), "Deleting");
   jsonp(APPS_SCRIPT_URL + "?action=deleteTrade&token=" + encodeURIComponent(_tok) +
         "&person=" + encodeURIComponent(person) +
@@ -8377,12 +8528,11 @@ function deleteTradeEntry(){
         "&date=" + encodeURIComponent(date), function(d){
     done();
     if(!d || !d.success){
+      busyEnd();
       document.getElementById("jErr").textContent = (d && d.error) || "Could not delete.";
       return;
     }
-    document.getElementById("jOk").textContent = "Deleted ✓";
-    checkExistingTrade();
-    refreshDashboardQuietly();
+    _journalAfterWrite("Trade deleted", "Deleted ✓");
   });
 }
 
