@@ -1151,14 +1151,14 @@ body::after {
 
 .cd-days { display: flex; flex-direction: column; gap: var(--sp-1); padding-bottom: var(--sp-1); }
 .cd-day {
-  display: grid; grid-template-columns: 96px 64px 72px 1fr 104px 12px; align-items: center; gap: var(--sp-3);
+  display: grid; grid-template-columns: 136px 64px 72px 1fr 104px 12px; align-items: center; gap: var(--sp-3);
   padding: var(--sp-2) var(--sp-3); border: 1px solid var(--border); border-radius: var(--r);
   background: var(--bg2); cursor: pointer;
   transition: border-color var(--t-fast), transform var(--t-base) var(--ease);
 }
 .cd-day:hover { border-color: var(--border3); transform: translateX(2px); }
 .cd-day .cal-dots { justify-content: flex-start; }
-.cd-day-d { font-family: var(--font-display); font-size: var(--fs-1); color: var(--txt3); }
+.cd-day-d { font-family: var(--font-display); font-size: var(--fs-1); color: var(--txt3); white-space: nowrap; }
 .cd-day-d b { font-family: var(--font-mono); color: var(--txt); font-weight: 600; margin-right: var(--sp-1); }
 .cd-day-n { font-family: var(--font-display); font-size: var(--fs-1); color: var(--txt3); }
 .cd-day-bar { height: 6px; border-radius: var(--r-pill); background: var(--bg5); overflow: hidden; }
@@ -1168,6 +1168,29 @@ body::after {
 .cd-day-v { font-family: var(--font-mono); font-size: var(--fs-2); font-weight: 600; text-align: right; color: var(--txt); }
 .cd-day-v.pos { color: var(--green); } .cd-day-v.neg { color: var(--red); }
 .cd-day-go { color: var(--txt4); }
+/* A KPI drill can span months of days; cap the list, not the popup. */
+.cd-days.capped { max-height: 420px; overflow-y: auto; padding-right: var(--sp-1); }
+
+/* Back to the popup this one was opened from. */
+.drill-back {
+  display: inline-flex; align-items: center; gap: var(--sp-1);
+  margin-bottom: var(--sp-h3); padding: 3px var(--sp-h3);
+  background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--r-pill);
+  color: var(--txt2); font-family: var(--font-display); font-size: var(--fs-1); font-weight: 600; cursor: pointer;
+  transition: border-color var(--t-fast), color var(--t-fast);
+}
+.drill-back:hover { border-color: var(--accent-rim); color: var(--accent); }
+.drill-count { font-family: var(--font-mono); font-size: var(--fs-1); color: var(--txt4); }
+
+/* Accounts and payouts as cards, two to a row. */
+.dc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-h3); padding-bottom: var(--sp-1); }
+.dc-badges { display: flex; gap: var(--sp-1); flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+.dc-kvs { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: var(--sp-2); }
+.dc-kv { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.dc-kv span { font-family: var(--font-display); font-size: var(--fs-0); color: var(--txt4); letter-spacing: var(--tr-label); }
+.dc-kv b { font-family: var(--font-mono); font-size: var(--fs-2); font-weight: 600; color: var(--txt); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dc-kv b.pos { color: var(--green); } .dc-kv b.neg { color: var(--red); }
+.dc-kv b.muted { color: var(--txt4); } .dc-kv b.gold { color: var(--accent); }
 
 .daycell {
   border: 1px solid var(--border); border-radius: var(--r2);
@@ -1648,7 +1671,10 @@ body::after {
 /* ── Stat drill-down ── */
 .kpi.drillable { cursor: pointer; }
 .kpi.drillable .kpi-sub::after { content: " ›"; color: var(--txt4); }
-.mt-modal.wide { max-width: 860px; padding: 0 0 var(--sp-4); overflow: hidden; }
+/* overflow-y must stay auto: this used to be overflow:hidden (to clip
+   the head's gradient to the corners), which also killed the base
+   .mt-modal scroll — anything taller than the screen was cut off. */
+.mt-modal.wide { max-width: 860px; padding: 0 0 var(--sp-4); overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; }
 .drill-head { position: relative; padding: var(--sp-5) var(--sp-h6) var(--sp-4); background: linear-gradient(180deg, var(--bg4), var(--bg3)); border-bottom: 1px solid var(--border); }
 .drill-head .mt-modal-x { position: absolute; top: 14px; right: 16px; }
 .drill-kicker { font-family: var(--font-display); font-size: var(--fs-0); font-weight: 700; letter-spacing: var(--tr-label); color: var(--txt4); text-transform: uppercase; }
@@ -2166,6 +2192,8 @@ summary:focus-visible,
   .cd-day .cal-dots, .cd-day-bar, .cd-day-go { display: none; }
   .cd-trade-top { flex-direction: column; gap: var(--sp-h2); }
   .drill-head .cd-nav { position: static; margin-top: var(--sp-h3); }
+  .dc-grid { grid-template-columns: 1fr; }
+  .cd-days.capped { max-height: none; overflow-y: visible; }
   .setup-head, .setup-row { grid-template-columns: 1fr 40px 48px 72px; }
   .stage-step { grid-template-columns: 14px 1fr 84px; }
   .stage-when, .stage-n { display: none; }
@@ -3909,38 +3937,123 @@ function calShift(delta){
    then the trades themselves. A day lists every trade as a card with an
    Edit button; a week or month lists its days, each of which opens. */
 var _calSel   = null;   // the day last opened, outlined on the grid
-var _calDrill = null;   // { from, to, kind } while the popup is open
+var _calDrill = null;   // { from, to, kind, src } while the popup is open
 var _calDim   = "account";
+// Where Back goes: { label, call } — set when a day is opened from
+// inside another popup (a KPI drill, or a week/month), null otherwise.
+var _popBack  = null;
 
-function openCalDay(isoKey){ openCalRange(isoKey, isoKey, "day"); }
+// From the grid: a fresh start, nothing to go back to.
+function openCalDay(isoKey){ _popBack = null; _drillRowsOpen = false; openCalRange(isoKey, isoKey, "day"); }
 
-function openCalRange(from, to, kind){
-  _calDrill = { from: from, to: to, kind: kind };
+// The trades a popup reads. Equity-based KPI drills ignore the Period
+// filter, so a day opened from one has to read the same set or it
+// could come up empty.
+function _calSource(src){ return src === "equity" ? _drillEquityTrades() : getFiltered(); }
+
+function openCalRange(from, to, kind, src){
+  if(src === undefined) src = (_calDrill && _calDrill.src) || "filtered";
+  _calDrill = { from: from, to: to, kind: kind, src: src };
   if(kind === "day"){
     _calSel = from;
     // Stepping across a month boundary drags the grid along with it.
     if(from.slice(0,7) !== _calMonth) _calMonth = from.slice(0,7);
     renderCalendar(getFiltered());
   }
-  var tr = getFiltered().filter(function(t){ return t.dateKey >= from && t.dateKey <= to; })
+  var tr = _calSource(src).filter(function(t){ return t.dateKey >= from && t.dateKey <= to; })
     .sort(function(a,b){ return a.dateKey < b.dateKey ? -1 : a.dateKey > b.dateKey ? 1 : String(a.accountName).localeCompare(String(b.accountName)); });
   openMaccModal(_calDrillHTML(tr, from, to, kind));
   var m = document.getElementById("mtModalBody");
-  if(m) m.classList.add("wide");
+  if(m){ m.classList.add("wide"); m.scrollTop = 0; }
 }
 
-// Traded days in the current filters, in order, for ‹ › and the arrow keys.
-function _calTradedDays(){ return Object.keys(computeCalendar(getFiltered()).days).sort(); }
+// A day row inside another popup: open the day, remembering the way back.
+function _openDayFromHere(isoKey){
+  var src = "filtered";
+  if(_calDrill){
+    var c = _calDrill;
+    _popBack = { label: _calKicker(c.from, c.to, c.kind), go: function(){ openCalRange(c.from, c.to, c.kind, c.src); } };
+    src = c.src;
+  } else if(_drillOpenLabel){
+    var lbl = _drillOpenLabel;
+    _popBack = { label: lbl.replace(/&amp;/g,"&"), go: function(){ _calClear(); openDrill(lbl); } };
+    var st = _TRADE_STATS[_drillKey(_drillOpenLabel)];
+    src = st && st.equity ? "equity" : "filtered";
+  }
+  _drillRowsOpen = false;
+  openCalRange(isoKey, isoKey, "day", src);
+}
+function _popGoBack(){
+  var b = _popBack; if(!b) return;
+  _popBack = null;
+  _drillRowsOpen = false;
+  b.go();
+}
+function _popBackHTML(){
+  return _popBack ? '<button class="drill-back" onclick="_popGoBack()">‹ '+esc(_popBack.label)+'</button>' : '';
+}
+// Leaving the calendar popups: drop the grid outline with them.
+function _calClear(){
+  if(!_calDrill && !_calSel) return;
+  _calDrill = null; _calSel = null;
+  renderCalendar(getFiltered());
+}
+// Re-render the open popup in place (a tab or a toggle changed)
+// without throwing the reader back to the top.
+function _keepScroll(fn){
+  var m = document.getElementById("mtModalBody"), y = m ? m.scrollTop : 0;
+  fn();
+  m = document.getElementById("mtModalBody");
+  if(m) m.scrollTop = y;
+}
+
+// Traded days in the popup's own trade set, in order, for ‹ › and the arrow keys.
+function _calTradedDays(){ return Object.keys(computeCalendar(_calSource(_calDrill && _calDrill.src)).days).sort(); }
 function calDayStep(delta){
   if(!_calDrill || _calDrill.kind !== "day") return;
   var ds = _calTradedDays(), i = ds.indexOf(_calDrill.from);
   var j = i + delta;
   if(i === -1 || j < 0 || j >= ds.length) return;
-  openCalDay(ds[j]);
+  openCalRange(ds[j], ds[j], "day");      // keeps the source and the way back
 }
-function _calSetDim(k){ _calDim = k; if(_calDrill) openCalRange(_calDrill.from, _calDrill.to, _calDrill.kind); }
-function _calToggleRows(){ _drillRowsOpen = !_drillRowsOpen; if(_calDrill) openCalRange(_calDrill.from, _calDrill.to, _calDrill.kind); }
-function _calEditTrade(accountId, dateKey){ closeMaccModal(); openTradeEdit(accountId, dateKey); }
+function _calReopen(){ openCalRange(_calDrill.from, _calDrill.to, _calDrill.kind); }
+function _calSetDim(k){ _calDim = k; if(_calDrill) _keepScroll(_calReopen); }
+function _calToggleRows(){ _drillRowsOpen = !_drillRowsOpen; if(_calDrill) _keepScroll(_calReopen); }
+function _calEditTrade(accountId, dateKey){ _popBack = null; closeMaccModal(); openTradeEdit(accountId, dateKey); }
+
+function _calKicker(from, to, kind){
+  var DOW = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  var d = new Date(+from.slice(0,4), +from.slice(5,7) - 1, +from.slice(8,10));
+  return kind === "day"  ? DOW[d.getDay()] + " · " + isoToDMY(from)
+       : kind === "week" ? "Week · " + isoToDMY(from).slice(0,5) + " – " + isoToDMY(to)
+       :                   niceMonth(from.slice(0,7));
+}
+
+/* A list of days, one clickable row each: date, outcome dots, trade
+   count, a magnitude bar and the net. Used by the week/month popups
+   and by every trade-based KPI drill. */
+function _daysListHTML(tr, newestFirst){
+  var DOW3 = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  var byDay = {};
+  tr.forEach(function(t){ (byDay[t.dateKey] = byDay[t.dateKey] || []).push(t); });
+  var keys = Object.keys(byDay).sort();
+  if(newestFirst) keys.reverse();
+  var dNet = keys.map(function(k){ return { k:k, v:_sumBy(byDay[k], function(t){ return t.pnl; }) }; });
+  var maxD = Math.max.apply(null, dNet.map(function(d){ return Math.abs(d.v); }).concat([0])) || 1;
+  var sgn = function(v){ return v > 0 ? "pos" : v < 0 ? "neg" : ""; };
+  return '<div class="cd-days'+(newestFirst && keys.length > 12 ? " capped" : "")+'">' + dNet.map(function(d){
+    var ts = byDay[d.k];
+    var dow = DOW3[new Date(+d.k.slice(0,4), +d.k.slice(5,7) - 1, +d.k.slice(8,10)).getDay()];
+    return '<div class="cd-day '+(sgn(d.v)||"flat")+'"'+_calBtnAttrs("_openDayFromHere('"+d.k+"')", "Open "+isoToDMY(d.k))+'>'+
+      '<span class="cd-day-d"><b>'+esc(isoToDMY(d.k).slice(0, newestFirst ? 10 : 5))+'</b> '+dow+'</span>'+
+      _calDotsHTML(ts.map(_calOutcome))+
+      '<span class="cd-day-n">'+ts.length+' trade'+(ts.length === 1 ? "" : "s")+'</span>'+
+      '<span class="cd-day-bar"><i style="width:'+Math.max(4, Math.round(100 * Math.abs(d.v) / maxD))+'%"></i></span>'+
+      '<span class="cd-day-v '+sgn(d.v)+'">'+_signed(d.v)+'</span>'+
+      '<span class="cd-day-go">›</span>'+
+    '</div>';
+  }).join("") + '</div>';
+}
 
 function _calDrillHTML(tr, from, to, kind){
   var DOW = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
@@ -3948,9 +4061,7 @@ function _calDrillHTML(tr, from, to, kind){
   var plural = function(n, w){ return n + " " + w + (n === 1 ? "" : "s"); };
   var sgn = function(v){ return v > 0 ? "pos" : v < 0 ? "neg" : ""; };
 
-  var kicker = kind === "day"   ? dowOf(from) + " · " + isoToDMY(from)
-             : kind === "week"  ? "Week · " + isoToDMY(from).slice(0,5) + " – " + isoToDMY(to)
-             :                    niceMonth(from.slice(0,7));
+  var kicker = _calKicker(from, to, kind);
 
   // ── Nav (days only): previous / next traded day ──
   var nav = "";
@@ -3964,7 +4075,7 @@ function _calDrillHTML(tr, from, to, kind){
   }
 
   var head = function(hero, explain, scope){
-    return '<div class="drill-head">'+
+    return '<div class="drill-head">'+_popBackHTML()+
       '<div class="drill-kicker">'+esc(kicker)+'</div>'+
       '<div class="drill-hero '+sgn(hero)+'">'+(tr.length ? _signed(hero) : "—")+'</div>'+
       '<div class="drill-explain">'+explain+'</div>'+
@@ -4027,7 +4138,6 @@ function _calDrillHTML(tr, from, to, kind){
   var sessLbl = (_config && _config.sessionLabels) || {};
   var st = _TRADE_STATS["total p&l"];
   var groups = _tradeGroups(tr, st);
-  groups.session = _groups(tr, function(t){ return sessLbl[t.session] || t.session; }, st.num, st.fmt);
   var dims = [["account","Account"],["strategy","Strategy"],["session","Session"],["person","Person"]]
     .filter(function(x){ return groups[x[0]] && groups[x[0]].length; });
   if(!dims.some(function(x){ return x[0] === _calDim; })) _calDim = dims[0][0];
@@ -4045,19 +4155,8 @@ function _calDrillHTML(tr, from, to, kind){
     h += '<div class="drill-section"><div class="drill-section-head"><span class="drill-section-title">'+plural(tr.length, "trade")+'</span></div>'+
       '<div class="cd-trades">' + tr.map(function(t){ return _calTradeCardHTML(t, sessLbl); }).join("") + '</div></div>';
   } else {
-    var maxD = Math.max.apply(null, dNet.map(function(d){ return Math.abs(d.v); })) || 1;
     h += '<div class="drill-section"><div class="drill-section-head"><span class="drill-section-title">Day by day</span></div>'+
-      '<div class="cd-days">' + dNet.map(function(d){
-        var ts = byDay[d.k];
-        return '<div class="cd-day '+(sgn(d.v)||"flat")+'"'+_calBtnAttrs("openCalDay('"+d.k+"')", "Open "+isoToDMY(d.k))+'>'+
-          '<span class="cd-day-d"><b>'+esc(isoToDMY(d.k).slice(0,5))+'</b> '+dowOf(d.k).slice(0,3)+'</span>'+
-          _calDotsHTML(ts.map(_calOutcome))+
-          '<span class="cd-day-n">'+plural(ts.length, "trade")+'</span>'+
-          '<span class="cd-day-bar"><i style="width:'+Math.max(4, Math.round(100 * Math.abs(d.v) / maxD))+'%"></i></span>'+
-          '<span class="cd-day-v '+sgn(d.v)+'">'+_signed(d.v)+'</span>'+
-          '<span class="cd-day-go">›</span>'+
-        '</div>';
-      }).join("") + '</div></div>'+
+      _daysListHTML(tr, false)+'</div>'+
       '<div class="drill-section">'+
         '<button class="drill-rows-toggle'+(_drillRowsOpen?" on":"")+'" onclick="_calToggleRows()">'+(_drillRowsOpen?"Hide":"Show")+' all '+plural(tr.length, "trade")+' <span>'+(_drillRowsOpen?"▴":"▾")+'</span></button>'+
         (_drillRowsOpen ? _tradesTableHTML(tr, { pct:true, running:true }) : '')+
@@ -4639,6 +4738,7 @@ function _tradeGroups(tr, st){
     account:  _groups(tr, function(t){ var a = _accountsById[t.accountId]; return (a && a.accountName) || t.accountName; }, st.num, st.fmt),
     strategy: _groups(tr, function(t){ return t.strategyName; }, st.num, st.fmt),
     person:   _groups(tr, function(t){ return t.person; },       st.num, st.fmt),
+    session:  _groups(tr, function(t){ var l = (_config && _config.sessionLabels) || {}; return l[t.session] || t.session; }, st.num, st.fmt),
   };
 }
 // personOf: who an account is grouped under — the current holder by
@@ -4710,8 +4810,14 @@ function _payoutStrip(P){
 }
 
 // ── Row tables (behind the toggle) ──
+// While a KPI drill is being built, each table also records the rows
+// and columns it was given, in order, so openDrill can draw the same
+// rows as cards and size the summary tiles without every case in
+// _drillBuild having to say it twice. Null the rest of the time.
+var _drillBuf = null;
 function _tradesTableHTML(tr, opts){
   opts = opts || {};
+  if(_drillBuf) _drillBuf.push({ kind:"trades", rows:tr });
   if(!tr.length) return '<div class="empty" style="padding:14px 0 2px">No trades in view.</div>';
   var run = 0;
   var h = '<div class="macc-trades-wrap drill-rows"><table class="macc-trades-table"><thead><tr>'+
@@ -4734,6 +4840,7 @@ function _tradesTableHTML(tr, opts){
   return h + '</tbody></table></div>';
 }
 function _accountsTableHTML(rows, cols){
+  if(_drillBuf) _drillBuf.push({ kind:"accounts", rows:rows, cols:cols });
   if(!rows.length) return '<div class="empty" style="padding:14px 0 2px">No accounts in view.</div>';
   var h = '<div class="macc-trades-wrap drill-rows"><table class="macc-trades-table"><thead><tr>'+
     '<th>Account</th><th>Phase</th><th>Status</th>'+cols.map(function(c){ return '<th class="'+(c.num?"num":"")+'">'+c.lbl+'</th>'; }).join("")+
@@ -4745,6 +4852,7 @@ function _accountsTableHTML(rows, cols){
   return h + '</tbody></table></div>';
 }
 function _payoutsTableHTML(rows){
+  if(_drillBuf) _drillBuf.push({ kind:"payouts", rows:rows });
   if(!rows.length) return '<div class="empty" style="padding:14px 0 2px">No payouts in view.</div>';
   var h = '<div class="macc-trades-wrap drill-rows"><table class="macc-trades-table"><thead><tr>'+
     '<th>Date</th><th>Account</th><th class="num">Withdrawn</th><th class="num">Split</th><th class="num">Charges</th><th class="num">You kept</th><th>Notes</th>'+
@@ -4902,7 +5010,7 @@ function _drillHas(label){
 }
 
 // ── Render ──
-var _DRILL_DIMS = [["account","Account"],["strategy","Strategy"],["person","Person"]];
+var _DRILL_DIMS = [["account","Account"],["strategy","Strategy"],["session","Session"],["person","Person"]];
 function _barsHTML(groups, tone){
   if(!groups || !groups.length) return '<div class="empty" style="padding:12px 0 2px">Nothing to compare.</div>';
   var nums = groups.map(function(g){ return g.n===null||g.n===Infinity?0:Math.abs(g.n); });
@@ -4922,15 +5030,20 @@ function _barsHTML(groups, tone){
 function openDrill(label){
   _drillOpenLabel = label;
   var key = _drillKey(label), d;
+  _drillBuf = [];
   try { d = _drillBuild(key); } catch(e){ d = null; }
+  var buf = _drillBuf; _drillBuf = null;
   if(!d) return;
-  var dims = _DRILL_DIMS.filter(function(x){ return d.groups && d.groups[x[0]]; });
+  var dims = _DRILL_DIMS.filter(function(x){ return d.groups && d.groups[x[0]] && d.groups[x[0]].length; });
   if(!dims.some(function(x){ return x[0] === _drillDim; })) _drillDim = dims.length ? dims[0][0] : null;
   var toneCls = d.tone==="money" ? (/^[+]/.test(d.value)?"pos":/^[−-]/.test(d.value)?"neg":"") : d.tone==="bad" ? "neg" : "pos";
 
   var seg = dims.length > 1 ? '<div class="seg drill-seg">' + dims.map(function(x){
     return '<button class="'+(x[0]===_drillDim?"active":"")+'" onclick="_drillSetDim(\'' + x[0] + '\')">'+x[1]+'</button>';
   }).join("") + '</div>' : '';
+
+  var tiles = _drillTilesHTML(key, buf);
+  var isTrades = buf.length && buf[0].kind === "trades";
 
   openMaccModal(
     '<div class="drill-head">'+
@@ -4940,21 +5053,137 @@ function openDrill(label){
       '<div class="drill-scope">'+esc(d.scope||"")+'</div>'+
       '<button class="mt-modal-x" title="Close (Esc)" onclick="closeMaccModal()">×</button>'+
     '</div>'+
-    (d.hero ? '<div class="drill-visual">'+d.hero+'</div>' : '')+
+    ((tiles || d.hero) ? '<div class="drill-visual">'+(tiles ? '<div class="cal-stats cd-tiles">'+tiles+'</div>' : '')+(d.hero||"")+'</div>' : '')+
     (dims.length ? '<div class="drill-section"><div class="drill-section-head"><span class="drill-section-title">Where it comes from</span>'+seg+'</div>'+
       _barsHTML(d.groups[_drillDim], d.tone)+'</div>' : '')+
+    buf.map(function(b, i){ return _drillCardsHTML(b, i, buf.length); }).join("")+
     '<div class="drill-section">'+
-      '<button class="drill-rows-toggle'+(_drillRowsOpen?" on":"")+'" onclick="_drillToggleRows()">'+(_drillRowsOpen?"Hide":"Show")+' the '+esc(d.rowsLabel||"rows")+' <span>'+(_drillRowsOpen?"▴":"▾")+'</span></button>'+
+      '<button class="drill-rows-toggle'+(_drillRowsOpen?" on":"")+'" onclick="_drillToggleRows()">'+(_drillRowsOpen?"Hide":"Show")+
+        (isTrades ? ' the '+esc(d.rowsLabel||"rows") : ' as a table')+' <span>'+(_drillRowsOpen?"▴":"▾")+'</span></button>'+
       (_drillRowsOpen ? d.rows : '')+
     '</div>'
   );
   var m = document.getElementById("mtModalBody");
-  if(m) m.classList.add("wide");
+  if(m){ m.classList.add("wide"); m.scrollTop = 0; }
 }
-function _drillSetDim(k){ _drillDim = k; if(_drillOpenLabel) openDrill(_drillOpenLabel); }
-function _drillToggleRows(){ _drillRowsOpen = !_drillRowsOpen; if(_drillOpenLabel) openDrill(_drillOpenLabel); }
+function _drillSetDim(k){ _drillDim = k; if(_drillOpenLabel) _keepScroll(function(){ openDrill(_drillOpenLabel); }); }
+function _drillToggleRows(){ _drillRowsOpen = !_drillRowsOpen; if(_drillOpenLabel) _keepScroll(function(){ openDrill(_drillOpenLabel); }); }
+function _drillEditPayout(id){ closeMaccModal(); openPayoutEdit(id); }
+function _drillEditAccount(id){ closeMaccModal(); openAccountEdit(id); }
 
-function openDrillFromTile(label){ _drillRowsOpen = false; openDrill(label); }
+/* ── The calendar look, for every KPI drill ──
+   Four summary tiles over the rows the drill is about, then those rows
+   as cards: trades as a day-by-day list (each day opens the calendar's
+   day popup, with a Back button to this one), accounts and payouts as
+   cards. The old table is still one click away. */
+function _drillTile(k, v, cls, sub){
+  return '<div class="cal-stat '+(cls||"accent")+'"><span class="cal-stat-k">'+k+'</span>'+
+    '<span class="cal-stat-v '+(cls && cls !== "accent" ? cls : "")+'">'+v+'</span><span class="cal-stat-s">'+sub+'</span></div>';
+}
+function _drillTilesHTML(key, buf){
+  if(!buf.length) return "";
+  var sg = function(v){ return v > 0 ? "pos" : v < 0 ? "neg" : "accent"; };
+  var pl = function(n, w){ return n + " " + w + (n === 1 ? "" : "s"); };
+  var b = buf[0];
+
+  if(b.kind === "trades"){
+    var tr = b.rows;
+    if(!tr.length) return "";
+    var s = stats(tr), net = _sumBy(tr, function(t){ return t.pnl; });
+    var w = 0, l = 0, ok = 0, days = {};
+    tr.forEach(function(t){ var o = _calOutcome(t); if(o === "w") w++; if(o === "l") l++; if(t.rules === "TRUE") ok++; days[t.dateKey] = 1; });
+    var pf = _TRADE_STATS["profit factor"];
+    var all = {
+      "total p&l":     _drillTile("Net P&amp;L", _signed(net), sg(net), "after fees"),
+      "win rate":      _drillTile("Win rate", s.winRate + "%", "accent", w + " won · " + l + " lost"),
+      "compliance":    _drillTile("Rules followed", s.compliance + "%", ok === tr.length ? "pos" : "accent", ok + " of " + tr.length),
+      "trades":        _drillTile("Trades", String(tr.length), "accent", "over " + pl(Object.keys(days).length, "day")),
+      "avg r:r":       _drillTile("Avg R:R", s.avgRR ? "1:" + s.avgRR : "—", "accent", "planned"),
+      "profit factor": _drillTile("Profit factor", pf.fmt(pf.num(tr)), "accent", "wins ÷ losses"),
+    };
+    return ["total p&l","win rate","compliance","trades","avg r:r","profit factor"]
+      .filter(function(k){ return k !== key; }).slice(0, 4).map(function(k){ return all[k]; }).join("");
+  }
+
+  if(b.kind === "payouts"){
+    var P = b.rows;
+    var kept = _sumBy(P, _net), gross = _sumBy(P, function(p){ return p.amount; });
+    if(buf[1] && buf[1].kind === "accounts"){     // real net profit: payouts against fees
+      var fees = _sumBy(buf[1].rows, function(a){ return a.cost; });
+      return _drillTile("Payouts kept", fmtMoney(kept), "pos", pl(P.length, "payout"))+
+             _drillTile("Fees paid", fmtMoney(fees), "neg", pl(buf[1].rows.length, "account"))+
+             _drillTile("Withdrawn", fmtMoney(gross), "accent", "before the split")+
+             _drillTile("Firm's cut", fmtMoney(Math.max(gross - kept, 0)), "accent", "split and charges");
+    }
+    var latest = P.reduce(function(m,p){ return !m || p.date > m ? p.date : m; }, null);
+    return _drillTile("Payouts", String(P.length), "accent", latest ? "latest " + esc(isoToDMY(latest)) : "none yet")+
+           _drillTile("Withdrawn", fmtMoney(gross), "accent", "left the accounts")+
+           _drillTile("You kept", fmtMoney(kept), "pos", "after split and charges")+
+           _drillTile("Firm's cut", fmtMoney(Math.max(gross - kept, 0)), "neg", "split and charges");
+  }
+
+  var A = b.rows;
+  var act = A.filter(function(a){ return a.status === "ACTIVE"; });
+  var blown = A.filter(function(a){ return a.status === "BLOWN"; }).length;
+  var paid = _sumBy(A, function(a){ return a.paidOut; });
+  return _drillTile("Accounts", String(A.length), "accent", act.length + " active · " + blown + " blown")+
+         _drillTile("Balance", fmtMoney(_sumBy(act, function(a){ return a.currentBalance; })), "accent", "active ones only")+
+         _drillTile("Cost", fmtMoney(_sumBy(A, function(a){ return a.cost; })), "neg", "to buy")+
+         _drillTile("Paid out", fmtMoney(paid), paid > 0 ? "pos" : "accent", "withdrawn, gross");
+}
+
+function _drillCardsHTML(b, i, n){
+  var title = function(t, count){
+    return '<div class="drill-section-head"><span class="drill-section-title">'+t+'</span><span class="drill-count">'+count+'</span></div>';
+  };
+  if(!b.rows.length) return "";
+
+  if(b.kind === "trades"){
+    var days = {}; b.rows.forEach(function(t){ days[t.dateKey] = 1; });
+    var nd = Object.keys(days).length;
+    return '<div class="drill-section">'+title("Day by day", nd + " day" + (nd === 1 ? "" : "s") + " · newest first · click one for its trades")+
+      _daysListHTML(b.rows, true)+'</div>';
+  }
+
+  if(b.kind === "payouts"){
+    return '<div class="drill-section">'+title("Payouts", b.rows.length)+'<div class="dc-grid">'+
+      b.rows.map(function(p){
+        var sp = p.splitPct || 100, ch = p.charges || 0;
+        return '<div class="cd-trade pos">'+
+          '<div class="cd-trade-top"><div class="cd-trade-who">'+
+            '<div class="cd-trade-acc">'+esc(p.accountName || "—")+'</div>'+
+            '<div class="cd-trade-sub">'+esc(p.person || "")+' · '+esc(isoToDMY(p.date))+'</div></div>'+
+            '<div class="cd-trade-pnl"><span class="cd-trade-v pos">'+fmtMoney(_net(p))+'</span></div></div>'+
+          '<div class="dc-kvs">'+
+            '<div class="dc-kv"><span>Withdrawn</span><b>'+fmtMoney(p.amount)+'</b></div>'+
+            '<div class="dc-kv"><span>Your split</span><b>'+sp+'%</b></div>'+
+            '<div class="dc-kv"><span>Charges</span><b class="'+(ch > 0 ? "neg" : "")+'">'+(ch > 0 ? "−" + fmtMoney(ch) : "—")+'</b></div>'+
+          '</div>'+
+          '<div class="cd-trade-foot">'+(p.notes ? '<span class="cd-fees">'+esc(p.notes)+'</span>' : '')+
+            (p.id ? '<button class="jbtn-sm mini cd-edit" onclick="_drillEditPayout(\''+esc(p.id)+'\')">Edit payout</button>' : '')+'</div>'+
+        '</div>';
+      }).join("")+'</div></div>';
+  }
+
+  // Accounts. In "real net profit" they follow the payouts, as the fee side.
+  var stripe = { ACTIVE:"pos", BLOWN:"neg" };
+  return '<div class="drill-section">'+title(i > 0 && n > 1 ? "Fees" : "Accounts", b.rows.length)+'<div class="dc-grid">'+
+    b.rows.map(function(a){
+      return '<div class="cd-trade '+(stripe[a.status] || "flat")+'">'+
+        '<div class="cd-trade-top"><div class="cd-trade-who">'+
+          '<div class="cd-trade-acc">'+esc(a.accountName || "(unnamed)")+'</div>'+
+          '<div class="cd-trade-sub">'+esc(a.person || "")+'</div></div>'+
+          '<div class="dc-badges">'+phaseBadge(a.phase)+statusBadge(a.status)+'</div></div>'+
+        '<div class="dc-kvs">'+b.cols.map(function(c){
+          var r = c.f(a);
+          return '<div class="dc-kv"><span>'+c.lbl+'</span><b class="'+(r.cls||"")+'">'+r.v+'</b></div>';
+        }).join("")+'</div>'+
+        (a.status !== "REMOVED" ? '<div class="cd-trade-foot"><button class="jbtn-sm mini cd-edit" onclick="_drillEditAccount(\''+esc(a.accountId)+'\')">Edit account</button></div>' : '')+
+      '</div>';
+    }).join("")+'</div></div>';
+}
+
+function openDrillFromTile(label){ _drillRowsOpen = false; _popBack = null; openDrill(label); }
 /* Enter and Space on a role="button" element — what the browser would
    have done for us had the tile been a real <button>. */
 function _kbActivate(ev){
@@ -7265,7 +7494,8 @@ function closeMaccModal(){
   document.getElementById("mtModalBody").innerHTML = "";
   document.getElementById("mtModalBody").classList.remove("wide");
   // Closing a calendar popup drops the outline it put on the grid.
-  if(_calDrill){ _calDrill = null; _calSel = null; renderCalendar(getFiltered()); }
+  _popBack = null;
+  _calClear();
   Object.keys(_maccTradeEdit).forEach(function(id){
     if(_maccTradeEdit[id]){ _maccTradeEdit[id] = null; rerenderAccountTrades(id); }
   });
